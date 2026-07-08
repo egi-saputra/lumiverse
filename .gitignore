@@ -1,0 +1,58 @@
+# ==========================
+# Environment
+# ==========================
+.env
+.env.*
+auth.json
+
+# ==========================
+# Laravel / PHP
+# ==========================
+/vendor
+/storage/*.key
+/storage/pail
+.phpactor.json
+.phpunit.result.cache
+/.phpunit.cache
+
+# ==========================
+# Node.js / Frontend
+# ==========================
+/node_modules
+*.log
+npm-debug.log
+yarn-error.log
+
+# ==========================
+# Build Output
+# ==========================
+/public/build
+/public/hot
+/public/storage
+
+# ==========================
+# IDE / Editors
+# ==========================
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+
+# ==========================
+# Homestead
+# ==========================
+Homestead.json
+Homestead.yaml
+
+# ==========================
+# macOS / Windows
+# ==========================
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Backup
+# ==========================
+backup/
+backup_soal_video/
