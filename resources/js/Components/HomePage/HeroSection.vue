@@ -120,7 +120,8 @@ onUnmounted(() => {
                             <div class="trust-avatar">+</div>
                         </div>
                         <p class="trust-text"><strong>1000+ pengguna</strong> telah bergabung <span
-                                class="sm:inline-flex hidden">— tanpa kartu kredit</span></p>
+                                class="sm:inline-flex hidden">— tanpa kartu kredit</span><span
+                                class="inline-flex sm:hidden">bersama kami, sekarang giliranmu!</span></p>
                     </div>
                 </div>
 
@@ -238,7 +239,8 @@ onUnmounted(() => {
 
 <style scoped>
 .hero {
-    min-height: 100vh;
+    /* min-height: 100vh; */
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -795,7 +797,7 @@ onUnmounted(() => {
     }
 
     .hero {
-        padding: 7rem 0 4rem;
+        padding: 6rem 0 4rem;
     }
 
     .hero-title {

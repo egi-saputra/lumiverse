@@ -74,12 +74,12 @@ onUnmounted(() => {
                     <img src="/images/logo-dark.png" alt="Lumiverse" class="h-8 object-cover scale-150 flex" />
                     <div class="text-2xl font-semibold logo-text-static">
                         Lumiverse
-                        <span class="logo-text-wrap sm:inline-flex hidden">
+                        <!-- <span class="logo-text-wrap sm:inline-flex hidden">
                             <Transition name="slide-up">
                                 <span :key="activeBrand" class="logo-text-inner text-cyan">{{
                                     brandVariants[activeBrand].suffix }}</span>
                             </Transition>
-                        </span>
+                        </span> -->
                     </div>
                 </a>
 
@@ -316,7 +316,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
     .container {
-        padding: 0 0.75rem;
+        padding: 0 0.5rem;
     }
 
     .navbar-content {
@@ -512,7 +512,6 @@ onUnmounted(() => {
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
-
     .nav-links {
         display: none;
     }

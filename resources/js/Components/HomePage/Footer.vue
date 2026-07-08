@@ -2,27 +2,27 @@
 import { Link } from '@inertiajs/vue3'
 
 const productLinks = [
-    { href: '#fitur', label: 'Fitur', anchor: true },
-    { href: '#harga', label: 'Harga', anchor: true },
-    { href: '#docs', label: 'Dokumentasi', anchor: true },
-    { href: '/changelog', label: 'Changelog' },
-    { href: '/roadmap', label: 'Roadmap' },
-    { href: '/status', label: 'Status Sistem' },
+    { href: '/', label: 'Produk', anchor: true },
+    { href: '/', label: 'Harga', anchor: true },
+    { href: '/', label: 'Dokumentasi', anchor: true },
+    { href: '/', label: 'Changelog' },
+    { href: '/', label: 'Roadmap' },
+    { href: '/', label: 'Status Sistem' },
 ]
 const companyLinks = [
-    { href: '/tentang', label: 'Tentang Kami' },
-    { href: '/blog', label: 'Blog' },
-    { href: '/karir', label: 'Karir' },
-    { href: '/partner', label: 'Program Partner' },
+    { href: '/', label: 'Tentang Kami' },
+    { href: '/', label: 'Blog' },
+    { href: '/', label: 'Karir' },
+    { href: '/', label: 'Program Partner' },
     { href: '#testimonial', label: 'Testimoni', anchor: true },
-    { href: '/press', label: 'Press Kit' },
+    // { href: '/', label: 'Press Kit' },
 ]
 const supportLinks = [
-    { href: '/bantuan', label: 'Pusat Bantuan' },
+    { href: '/', label: 'Pusat Bantuan' },
     { href: '#docs', label: 'API Docs', anchor: true },
-    { href: '/tutorial', label: 'Video Tutorial' },
-    { href: 'mailto:hello@lumiverse.co.id', label: 'hello@lumiverse.co.id' },
-    { href: 'https://wa.me/8987504976', label: 'WhatsApp Support', external: true },
+    { href: '/', label: 'Video Tutorial' },
+    { href: 'mailto:info@lumiverse.co.id', label: 'info@lumiverse.co.id' },
+    { href: 'https://wa.me/+628987504976', label: 'WhatsApp Support', external: true },
 ]
 </script>
 
@@ -43,7 +43,7 @@ const supportLinks = [
                         pendidikan.
                     </p>
                     <div class="footer-socials">
-                        <a href="https://instagram.com/kreaticraft.id" class="social-link" aria-label="Instagram"
+                        <a href="https://instagram.com/lumiplatforms" class="social-link" aria-label="Instagram"
                             target="_blank" rel="noopener">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -131,7 +131,7 @@ const supportLinks = [
 <style scoped>
 .footer {
     border-top: 1px solid var(--border);
-    padding: 4rem 0 2.5rem;
+    padding: 6rem 0 2.5rem;
     position: relative;
     z-index: 1;
 }

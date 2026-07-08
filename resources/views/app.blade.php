@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
         <!-- Mencegah Google Translate & browser menerjemahkan otomatis -->
         <meta name="google" content="notranslate">
@@ -29,11 +29,12 @@
         @inertiaHead
     </head>
 
-    <body class="font-sans antialiased">
+    <body class="font-sans antialiased" oncontextmenu="return false;" oncopy="return false;" oncut="return false;">
         @inertia
 
         <!-- Sandbox -->
-        <script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        {{-- <script src="https://app.sandbox.midtrans.com/snap/snap.js" --}}
+        <script src="https://app.midtrans.com/snap/snap.js"
                 data-client-key="{{ config('midtrans.client_key') }}"></script>
         <!-- Production: ganti URL ke https://app.midtrans.com/snap/snap.js -->
     </body>

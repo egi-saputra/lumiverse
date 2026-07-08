@@ -8,18 +8,18 @@ import { Link } from '@inertiajs/vue3'
             <div class="cta-box reveal">
                 <h2 class="cta-title" id="cta-title">
                     Siap transformasi<br>
-                    <span class="gradient-text">sekolah Anda?</span>
+                    <span class="gradient-text">bersama kami?</span>
                 </h2>
                 <p class="cta-desc">
-                    Mulai gratis selama 14 hari. Tidak perlu kartu kredit. Setup dalam 10 menit.
+                    Pendaftaran gratis. Tanpa kartu kredit. Setup mudah dalam 5 menit.
                 </p>
                 <div class="cta-actions">
                     <Link href="/register" class="btn-hero">
                         Mulai Gratis Sekarang →
                     </Link>
-                    <a href="https://wa.me/6200000000000" class="btn-outline" target="_blank" rel="noopener noreferrer">
+                    <!-- <a href="https://wa.me/628987504976" class="btn-outline" target="_blank" rel="noopener noreferrer">
                         💬 Chat via WhatsApp
-                    </a>
+                    </a> -->
                 </div>
             </div>
         </div>
@@ -77,7 +77,7 @@ import { Link } from '@inertiajs/vue3'
     color: var(--muted);
     max-width: 600px;
     margin: 0 auto 2.5rem;
-    line-height: 1.75;
+    line-height: 1.5;
     position: relative;
 }
 

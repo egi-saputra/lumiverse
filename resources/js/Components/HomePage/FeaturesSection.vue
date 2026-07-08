@@ -2,23 +2,23 @@
 const features = [
     {
         icon: '📚', color: 'cyan', goldAccent: false,
-        title: 'Manajemen Kurikulum',
-        desc: 'Susun mata pelajaran, modul, dan materi pembelajaran secara terstruktur sesuai kurikulum Merdeka Belajar atau KTSP.',
+        title: 'Manajemen Administrasi',
+        desc: 'Kelola data siswa / karyawan, modul dan materi pembelajaran secara terstruktur, cepat dan mudah.',
     },
     {
         icon: '✏️', color: 'gold', goldAccent: false,
         title: 'Ujian Online & Bank Soal',
-        desc: 'Buat ujian dengan berbagai tipe soal — pilihan ganda, essay, benar/salah — dengan bank soal terorganisir dan penilaian otomatis.',
+        desc: 'Buat berbagai soal ujian dan pelatihan mandiri dengan cepat, mudah,terorganisir dan penilaian secara otomatis.',
     },
     {
         icon: '📊', color: 'green', goldAccent: false,
-        title: 'Rapor & Analitik Nilai',
-        desc: 'Generate rapor digital secara otomatis. Pantau perkembangan siswa dengan grafik analitik yang mudah dipahami.',
+        title: 'Rapor / Sertifikasi & Analitik Penilaian',
+        desc: 'Generate rapor atau sertifikat digital secara otomatis. Pantau perkembangan siswa / karyawan dengan grafik analitik yang mudah dipahami.',
     },
     {
         icon: '🗓️', color: 'purple', goldAccent: false,
         title: 'Absensi Digital',
-        desc: 'Catat kehadiran siswa dan guru secara digital. Laporan absensi otomatis tersedia kapanpun dibutuhkan.',
+        desc: 'Catat kehadiran siswa / karyawan secara digital. Laporan absensi otomatis tersedia kapanpun dibutuhkan.',
     },
     {
         icon: '💬', color: 'rose', goldAccent: true,
@@ -28,7 +28,7 @@ const features = [
     {
         icon: '🔐', color: 'orange', goldAccent: false,
         title: 'Keamanan Data Terjamin',
-        desc: 'Data sekolah dienkripsi dan disimpan di server berstandar ISO 27001. Backup otomatis setiap hari tanpa konfigurasi tambahan.',
+        desc: 'Data sekolah atau perusahaan disimpan di server berstandar ISO 27001. Backup otomatis setiap hari tanpa konfigurasi tambahan.',
     },
 ]
 </script>
@@ -39,11 +39,10 @@ const features = [
             <div class="section-header centered reveal">
                 <div class="section-eyebrow">fitur dan layanan kami</div>
                 <h2 class="section-title" id="features-title">
-                    Semua kebutuhan lembaga pendidikan modern
+                    Semua kebutuhan digitalisasi lembaga modern
                 </h2>
                 <p class="section-desc">
-                    Dari manajemen siswa, absensi, ujian online hingga rapor digital semuanya dalam satu platform yang
-                    terintegrasi.
+                    Dari manajemen administrasi, absensi, ujian online, psikotest, formulir hingga rapor dan sertifikat digital semuanya dalam satu platform yang terintegrasi.
                 </p>
             </div>
 
@@ -55,49 +54,6 @@ const features = [
                     <h3 class="feature-title">{{ feature.title }}</h3>
                     <p class="feature-desc">{{ feature.desc }}</p>
                 </div>
-
-                <!-- Full-width API Highlight -->
-                <!-- <div class="feature-card feature-highlight reveal" style="transition-delay:.6s">
-                    <div>
-                        <div class="feature-icon cyan" style="margin-bottom:1.5rem">⚡</div>
-                        <h3 class="feature-title" style="font-size:1.4rem;margin-bottom:1rem">
-                            Integrasi API & Webhook
-                        </h3>
-                        <p class="feature-desc" style="margin-bottom:1.5rem">
-                            Hubungkan KREATICRAFT dengan sistem yang sudah berjalan di sekolah Anda — SIAK, presensi
-                            fingerprint, atau sistem keuangan — melalui REST API yang terdokumentasi lengkap.
-                        </p>
-                        <a href="#docs" class="link-api">
-                            Baca Dokumentasi API
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5">
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                        </a>
-                    </div>
-                    <div class="feature-highlight-visual">
-                        <div class="code-block">
-                            <span class="cm">// Contoh: Kirim nilai siswa via API</span>
-                            <span class="kw">POST</span> <span class="fn">/api/v1/nilai</span>
-                            <span class="cm">Authorization: Bearer {token}</span>
-
-                            {
-                            <span class="str">"siswa_id"</span>: <span class="num">10482</span>,
-                            <span class="str">"mapel"</span>: <span class="str">"matematika"</span>,
-                            <span class="str">"semester"</span>: <span class="num">1</span>,
-                            <span class="str">"nilai_uts"</span>: <span class="num">87</span>,
-                            <span class="str">"nilai_uas"</span>: <span class="num">92</span>
-                            }
-
-                            <span class="cm">// Response</span>
-                            {
-                            <span class="str">"status"</span>: <span class="str">"success"</span>,
-                            <span class="str">"nilai_akhir"</span>: <span class="num">90.2</span>,
-                            <span class="str">"predikat"</span>: <span class="str">"A"</span>
-                            }
-                        </div>
-                    </div>
-                </div> -->
             </div>
         </div>
     </section>
@@ -266,6 +222,15 @@ const features = [
 @media (max-width: 768px) {
     .container {
         padding: 0 0.75rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.45rem, 3.5vw, 2.75rem);
+    }
+
+    .section-desc {
+        font-size: 0.875rem;
+        line-height: 1.5;
     }
 
     .features-grid {

@@ -13,7 +13,7 @@ const steps = [
             <div class="section-header centered reveal">
                 <div class="section-eyebrow">How It Works</div>
                 <h2 class="section-title" id="how-title">Mulai dalam 4 langkah mudah</h2>
-                <p class="section-desc">Tidak perlu keahlian teknis secara khusus. Sekolah Anda bisa langsung aktif
+                <p class="section-desc">Tidak perlu keahlian teknis secara khusus. Lembaga Anda bisa langsung aktif
                     hanya dalam hitungan menit.</p>
             </div>
 

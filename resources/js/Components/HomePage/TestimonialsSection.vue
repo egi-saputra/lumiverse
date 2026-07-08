@@ -8,16 +8,16 @@ const testimonials = [
         avatarGradient: '',
     },
     {
-        text: 'Fitur notifikasi WhatsApp sangat membantu komunikasi dengan orang tua. Mereka sekarang selalu up-to-date dengan perkembangan belajar anak-anak.',
-        name: 'Dra. Ratna Wulandari',
-        role: 'Kepala Sekolah, SMP Bina Insani',
-        initials: 'DR',
+        text: 'Fitur pembuatan modul pelatihan dan pengembangan karyawan yang sangat membantu. Mereka sekarang jadi lebih cepat untuk mengakses modul sebagai bahan bacaan dan pembelajaran untuk perkembangan skill mereka.',
+        name: 'Ade Kurniawan',
+        role: 'Kepala Toko, Koperasi Desa Sejahtera',
+        initials: 'AS',
         avatarGradient: 'linear-gradient(135deg,var(--gold-dim),var(--navy-light))',
     },
     {
-        text: 'Dokumentasi API-nya sangat lengkap dan jelas. Tim IT kami berhasil integrasi dengan sistem absensi fingerprint kami hanya dalam 3 hari.',
+        text: 'Sangat membantu saya untuk keperluan recruitment pegawai baru. Bisa melakukan test / psikotest terhadap karyawan baru secara daring dengan visual yang lebih modern dan futuristic.',
         name: 'Ahmad Prasetyo',
-        role: 'IT Manager, Yayasan Pendidikan Mandiri Teknologi',
+        role: 'HR Staff, PT Jala Lintas Media',
         initials: 'AP',
         avatarGradient: 'linear-gradient(135deg,#7dd3fc,var(--navy-light))',
     },
@@ -29,7 +29,7 @@ const testimonials = [
         <div class="container">
             <div class="section-header centered reveal">
                 <div class="section-eyebrow">Apa kata mereka</div>
-                <h2 class="section-title" id="testimonials-title">Dipercaya ribuan pendidik Indonesia</h2>
+                <h2 class="section-title" id="testimonials-title">Dipercaya ribuan pengguna di Indonesia</h2>
             </div>
 
             <div class="testimonials-grid">
