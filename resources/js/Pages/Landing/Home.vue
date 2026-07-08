@@ -4,12 +4,12 @@ import { Head } from '@inertiajs/vue3'
 import LandingLayout from '@/Layouts/LandingLayout.vue'
 import HeroSection from '@/Components/HomePage/HeroSection.vue'
 // import AboutSection from '@/Components/HomePage/AboutSection.vue'
-import LogosSection from '@/Components/HomePage/LogosSection.vue'
+// import LogosSection from '@/Components/HomePage/LogosSection.vue'
 import StatsSection from '@/Components/HomePage/StatsSection.vue'
 import FeaturesSection from '@/Components/HomePage/FeaturesSection.vue'
 import HowItWorksSection from '@/Components/HomePage/HowItWorksSection.vue'
 // import DocsSection from '@/Components/HomePage/DocsSection.vue'
-import PricingSection from '@/Components/HomePage/PricingSection.vue'
+// import PricingSection from '@/Components/HomePage/PricingSection.vue'
 import TestimonialsSection from '@/Components/HomePage/TestimonialsSection.vue'
 import LegalitasSection from '@/Components/HomePage/LegalitasSection.vue'
 import CtaSection from '@/Components/HomePage/CtaSection.vue'
@@ -22,24 +22,24 @@ useHead({
     meta: [
         {
             name: 'description',
-            content: 'Lumiverse School menghadirkan Learning Management System (LMS) berbasis cloud yang cepat, aman, dan dirancang khusus untuk sekolah tingkat SD, SMP, SMK, dan semua lembaga pendidikan di Indonesia.',
+            content: 'Lumiverse merupakan The All in One Growth System Platform berbasis cloud pertama di Indonesia, yang hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan atau lembaga pendidikan.',
         },
         {
             name: 'keywords',
-            content: 'LMS Indonesia, Learning Management System, platform belajar online, sistem manajemen sekolah, e-learning sekolah, Smart School, Sekolah Digital, Digitalisasi Sekolah, Ujian Online, Guru Pejuang Digital, LMS SD, LMS SMP, LMS SMK, LMS pesantren, LMS Pendidikan, LUMIVERSE, LUMIVERSE SCHOOL, Lumiverse School, PT LUMI PLATFORMS INDONESIA, PT Lumi Platforms Indonesia, pt lumi platforms indonesia',
+            content: 'LMS Indonesia, Learning Management System, platform belajar online, sistem manajemen sekolah, e-learning sekolah, Smart School, Sekolah Digital, Digitalisasi Sekolah, Ujian Online, Guru Pejuang Digital, LMS SD, LMS SMP, LMS SMK, LMS pesantren, LMS Pendidikan, LUMIVERSE, LUMIVERSE SCHOOL, Lumiverse School, LUMI WORKSPACE, Lumi Workspace, LUMI CLASSROOM, Lumi Classroom, PT LUMI PLATFORMS INDONESIA, PT Lumi Platforms Indonesia, pt lumi platforms indonesia',
         },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://lumiverse.co.id/' },
-        { property: 'og:title', content: 'Lumiverse School — Platform LMS Modern untuk Sekolah' },
+        { property: 'og:title', content: 'Lumiverse — The All in One Growth System Platform' },
         {
             property: 'og:description',
-            content: 'LMS berbasis cloud yang cepat, aman, dan dirancang khusus untuk sekolah dan lembaga pendidikan di Indonesia.',
+            content: 'Platform LMS dan Workspace berbasis cloud yang cepat, aman, dan dirancang khusus untuk sekolah, lembaga pendidikan, perusahaan dan korporasi di Indonesia.',
         },
         { property: 'og:image', content: 'https://lumiverse.co.id/og-image.jpg' },
         { property: 'og:locale', content: 'id_ID' },
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Lumiverse School — Platform LMS Modern' },
-        { name: 'twitter:description', content: 'LMS cloud untuk sekolah Indonesia. Cepat, aman, profesional.' },
+        { name: 'twitter:title', content: 'Lumiverse — Platform LMS dan Workspace Modern' },
+        { name: 'twitter:description', content: 'Platform LMS dan Workspace berbasis cloud untuk sekolah, lembaga pendidikan, perusahaan dan korporasi di Indonesia. Cepat, aman, profesional.' },
         { name: 'twitter:image', content: 'https://lumiverse.co.id/og-image.jpg' },
     ],
     script: [
@@ -48,10 +48,10 @@ useHead({
             children: JSON.stringify({
                 '@context': 'https://schema.org',
                 '@type': 'Organization',
-                name: 'Lumiverse School',
+                name: 'Lumiverse',
                 url: 'https://lumiverse.co.id',
                 logo: 'https://lumiverse.co.id/logo.svg',
-                description: 'Platform Learning Management System (LMS) cloud untuk sekolah dan lembaga pendidikan di Indonesia.',
+                description: 'Platform LMS dan Workspace berbasis cloud untuk sekolah, lembaga pendidikan, perusahaan dan korporasi di Indonesia.',
                 address: { '@type': 'PostalAddress', addressLocality: 'Bogor', addressCountry: 'ID' },
                 contactPoint: {
                     '@type': 'ContactPoint',
@@ -60,7 +60,7 @@ useHead({
                     availableLanguage: ['Indonesian', 'English'],
                 },
                 sameAs: [
-                    'https://linkedin.com/company/lumiverse-school',
+                    'https://linkedin.com/company/lumiverse',
                     'https://instagram.com/lumiverse',
                 ],
             }),
@@ -76,15 +76,15 @@ onMounted(() => {
 
 <template>
 
-    <Head title="Lumi Platforms Smart Learning System" />
+    <Head title="Lumiverse The All in One Growth Platform System" />
     <HeroSection />
     <!-- <AboutSection /> -->
-    <LogosSection />
+    <!-- <LogosSection /> -->
     <StatsSection />
     <FeaturesSection />
     <HowItWorksSection />
     <!-- <DocsSection /> -->
-    <PricingSection />
+    <!-- <PricingSection /> -->
     <TestimonialsSection />
     <LegalitasSection />
     <CtaSection />

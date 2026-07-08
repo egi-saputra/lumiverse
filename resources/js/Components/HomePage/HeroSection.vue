@@ -119,7 +119,8 @@ onUnmounted(() => {
                             <div class="trust-avatar">SN</div>
                             <div class="trust-avatar">+</div>
                         </div>
-                        <p class="trust-text"><strong>1000+ pengguna</strong> telah bergabung — tanpa kartu kredit</p>
+                        <p class="trust-text"><strong>1000+ pengguna</strong> telah bergabung <span
+                                class="sm:inline-flex hidden">— tanpa kartu kredit</span></p>
                     </div>
                 </div>
 
@@ -292,6 +293,12 @@ onUnmounted(() => {
     align-items: center;
     position: relative;
     z-index: 1;
+    min-width: 0;
+    /* tambahan */
+}
+
+.hero-content {
+    min-width: 0;
 }
 
 .hero-badge {
@@ -783,12 +790,35 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
     .hero {
         padding: 7rem 0 4rem;
     }
 
     .hero-title {
         font-size: 2.3rem;
+    }
+
+    .hero-desc {
+        font-size: 1rem;
+    }
+
+    .hero-badge {
+        white-space: normal;
+        flex-wrap: wrap;
+        row-gap: 0.25rem;
+        font-size: 10px;
+    }
+
+    .word-slot-h-title {
+        max-width: 100%;
+    }
+
+    .word-inner-h {
+        white-space: normal;
     }
 }
 </style>

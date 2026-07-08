@@ -27,7 +27,7 @@ const supportLinks = [
 </script>
 
 <template>
-    <footer class="footer" role="contentinfo">
+    <footer class="footer" id="kontak" role="contentinfo">
         <div class="container">
             <div class="footer-grid">
                 <!-- Brand -->
@@ -35,11 +35,12 @@ const supportLinks = [
                     <div class="footer-brand-row">
                         <img src="/images/logo-dark.png" alt="Lumiverse"
                             class="h-8 object-cover scale-150 sm:flex hidden" />
-                        <div class="font-semibold text-3xl">Lumiverse <span class="text-cyan">School</span></div>
+                        <div class="font-semibold text-3xl">Lumiverse</div>
                     </div>
                     <p class="footer-brand-desc">
-                        Platform Learning Management System cloud terpercaya untuk sekolah dan lembaga pendidikan di
-                        Indonesia. Cepat, aman, profesional.
+                        The All in One Growth System Platform berbasis cloud terpercaya,
+                        hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan atau lembaga
+                        pendidikan.
                     </p>
                     <div class="footer-socials">
                         <a href="https://instagram.com/kreaticraft.id" class="social-link" aria-label="Instagram"
@@ -113,7 +114,8 @@ const supportLinks = [
                         Bogor, Indonesia 🇮🇩</span>
                 </p> -->
                 <p class="footer-legal-text">
-                    © 2026 PT Lumi Platforms Indonesia. Hak cipta dilindungi undang-undang.
+                    © 2026 PT Lumi Platforms Indonesia. <span class="sm:inline-flex hidden">Hak cipta dilindungi
+                        undang-undang.</span><span class="inline-flex sm:hidden">All rights reserved.</span>
                 </p>
                 <nav class="footer-legal-links" aria-label="Legal links">
                     <a href="/privasi">Kebijakan Privasi</a>
@@ -263,6 +265,10 @@ const supportLinks = [
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
     .footer-grid {
         grid-template-columns: 1fr;
         gap: 2rem;

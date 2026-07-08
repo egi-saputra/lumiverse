@@ -138,6 +138,19 @@ const items = [
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.45rem, 3.5vw, 2.75rem);
+    }
+
+    .section-desc {
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
     .legal-grid {
         grid-template-columns: repeat(1, 1fr);
     }

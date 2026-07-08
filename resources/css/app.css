@@ -85,16 +85,6 @@ ul {
     background: var(--cyan-dim);
 }
 
-/* input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0 1000px #131c2e inset !important;
-    -webkit-text-fill-color: #f8f9ff !important;
-    caret-color: #f8f9ff;
-    transition: background-color 5000s ease-in-out 0s;
-} */
-
 /* Nonaktifkan background biru Safari/WebKit pada input autofill */
 /* Autofill — Light mode (default) */
 input:-webkit-autofill,

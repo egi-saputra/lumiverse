@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/vue3'
 </script>
 
 <template>
-    <section class="cta-section" aria-labelledby="cta-title">
+    <section class="cta-section" id="cta" aria-labelledby="cta-title">
         <div class="container">
             <div class="cta-box reveal">
                 <h2 class="cta-title" id="cta-title">
@@ -91,6 +91,14 @@ import { Link } from '@inertiajs/vue3'
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .cta-section {
+        padding: 2rem 0;
+    }
+
     .cta-box {
         padding: 3rem 1.5rem;
     }

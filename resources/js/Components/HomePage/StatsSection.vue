@@ -90,6 +90,14 @@ const stats = [
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .stats-section {
+        padding: 2rem 0;
+    }
+
     .stats-grid {
         grid-template-columns: repeat(1, 1fr);
     }

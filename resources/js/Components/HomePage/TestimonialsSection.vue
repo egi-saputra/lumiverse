@@ -125,6 +125,10 @@ const testimonials = [
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
     .testimonials-grid {
         grid-template-columns: 1fr;
     }

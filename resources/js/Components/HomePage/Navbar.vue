@@ -7,13 +7,14 @@ const isScrolled = ref(false)
 const isMenuOpen = ref(false)
 
 const navItems = [
-    { id: 'hero', href: '#fitur', label: 'Beranda' },
-    { id: 'about', href: '#about', label: 'Tentang Kami' },
+    { id: 'hero', href: '#hero', label: 'Beranda' },
+    // { id: 'about', href: '#about', label: 'Tentang Kami' },
     { id: 'fitur', href: '#fitur', label: 'Fitur Aplikasi' },
     { id: 'cara-kerja', href: '#cara-kerja', label: 'Dokumentasi' },
-    { id: 'harga', href: '#harga', label: 'Paket Harga' },
+    // { id: 'harga', href: '#harga', label: 'Paket Harga' },
     { id: 'testimonial', href: '#testimonial', label: 'Testimoni' },
     { id: 'legalitas', href: '#legalitas', label: 'Legalitas' },
+    { id: 'kontak', href: '#kontak', label: 'Kontak' },
 ]
 
 // Varian nama brand — bergantian tiap 2.5 detik, sinkron dengan tema Hero (LMS/Workspace)
@@ -314,6 +315,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
     .navbar-content {
         grid-template-columns: 1fr 1fr;
     }
@@ -406,7 +411,7 @@ onUnmounted(() => {
     color: var(--muted);
     cursor: pointer;
     padding: 0.875rem 0.25rem;
-    border-radius: 8px;
+    /* border-radius: 8px; */
     border-bottom: 1px solid var(--border);
     transition: color 0.15s, background 0.15s;
 

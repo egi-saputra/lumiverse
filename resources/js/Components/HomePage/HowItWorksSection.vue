@@ -13,7 +13,8 @@ const steps = [
             <div class="section-header centered reveal">
                 <div class="section-eyebrow">How It Works</div>
                 <h2 class="section-title" id="how-title">Mulai dalam 4 langkah mudah</h2>
-                <p class="section-desc">Tidak perlu keahlian teknis secara khusus. Sekolah Anda bisa langsung aktif hanya dalam hitungan menit.</p>
+                <p class="section-desc">Tidak perlu keahlian teknis secara khusus. Sekolah Anda bisa langsung aktif
+                    hanya dalam hitungan menit.</p>
             </div>
 
             <div class="steps-grid">
@@ -94,12 +95,34 @@ const steps = [
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.45rem, 3.5vw, 2.75rem);
+    }
+
+    .section-desc {
+        font-size: 0.875rem;
+        line-height: 1.25;
+    }
+
     .steps-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
     .steps-grid::before {
         display: none;
+    }
+
+    .step-title {
+        font-weight: 600;
+    }
+
+    .step-desc {
+        font-size: 0.875rem;
+        line-height: 1.35;
     }
 }
 </style>

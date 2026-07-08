@@ -105,7 +105,7 @@ const features = [
 
 <style scoped>
 .features-section {
-    padding: 7rem 0;
+    padding: 6rem 0;
     position: relative;
     z-index: 1;
 }
@@ -264,6 +264,10 @@ const features = [
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
     .features-grid {
         grid-template-columns: 1fr;
     }
