@@ -56,3 +56,9 @@ Thumbs.db
 # ==========================
 backup/
 backup_soal_video/
+
+# ==========================
+# MD File
+# ==========================
+github.md
+Seeder.md
