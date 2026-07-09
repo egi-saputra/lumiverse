@@ -53,7 +53,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
-    'central_domain' => env('CENTRAL_DOMAIN', 'localhost'),
+    // 'central_domain' => env('CENTRAL_DOMAIN', 'localhost'),
+    'central_domain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
 
     /*
     |--------------------------------------------------------------------------

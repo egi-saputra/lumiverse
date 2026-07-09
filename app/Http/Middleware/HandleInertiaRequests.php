@@ -121,7 +121,8 @@ class HandleInertiaRequests extends Middleware
                 'max_users' => tenant('max_users'),
             ] : null,
 
-            'centralDomain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
+            // 'centralDomain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
+            'centralDomain' => config('app.central_domain'),
 
             'auth' => [
                 'user'   => $user,
