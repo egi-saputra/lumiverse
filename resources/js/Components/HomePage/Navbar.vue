@@ -119,7 +119,7 @@ onUnmounted(() => {
                 </ul>
 
                 <div class="mobile-cta-group">
-                    <Link href="/login" class="btn-mob-ghost" @click="isMenuOpen = false">Masuk</Link>
+                    <Link href="/lumiverse/login" class="btn-mob-ghost" @click="isMenuOpen = false">Masuk</Link>
                     <Link href="/registration" class="btn-mob-cta" @click="isMenuOpen = false">Coba Gratis</Link>
                 </div>
             </div>

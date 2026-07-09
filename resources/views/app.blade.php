@@ -29,7 +29,7 @@
         @inertiaHead
     </head>
 
-    <body class="font-sans antialiased" oncontextmenu="return false;" oncopy="return false;" oncut="return false;">
+    <body class="font-sans antialiased" oncontextmenu="true false;" oncopy="return true;" oncut="return true;">
         @inertia
 
         <!-- Sandbox -->
