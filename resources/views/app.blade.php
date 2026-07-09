@@ -33,8 +33,8 @@
         @inertia
 
         <!-- Sandbox -->
-        {{-- <script src="https://app.sandbox.midtrans.com/snap/snap.js" --}}
-        <script src="https://app.midtrans.com/snap/snap.js"
+        <script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        {{-- <script src="https://app.midtrans.com/snap/snap.js" --}}
                 data-client-key="{{ config('midtrans.client_key') }}"></script>
         <!-- Production: ganti URL ke https://app.midtrans.com/snap/snap.js -->
     </body>
