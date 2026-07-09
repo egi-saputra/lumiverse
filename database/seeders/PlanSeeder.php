@@ -13,11 +13,11 @@ class PlanSeeder extends Seeder
             [
                 'key'                  => 'trial',
                 'name'                 => 'Free Trial',
-                'description'          => 'Paket uji coba gratis selama 14 hari.',
+                'description'          => 'Paket uji coba gratis.',
                 'price_monthly'        => 0,
                 'price_yearly'         => 0,
-                'max_users'            => 50,
-                'duration_days'        => 14,
+                'max_users'            => 10,
+                'duration_days'        => 0,
                 'features'             => [
                     'Akses semua fitur dasar',
                     'Hingga 50 pengguna',
@@ -30,7 +30,7 @@ class PlanSeeder extends Seeder
                     'Notifikasi WhatsApp',
                     'Custom domain',
                 ],
-                'badge'                => 'Gratis 14 Hari',
+                'badge'                => 'Gratis',
                 'accent_color'         => '#34d399',
                 'is_highlighted'       => false,
                 'is_active'            => true,
