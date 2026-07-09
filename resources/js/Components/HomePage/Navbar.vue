@@ -130,14 +130,14 @@ onUnmounted(() => {
 <style scoped>
 /* ── Navbar ─────────────────────────────────────────── */
 .navbar {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
     /* GPU layer — tidak ada reflow saat scroll */
-    transform: translateZ(0);
-    will-change: transform;
+    /* transform: translateZ(0);
+    will-change: transform; */
 }
 
 /* Backdrop sebagai layer terpisah — tidak menggeser layout konten */
