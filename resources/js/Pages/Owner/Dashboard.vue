@@ -50,7 +50,7 @@ const centralDomain = computed(() => {
     const hostname = window.location.hostname
     const port = window.location.port ? `:${window.location.port}` : ''
     if (isIpOrLocalhost(hostname)) return `${hostname}${port}`
-    return hostname.replace(/^[^.]+\./, '') || hostname
+    return page.props.centralDomain ?? hostname
 })
 
 const tenantAppUrl = computed(() => {
@@ -61,7 +61,7 @@ const tenantAppUrl = computed(() => {
     if (isIpOrLocalhost(hostname)) {
         return `${protocol}//${props.tenant.subdomain}.localhost${port}/home`
     }
-    const base = hostname.replace(/^[^.]+\./, '') || hostname
+    const base = page.props.centralDomain ?? hostname
     return `${protocol}//${props.tenant.subdomain}.${base}${port}/home`
 })
 
@@ -219,7 +219,7 @@ async function confirmPay() {
                     </span>
                     <span style="display:flex;flex-direction:column;gap:1px;line-height:1;">
                         <span class="text-gray-900" style="font-size:0.8rem;font-weight:800;">Premium {{ tenant.plan
-                        }}</span>
+                            }}</span>
                     </span>
                 </Link>
             </div>
