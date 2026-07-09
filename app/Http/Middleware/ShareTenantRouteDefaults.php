@@ -13,7 +13,8 @@ class ShareTenantRouteDefaults
         if (tenant()) {
             URL::defaults([
             'tenant' => tenant('id'),
-            'centralDomain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
+            // 'centralDomain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
+            'centralDomain' => config('app.central_domain'),
             ]);
         }
 
