@@ -59,10 +59,10 @@ const tenantAppUrl = computed(() => {
     const port = window.location.port ? `:${window.location.port}` : ''
     const hostname = window.location.hostname
     if (isIpOrLocalhost(hostname)) {
-        return `${protocol}//${props.tenant.subdomain}.localhost${port}/home`
+        return `${protocol}//${props.tenant.subdomain}.localhost${port}/`
     }
     const base = page.props.centralDomain ?? hostname
-    return `${protocol}//${props.tenant.subdomain}.${base}${port}/home`
+    return `${protocol}//${props.tenant.subdomain}.${base}${port}/`
 })
 
 const statusClass = computed(() => {
@@ -219,7 +219,7 @@ async function confirmPay() {
                     </span>
                     <span style="display:flex;flex-direction:column;gap:1px;line-height:1;">
                         <span class="text-gray-900" style="font-size:0.8rem;font-weight:800;">Premium {{ tenant.plan
-                            }}</span>
+                        }}</span>
                     </span>
                 </Link>
             </div>

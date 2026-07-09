@@ -34,7 +34,7 @@ Route::middleware([
     ->where('path', '.*')
     ->name('tenant.storage');
 
-    Route::get('/home', function () {
+    Route::get('/', function () {
     // return Inertia::render('HomePage', [
     return Inertia::render('Auth/Login', [
         'canLogin' => Route::has('login'),
