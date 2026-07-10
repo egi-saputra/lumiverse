@@ -2,11 +2,11 @@
 import { useHead } from '@vueuse/head'
 import { Head } from '@inertiajs/vue3'
 import LandingLayout from '@/Layouts/LandingLayout.vue'
-import HeroSection from '@/Components/WorkspacePage/HeroSection.vue'
-import StatsSection from '@/Components/WorkspacePage/StatsSection.vue'
-import FeaturesSection from '@/Components/WorkspacePage/FeaturesSection.vue'
-import HowItWorksSection from '@/Components/WorkspacePage/HowItWorksSection.vue'
-import TestimonialsSection from '@/Components/WorkspacePage/TestimonialsSection.vue'
+// import HeroSection from '@/Components/WorkspacePage/HeroSection.vue'
+// import StatsSection from '@/Components/WorkspacePage/StatsSection.vue'
+// import FeaturesSection from '@/Components/WorkspacePage/FeaturesSection.vue'
+// import HowItWorksSection from '@/Components/WorkspacePage/HowItWorksSection.vue'
+// import TestimonialsSection from '@/Components/WorkspacePage/TestimonialsSection.vue'
 import LegalitasSection from '@/Components/HomePage/LegalitasSection.vue'
 import CtaSection from '@/Components/WorkspacePage/CtaSection.vue'
 import { onMounted } from 'vue'
@@ -77,12 +77,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <Head title="Lumiverse Workspace — Tools Kolaborasi Tim Berbasis Cloud" />
-    <HeroSection />
+
+    <Head title="Lumi Workspace — Tools Kolaborasi Tim Berbasis Cloud" />
+    <!-- <HeroSection />
     <StatsSection />
     <FeaturesSection />
     <HowItWorksSection />
-    <TestimonialsSection />
+    <TestimonialsSection /> -->
     <LegalitasSection />
     <CtaSection />
 </template>
