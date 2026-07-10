@@ -70,9 +70,9 @@ onUnmounted(() => {
         <div class="container">
             <div class="navbar-content">
                 <a href="/" class="nav-logo" @click.prevent="handleLogoClick">
-                    <img src="/images/logo-dark.png" alt="Lumiverse" class="h-8 object-cover scale-150 flex" />
+                    <img src="/images/logo-dark.png" alt="Lumiverse School" class="h-8 object-cover scale-150 flex" />
                     <div class="text-2xl font-semibold logo-text-static">
-                        Lumiverse
+                        Lumiverse <span class="text-cyan">School</span>
                     </div>
                 </a>
 

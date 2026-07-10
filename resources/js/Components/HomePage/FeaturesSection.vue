@@ -39,10 +39,11 @@ const features = [
             <div class="section-header centered reveal">
                 <div class="section-eyebrow">fitur dan layanan kami</div>
                 <h2 class="section-title" id="features-title">
-                    Semua kebutuhan digitalisasi lembaga modern
+                    Semua kebutuhan digitalisasi sekolah
                 </h2>
                 <p class="section-desc">
-                    Dari manajemen administrasi, absensi, ujian online, psikotest, formulir hingga rapor dan sertifikat digital semuanya dalam satu platform yang terintegrasi.
+                    Dari manajemen administrasi, absensi, ujian online, psikotest, formulir hingga rapor dan sertifikat
+                    digital semuanya dalam satu platform yang terintegrasi.
                 </p>
             </div>
 

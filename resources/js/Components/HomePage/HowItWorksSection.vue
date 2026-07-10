@@ -46,9 +46,9 @@ const steps = [
 .steps-grid::before {
     content: '';
     position: absolute;
-    top: 28px;
-    left: calc(12.5% + 28px);
-    right: calc(12.5% + 28px);
+    top: 60px;
+    left: calc(12.5% + 20px);
+    right: calc(12.5% + 20px);
     height: 1px;
     background: linear-gradient(90deg, var(--cyan), var(--gold), var(--cyan));
     opacity: 0.3;

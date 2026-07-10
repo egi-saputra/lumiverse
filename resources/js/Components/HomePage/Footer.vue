@@ -33,14 +33,15 @@ const supportLinks = [
                 <!-- Brand -->
                 <div>
                     <div class="footer-brand-row">
-                        <img src="/images/logo-dark.png" alt="Lumiverse"
-                            class="h-8 object-cover scale-150 sm:flex hidden" />
-                        <div class="font-semibold text-3xl">Lumiverse</div>
+                        <img src="/images/logo-dark.png" alt="Lumiverse" class="h-8 object-cover scale-150" />
+                        <div class="font-semibold text-3xl">Lumiverse <span class="text-cyan">School</span>
+                        </div>
                     </div>
                     <p class="footer-brand-desc">
                         The All in One Growth System Platform berbasis cloud terpercaya,
-                        hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan atau lembaga
-                        pendidikan.
+                        hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan, korporasi, sekolah,
+                        komunitas belajar dan lembaga
+                        pendidikan lainnya.
                     </p>
                     <div class="footer-socials">
                         <a href="https://instagram.com/lumiplatforms" class="social-link" aria-label="Instagram"

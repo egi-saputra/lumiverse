@@ -29,7 +29,8 @@ const testimonials = [
         <div class="container">
             <div class="section-header centered reveal">
                 <div class="section-eyebrow">Apa kata mereka</div>
-                <h2 class="section-title" id="testimonials-title">Dipercaya ribuan pengguna di Indonesia</h2>
+                <h2 class="section-title" id="testimonials-title">Dipercaya 100+ lembaga pendidikan di Indonesia
+                </h2>
             </div>
 
             <div class="testimonials-grid">

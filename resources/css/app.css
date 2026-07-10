@@ -92,6 +92,15 @@ body.lock-scroll {
     scroll-behavior: smooth;
 }
 
+/* ─── Sembunyikan scrollbar visual ─── */
+.no-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE / Edge lama */
+}
+.no-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge (Chromium) */
+}
+
 /* ─── ANTI COPY / SELECT / TOUCH CALLOUT ─────────────── */
 html,
 body {

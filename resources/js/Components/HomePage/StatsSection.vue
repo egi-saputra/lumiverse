@@ -1,6 +1,6 @@
 <script setup>
 const stats = [
-    { num: '100', suffix: '+', color: 'cyan', label: 'Sekolah, Lembaga Pendidikan, Komunitas Belajar, Perusahaan & Korporasi' },
+    { num: '100', suffix: '+', color: 'cyan', label: 'Lembaga Pendidikan, Komunitas Belajar, Perusahaan & Korporasi' },
     { num: '75K', suffix: '+', color: 'gold', label: 'Pengguna Aktif Dari Berbagai Institusi' },
     { num: '99.97', suffix: '%', color: 'white', label: 'Uptime Dijamin' },
     { num: '4.9', suffix: '★', color: 'green', label: 'Rating Kepuasan' },

@@ -56,7 +56,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div ref="scrollRoot" class="scroll-viewport" id="scroll-root">
+    <div ref="scrollRoot" class="scroll-viewport no-scrollbar" id="scroll-root">
         <Navbar />
         <main>
             <slot />

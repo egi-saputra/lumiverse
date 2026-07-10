@@ -83,7 +83,7 @@ onMounted(() => {
 
 <template>
 
-    <Head title="Lumiverse The All in One Growth Platform System" />
+    <Head title="Lumiverse" />
     <HeroSection />
     <!-- <AboutSection /> -->
     <!-- <LogosSection /> -->
