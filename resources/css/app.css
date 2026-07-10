@@ -72,10 +72,10 @@ ul {
 }
 
 /* ─── LOCK WINDOW SCROLL (biar address bar browser tidak collapse) ─── */
-html,
-body {
+html.lock-scroll,
+body.lock-scroll {
     height: 100%;
-    overflow: hidden; /* window tidak pernah scroll */
+    overflow: hidden;
     overscroll-behavior: none;
 }
 

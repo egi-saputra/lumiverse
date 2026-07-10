@@ -1,6 +1,6 @@
 <script setup>
 import { useHead } from '@vueuse/head'
-import { onMounted, ref, provide } from 'vue'
+import { onMounted, onUnmounted, ref, provide } from 'vue'
 import Navbar from '@/Components/HomePage/Navbar.vue'
 import Footer from '@/Components/HomePage/Footer.vue'
 
@@ -27,6 +27,9 @@ useHead({
 })
 
 onMounted(() => {
+    document.documentElement.classList.add('lock-scroll')
+    document.body.classList.add('lock-scroll')
+
     const observer = new IntersectionObserver(
         (entries) => {
             entries.forEach((entry) => {
@@ -44,6 +47,11 @@ onMounted(() => {
     )
 
     scrollRoot.value?.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+})
+
+onUnmounted(() => {
+    document.documentElement.classList.remove('lock-scroll')
+    document.body.classList.remove('lock-scroll')
 })
 </script>
 
