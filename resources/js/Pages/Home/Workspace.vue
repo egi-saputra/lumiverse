@@ -8,7 +8,7 @@ import LandingLayout from '@/Layouts/LandingLayout.vue'
 // import HowItWorksSection from '@/Components/WorkspacePage/HowItWorksSection.vue'
 // import TestimonialsSection from '@/Components/WorkspacePage/TestimonialsSection.vue'
 import LegalitasSection from '@/Components/HomePage/LegalitasSection.vue'
-import CtaSection from '@/Components/WorkspacePage/CtaSection.vue'
+// import CtaSection from '@/Components/WorkspacePage/CtaSection.vue'
 import { onMounted } from 'vue'
 
 defineOptions({ layout: LandingLayout })
@@ -85,5 +85,5 @@ onMounted(() => {
     <HowItWorksSection />
     <TestimonialsSection /> -->
     <LegalitasSection />
-    <CtaSection />
+    <!-- <CtaSection /> -->
 </template>
