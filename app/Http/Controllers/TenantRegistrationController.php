@@ -30,9 +30,17 @@ class TenantRegistrationController extends Controller
     protected array $institutionTypes = ['sekolah', 'kursus', 'privat', 'yayasan', 'lainnya'];
     protected array $schoolLevels = ['sd', 'smp', 'smk'];
 
-    public function create(): Response
+    public function create(Request $request): Response
     {
-        return Inertia::render('Tenant/Register');
+        $productType = $request->query('product', 'school');
+
+        if (!in_array($productType, ['school', 'workspace'], true)) {
+            $productType = 'school';
+        }
+
+        return Inertia::render('Tenant/Register', [
+            'productType' => $productType,
+        ]);
     }
 
     public function suggestSubdomain(Request $request)

@@ -53,7 +53,7 @@ onUnmounted(() => {
             <div class="hero-layout">
                 <!-- Content -->
                 <div class="hero-content">
-                    <div class="hero-badge"
+                    <div class="hero-badge sm:inline-flex hidden"
                         :aria-label="`Platform ${variants[activeIndex].platform} #1 untuk ${variants[activeIndex].audience}`">
                         <div class="hero-badge-dot"></div>
                         <span>Platform</span>
@@ -70,6 +70,12 @@ onUnmounted(() => {
                                     variants[activeIndex].audience }}</span>
                             </Transition>
                         </span>
+                    </div>
+
+                    <div class="hero-badge inline-flex sm:hidden"
+                        :aria-label="`Platform LMS #1 untuk Sekolah Indonesia`">
+                        <div class="hero-badge-dot"></div>
+                        <span>Platform LMS #1 Untuk Sekolah Indonesia</span>
                     </div>
 
                     <h1 class="hero-title" id="hero-title">
@@ -98,9 +104,10 @@ onUnmounted(() => {
 
                     <!-- The All in One Growth System Platform -->
                     <p class="hero-desc">
-                        Lumiverse merupakan The All in One Growth System Platform berbasis cloud pertama di
-                        Indonesia, yang hadir
-                        untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan atau lembaga pendidikan.
+                        Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang
+                        hadir untuk
+                        memberikan solusi dan kemudahan bagi satuan pendidikan seperti sekolah atau instansi lembaga
+                        pendidikan lainnya.
                     </p>
 
                     <div class="hero-actions">
@@ -312,7 +319,6 @@ onUnmounted(() => {
 }
 
 .hero-badge {
-    display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     padding: 0.35rem 1rem;

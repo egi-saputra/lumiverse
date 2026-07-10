@@ -14,29 +14,74 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// $centralDomains = config('tenancy.central_domains');
-
-// Route::domain('{domain}')
-//     ->where(['domain' => implode('|', array_map('preg_quote', $centralDomains))])
-//     ->middleware(['web'])
-//     ->group(function () {
-
 $centralDomains = config('tenancy.central_domains');
 
-foreach ($centralDomains as $domain) {
+/*
+|--------------------------------------------------------------------------
+| Homepage per domain — TIDAK di dalam foreach, didaftarkan SEKALI
+| masing-masing, dan HARUS lebih dulu dari grup wildcard di bawah.
+|--------------------------------------------------------------------------
+*/
 
-    Route::domain($domain)
-        ->middleware('web')
-        ->group(function () {
+// Domain lokal untuk development (127.0.0.1, localhost) — tampilkan landing LMS juga
+Route::domain('127.0.0.1')->middleware('web')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Home/School', [
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    })->name('home.local.ip');
+});
 
-        Route::get('/', function () {
-            return Inertia::render('Home/School', [
-                // 'canLogin' => Route::has('login'),
-                // 'canRegister' => Route::has('register'),
-                'laravelVersion' => Application::VERSION,
-                'phpVersion' => PHP_VERSION,
-            ]);
-        });
+Route::domain('localhost')->middleware('web')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Home/School', [
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    })->name('home.local.host');
+});
+
+// Domain utama (apex) — LMS/School landing
+Route::domain('lumiverse.co.id')->middleware('web')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Home/School', [
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    })->name('home.lms');
+});
+
+// www — sama-sama LMS (kalau memang www.lumiverse.co.id dianggap central domain terpisah)
+Route::domain('www.lumiverse.co.id')->middleware('web')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Home/School', [
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    })->name('home.lms.www');
+});
+
+// Workspace — subdomain khusus
+Route::domain('workspace.lumiverse.co.id')->middleware('web')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Landing/Workspace', [
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    })->name('home.workspace');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Rute bersama — SATU KALI untuk semua central domain (termasuk workspace).
+| Tidak ada '/' di sini, karena sudah ditangani di atas per-domain.
+|--------------------------------------------------------------------------
+*/
+Route::domain('{domain}')
+    ->where(['domain' => implode('|', array_map('preg_quote', $centralDomains))])
+    ->middleware('web')
+    ->group(function () {
 
         Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect.central');
         Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback.central');
@@ -116,6 +161,4 @@ foreach ($centralDomains as $domain) {
 
         Route::post('/registration/suggest-subdomain', [TenantRegistrationController::class, 'suggestSubdomain'])
             ->name('tenant.suggest-subdomain');
-    // });
     });
-}

@@ -1,12 +1,19 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { ref, computed, watch, onMounted } from 'vue'
 import axios from 'axios'
-import ProductSelectScreen from './Partials/ProductSelectScreen.vue'
+import ProductSelectModal from '@/Components/Modals/ProductSelectModal.vue'
 import PasswordFields from './Partials/PasswordFields.vue'
 
+const props = defineProps({
+    productType: {
+        type: String,
+        default: 'school',
+    },
+})
+
 const form = useForm({
-    product_type: '',
+    product_type: props.productType,
     institution_type: '',
     institution_type_other: '',
     school_name: '',
@@ -30,7 +37,7 @@ const form = useForm({
 
 const currentStep = ref(1)
 const isWorkspace = computed(() => form.product_type === 'workspace')
-const isSchoolProduct = computed(() => form.product_type === 'school')
+const showProductModal = ref(false)
 
 // Workspace: 3 step (Detail Perusahaan, Kontak Perusahaan, Akun Admin)
 // Sekolah/Lembaga: 4 step (Lembaga, Profil, Kontak, Admin)
@@ -67,11 +74,6 @@ function jumpToFirstErrorStep() {
     const errorKeys = Object.keys(form.errors)
     if (errorKeys.length === 0) return
 
-    // Kalau error ada di product_type (atau produk belum dipilih), tampilkan layar pilihan produk
-    if (errorKeys.includes('product_type') || !form.product_type) {
-        return
-    }
-
     const steps = errorKeys.map((key) => fieldStepMap.value[key] || 1)
     currentStep.value = Math.min(...steps)
 }
@@ -85,7 +87,6 @@ const institutionOptions = [
     { value: 'sekolah', label: 'Sekolah / Madrasah', desc: 'SD, SMP, SMA/SMK/Sederajat', icon: '🏫' },
     { value: 'yayasan', label: 'Yayasan / Lembaga', desc: 'Yayasan pendidikan / Lembaga sosial', icon: '🏛️' },
     { value: 'kursus', label: 'Kursus & Bimbel', desc: 'Lembaga pelatihan / bimbingan belajar', icon: '📚' },
-    // { value: 'privat', label: 'Privat / Tutor', desc: 'Pengajar individu / kelompok kecil', icon: '📋' },
     { value: 'lainnya', label: 'Institusi Lainnya', desc: 'Lembaga pendidikan lainnya', icon: '🎓' },
 ]
 
@@ -134,7 +135,6 @@ function onSchoolNameInput(e) {
     const value = e.target.value
     form.school_name = value.replace(/\w\S*/g, (word) =>
         word.charAt(0).toUpperCase() + word.slice(1).toUpperCase()
-        // word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
     )
 }
 
@@ -165,29 +165,23 @@ function removeLogo() {
     logoPreview.value = null
 }
 
-function selectProduct(type) {
-    form.product_type = type
-    currentStep.value = 1
-    stepErrors.value = {}
-}
-
-function backToProductSelect() {
-    form.product_type = ''
-    currentStep.value = 1
-    stepErrors.value = {}
+// Ganti jenis produk — navigasi ulang ke halaman register dengan query
+// param baru. Controller yang menangkap & set productType default-nya.
+function onSwitchProduct(type) {
+    showProductModal.value = false
+    if (type === form.product_type) return
+    router.get(route('tenant.register.form'), { product: type })
 }
 
 function validateStep(step) {
     stepErrors.value = {}
 
     if (isWorkspace.value) {
-        // Step 1: Detail Perusahaan — satu-satunya step dengan field wajib
         if (step === 1) {
             if (!form.school_name.trim()) stepErrors.value.school_name = 'Nama perusahaan wajib diisi.'
             if (!form.subdomain.trim()) stepErrors.value.subdomain = 'Subdomain wajib diisi.'
             if (!form.address.trim()) stepErrors.value.address = 'Alamat wajib diisi.'
         }
-        // Step 2 (Kontak Perusahaan) semua opsional, tidak perlu divalidasi
         return Object.keys(stepErrors.value).length === 0
     }
 
@@ -224,8 +218,9 @@ function nextStep() {
 }
 
 function prevStep() {
+    // Di step paling awal, "Kembali" langsung ke homepage
     if (currentStep.value <= 1) {
-        backToProductSelect()
+        router.visit('/')
         return
     }
     currentStep.value--
@@ -233,7 +228,6 @@ function prevStep() {
 }
 
 function submit() {
-    // Cek semua rule password terpenuhi (lewat ref ke komponen PasswordFields)
     const rules = passwordFieldsRef.value?.passwordRules ?? []
     if (rules.some((r) => !r.valid)) {
         stepErrors.value.admin_password = 'Password belum memenuhi semua syarat keamanan.'
@@ -275,421 +269,422 @@ onMounted(() => {
     <div class="register-page flex-col">
         <div class="register-card">
             <h1 class="register-title text-center">Saatnya transformasi bersama kami!</h1>
-            <p class="register-sub flex sm:flex-row flex-col text-center"><span>Daftar gratis sekarang juga.
+            <p class="register-sub flex sm:flex-row flex-col justify-center text-center gap-1"><span>Daftar gratis
+                    sekarang
+                    juga!
                 </span><span>Setup
                     otomatis
                     dalam hitungan menit.</span></p>
 
-            <!-- STEP 0: Pemilihan Produk -->
-            <ProductSelectScreen v-if="!form.product_type" :error="fieldError('product_type')"
-                @select="selectProduct" />
+            <div class="switch-product-row">
+                <button type="button" class="switch-product-link" @click="showProductModal = true">
+                    Mendaftar sebagai {{ isWorkspace ? 'Perusahaan / Workspace' : 'Sekolah / Lembaga Pendidikan' }} ·
+                    <span class="text-cyan">Ganti</span>
+                </button>
+            </div>
 
-            <template v-else>
-                <!-- Step indicator -->
-                <div class="steps-bar">
-                    <div v-for="n in totalSteps" :key="n" class="step-item">
-                        <div class="step-circle" :class="{
-                            'step-active': currentStep === n,
-                            'step-done': currentStep > n,
-                        }">
-                            <span v-if="currentStep > n">✓</span>
-                            <span v-else>{{ n }}</span>
-                        </div>
-                        <span class="step-label">
-                            {{ stepLabels[n - 1] }}
-                        </span>
-                        <div v-if="n < totalSteps" class="step-line" :class="{ 'step-line-done': currentStep > n }">
-                        </div>
+            <!-- Step indicator -->
+            <div class="steps-bar">
+                <div v-for="n in totalSteps" :key="n" class="step-item">
+                    <div class="step-circle" :class="{
+                        'step-active': currentStep === n,
+                        'step-done': currentStep > n,
+                    }">
+                        <span v-if="currentStep > n">✓</span>
+                        <span v-else>{{ n }}</span>
+                    </div>
+                    <span class="step-label">
+                        {{ stepLabels[n - 1] }}
+                    </span>
+                    <div v-if="n < totalSteps" class="step-line" :class="{ 'step-line-done': currentStep > n }">
                     </div>
                 </div>
+            </div>
 
-                <form @submit.prevent="submit" class="register-form">
+            <form @submit.prevent="submit" class="register-form">
 
-                    <transition name="fade-slide" mode="out-in">
-                        <!-- WORKSPACE STEP 1: Detail Perusahaan -->
-                        <div v-if="currentStep === 1 && isWorkspace" key="ws-step1">
-                            <div class="field">
-                                <label for="ws_school_name">* Nama Perusahaan</label>
-                                <input id="ws_school_name" type="text" :value="form.school_name"
-                                    @input="onSchoolNameInput" placeholder="PT Lumi Platforms Indonesia" />
-                                <div v-if="fieldError('school_name')" class="field-error">{{ fieldError('school_name')
-                                }}
+                <transition name="fade-slide" mode="out-in">
+                    <!-- WORKSPACE STEP 1: Detail Perusahaan -->
+                    <div v-if="currentStep === 1 && isWorkspace" key="ws-step1">
+                        <div class="field">
+                            <label for="ws_school_name">* Nama Perusahaan</label>
+                            <input id="ws_school_name" type="text" :value="form.school_name" @input="onSchoolNameInput"
+                                placeholder="PT Lumi Platforms Indonesia" />
+                            <div v-if="fieldError('school_name')" class="field-error">{{ fieldError('school_name')
+                            }}
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ws_subdomain">* URL / Link Akses Aplikasi</label>
+                            <div class="subdomain-input">
+                                <input id="ws_subdomain" type="text" v-model="form.subdomain" @input="onSubdomainInput"
+                                    placeholder="lumiplatforms" />
+                                <span class="subdomain-suffix">.{{ centralDomain }}</span>
+                            </div>
+                            <div v-if="fieldError('subdomain')" class="field-error">{{ fieldError('subdomain') }}
+                            </div>
+                            <p class="field-hint">Ini akan jadi alamat khusus workspace perusahaan Anda.</p>
+                        </div>
+
+                        <div class="field">
+                            <label>Logo Perusahaan <span class="optional-tag">(opsional, maks 15MB)</span></label>
+                            <div v-if="!logoPreview" class="logo-upload">
+                                <input type="file" accept="image/*" @change="onLogoChange" id="ws_logo"
+                                    class="logo-input" />
+                                <label for="ws_logo" class="logo-upload-label">
+                                    <span class="logo-upload-icon">📷</span>
+                                    <span>Klik untuk upload logo</span>
+                                    <span class="field-hint">PNG/JPG/WebP, maks 15MB</span>
+                                </label>
+                            </div>
+                            <div v-else class="logo-preview">
+                                <img :src="logoPreview" alt="Preview logo" />
+                                <button type="button" class="logo-remove" @click="removeLogo">✕</button>
+                            </div>
+                            <div v-if="fieldError('logo')" class="field-error">{{ fieldError('logo') }}</div>
+                        </div>
+
+                        <div class="field-divider"></div>
+
+                        <div class="field">
+                            <label for="ws_registration_number">Nomor Legalitas Perusahaan <span
+                                    class="optional-tag">(opsional, NIB/NPWP/Akta)</span></label>
+                            <input id="ws_registration_number" type="text" v-model="form.registration_number"
+                                placeholder="Masukkan nomor legalitas perusahaan" />
+                            <div v-if="fieldError('registration_number')" class="field-error">{{
+                                fieldError('registration_number') }}</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ws_address">* Alamat Lengkap Perusahaan</label>
+                            <textarea id="ws_address" v-model="form.address" rows="3"
+                                placeholder="Jl. Sudirman No. 1, Jakarta Selatan, 12190."></textarea>
+                            <div v-if="fieldError('address')" class="field-error">{{ fieldError('address') }}</div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        </div>
+                    </div>
+
+                    <!-- WORKSPACE STEP 2: Kontak Perusahaan -->
+                    <div v-else-if="currentStep === 2 && isWorkspace" key="ws-step2">
+                        <p class="step-intro">Informasi kontak ini akan ditampilkan sebagai kontak resmi
+                            perusahaan Anda di platform. Semua field pada step ini bersifat opsional.</p>
+
+                        <div class="field">
+                            <label for="ws_contact_phone">Nomor Telepon <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="ws_contact_phone" type="text" v-model="form.contact_phone"
+                                placeholder="Masukkan No.Telp Perusahaan" />
+                            <div v-if="fieldError('contact_phone')" class="field-error">{{
+                                fieldError('contact_phone') }}</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ws_institution_email">Alamat Email <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="ws_institution_email" type="email" v-model="form.institution_email"
+                                placeholder="info@perusahaan.co.id" />
+                            <div v-if="fieldError('institution_email')" class="field-error">{{
+                                fieldError('institution_email') }}</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ws_institution_website">Website Utama <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="ws_institution_website" type="text" v-model="form.institution_website"
+                                placeholder="https://perusahaan.co.id" />
+                            <div v-if="fieldError('institution_website')" class="field-error">{{
+                                fieldError('institution_website') }}</div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        </div>
+                    </div>
+
+                    <!-- WORKSPACE STEP 3: Akun Admin -->
+                    <div v-else-if="currentStep === 3 && isWorkspace" key="ws-step3">
+                        <p class="step-intro">Data ini akan digunakan untuk login / masuk ke halaman dashboard
+                            Lumiverse Workspace perusahaan Kamu.</p>
+
+                        <div class="field">
+                            <label for="ws_admin_name">* Nama Lengkap (Admin / PIC)</label>
+                            <input id="ws_admin_name" type="text" v-model="form.admin_name"
+                                placeholder="Budi Santoso" />
+                            <div v-if="fieldError('admin_name')" class="field-error">{{ fieldError('admin_name') }}
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ws_admin_email">* Alamat Email</label>
+                            <input id="ws_admin_email" type="email" v-model="form.admin_email"
+                                placeholder="budi@perusahaan.co.id" />
+                            <div v-if="fieldError('admin_email')" class="field-error">{{ fieldError('admin_email')
+                            }}
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="ws_admin_phone">* Nomor WhatsApp</label>
+                            <input id="ws_admin_phone" type="text" v-model="form.admin_phone"
+                                placeholder="08123456789" />
+                            <div v-if="fieldError('admin_phone')" class="field-error">{{ fieldError('admin_phone')
+                            }}
+                            </div>
+                        </div>
+
+                        <PasswordFields ref="passwordFieldsRef" v-model:password="form.admin_password"
+                            v-model:password-confirmation="form.admin_password_confirmation"
+                            :password-error="fieldError('admin_password')"
+                            :confirmation-error="fieldError('admin_password_confirmation')" />
+
+                        <div v-if="fieldError('school_name')" class="field-error submit-error">{{
+                            fieldError('school_name') }}</div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="submit" class="btn-hero step-next" :disabled="form.processing">
+                                {{ form.processing ? 'Sedang membuat akun...' : 'Daftar Sekarang' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 1: Jenis Lembaga -->
+                    <div v-else-if="currentStep === 1" key="step1">
+                        <div class="field">
+                            <label>Silakan Pilih Jenis Lembaga Pendidikan</label>
+                            <div class="institution-grid">
+                                <button v-for="opt in institutionOptions" :key="opt.value" type="button"
+                                    class="institution-card"
+                                    :class="{ 'institution-card-active': form.institution_type === opt.value }"
+                                    @click="form.institution_type = opt.value">
+                                    <span class="institution-icon">{{ opt.icon }}</span>
+                                    <span class="institution-label">{{ opt.label }}</span>
+                                    <span class="institution-desc">{{ opt.desc }}</span>
+                                </button>
+                            </div>
+                            <div v-if="fieldError('institution_type')" class="field-error">{{
+                                fieldError('institution_type') }}</div>
+                        </div>
+
+                        <transition name="fade-slide">
+                            <div v-if="isLainnya" class="field">
+                                <label for="institution_type_other">Nama Jenis Lembaga Anda</label>
+                                <input id="institution_type_other" type="text" v-model="form.institution_type_other"
+                                    placeholder="Contoh: Komunitas Belajar, Tutor, Private, PAUD, Pesantren dll" />
+                                <div v-if="fieldError('institution_type_other')" class="field-error">{{
+                                    fieldError('institution_type_other') }}</div>
+                            </div>
+                        </transition>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Data Lembaga -->
+                    <div v-else-if="currentStep === 2" key="step2">
+                        <div class="field">
+                            <label for="school_name">* Nama Lengkap Lembaga</label>
+                            <input id="school_name" type="text" :value="form.school_name" @input="onSchoolNameInput"
+                                placeholder="Lumi Boarding School" />
+                            <div v-if="fieldError('school_name')" class="field-error">{{ fieldError('school_name')
+                            }}
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="subdomain">* URL / Link Akses Aplikasi LMS</label>
+                            <div class="subdomain-input">
+                                <input id="subdomain" type="text" v-model="form.subdomain" @input="onSubdomainInput"
+                                    placeholder="smkluminous" />
+                                <span class="subdomain-suffix">.{{ centralDomain }}</span>
+                            </div>
+                            <div v-if="fieldError('subdomain')" class="field-error">{{ fieldError('subdomain') }}
+                            </div>
+                            <p class="field-hint">Ini akan jadi alamat khusus sekolah / lembaga yang Anda daftarkan.
+                            </p>
+                        </div>
+
+                        <div class="field">
+                            <label>Logo Utama <span class="optional-tag">(opsional, maks
+                                    15MB)</span></label>
+                            <div v-if="!logoPreview" class="logo-upload">
+                                <input type="file" accept="image/*" @change="onLogoChange" id="logo"
+                                    class="logo-input" />
+                                <label for="logo" class="logo-upload-label">
+                                    <span class="logo-upload-icon">📷</span>
+                                    <span>Klik untuk upload logo</span>
+                                    <span class="field-hint">PNG/JPG/WebP, maks 15MB</span>
+                                </label>
+                            </div>
+                            <div v-else class="logo-preview">
+                                <img :src="logoPreview" alt="Preview logo" />
+                                <button type="button" class="logo-remove" @click="removeLogo">✕</button>
+                            </div>
+                            <div v-if="fieldError('logo')" class="field-error">{{ fieldError('logo') }}</div>
+                        </div>
+
+                        <div class="field-divider"></div>
+
+                        <transition name="fade-slide" mode="out-in">
+                            <div v-if="isSchool" key="sekolah-fields" class="field-row">
+
+                                <div class="field">
+                                    <label for="school_level" class="field-label">* Tingkat / Jenjang</label>
+                                    <select id="school_level" v-model="form.school_level" class="field-input">
+                                        <option value="" disabled>Silakan Pilih jenjang</option>
+                                        <option v-for="lvl in schoolLevelOptions" :key="lvl.value" :value="lvl.value">
+                                            {{ lvl.label }}
+                                        </option>
+                                    </select>
+                                    <div v-if="fieldError('school_level')" class="field-error">{{
+                                        fieldError('school_level') }}</div>
+                                </div>
+
+                                <div class="field">
+                                    <label for="npsn">* NPSN <span class="optional-tag">(8 digit)</span></label>
+                                    <input id="npsn" type="text" inputmode="numeric" :value="form.npsn"
+                                        @input="onNpsnInput" maxlength="8" placeholder="20123456" />
+                                    <div v-if="fieldError('npsn')" class="field-error">{{ fieldError('npsn') }}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="field">
-                                <label for="ws_subdomain">* URL / Link Akses Aplikasi</label>
-                                <div class="subdomain-input">
-                                    <input id="ws_subdomain" type="text" v-model="form.subdomain"
-                                        @input="onSubdomainInput" placeholder="lumiplatforms" />
-                                    <span class="subdomain-suffix">.{{ centralDomain }}</span>
-                                </div>
-                                <div v-if="fieldError('subdomain')" class="field-error">{{ fieldError('subdomain') }}
-                                </div>
-                                <p class="field-hint">Ini akan jadi alamat khusus workspace perusahaan Anda.</p>
-                            </div>
-
-                            <div class="field">
-                                <label>Logo Perusahaan <span class="optional-tag">(opsional, maks 15MB)</span></label>
-                                <div v-if="!logoPreview" class="logo-upload">
-                                    <input type="file" accept="image/*" @change="onLogoChange" id="ws_logo"
-                                        class="logo-input" />
-                                    <label for="ws_logo" class="logo-upload-label">
-                                        <span class="logo-upload-icon">📷</span>
-                                        <span>Klik untuk upload logo</span>
-                                        <span class="field-hint">PNG/JPG/WebP, maks 15MB</span>
-                                    </label>
-                                </div>
-                                <div v-else class="logo-preview">
-                                    <img :src="logoPreview" alt="Preview logo" />
-                                    <button type="button" class="logo-remove" @click="removeLogo">✕</button>
-                                </div>
-                                <div v-if="fieldError('logo')" class="field-error">{{ fieldError('logo') }}</div>
-                            </div>
-
-                            <div class="field-divider"></div>
-
-                            <div class="field">
-                                <label for="ws_registration_number">Nomor Legalitas Perusahaan <span
-                                        class="optional-tag">(opsional, NIB/NPWP/Akta)</span></label>
-                                <input id="ws_registration_number" type="text" v-model="form.registration_number"
-                                    placeholder="Masukkan nomor legalitas perusahaan" />
+                            <div v-else-if="form.institution_type" key="non-sekolah-fields" class="field">
+                                <label for="registration_number">{{ registrationNumberLabel }}</label>
+                                <input id="registration_number" type="text" v-model="form.registration_number"
+                                    placeholder="Masukkan nomor legalitas" />
                                 <div v-if="fieldError('registration_number')" class="field-error">{{
                                     fieldError('registration_number') }}</div>
                             </div>
+                        </transition>
 
-                            <div class="field">
-                                <label for="ws_address">* Alamat Lengkap Perusahaan</label>
-                                <textarea id="ws_address" v-model="form.address" rows="3"
-                                    placeholder="Jl. Sudirman No. 1, Jakarta Selatan, 12190."></textarea>
-                                <div v-if="fieldError('address')" class="field-error">{{ fieldError('address') }}</div>
-                            </div>
+                        <div v-if="isSchool" class="field">
+                            <label for="nss">NSS <span class="optional-tag">(opsional, 12 digit)</span></label>
+                            <input id="nss" type="text" inputmode="numeric" :value="form.nss" @input="onNssInput"
+                                maxlength="12" placeholder="201234567890" />
+                            <div v-if="fieldError('nss')" class="field-error">{{ fieldError('nss') }}</div>
+                        </div>
 
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        <div v-if="isSchool" class="field">
+                            <label for="registration_number_school">Nomor Izin Pendirian / Operasional <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="registration_number_school" type="text" v-model="form.registration_number_school"
+                                placeholder="Masukkan nomor izin (jika ada)" />
+                            <div v-if="fieldError('registration_number_school')" class="field-error">{{
+                                fieldError('registration_number_school') }}</div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Kontak Lembaga -->
+                    <div v-else-if="currentStep === 3" key="step3">
+                        <div class="field">
+                            <label for="contact_phone">Nomor Telepon <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="contact_phone" type="text" v-model="form.contact_phone"
+                                placeholder="Masukkan No.Telp Sekolah / Lembaga Pendidikan" />
+                            <div v-if="fieldError('contact_phone')" class="field-error">{{
+                                fieldError('contact_phone') }}</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="institution_email">Alamat Email <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="institution_email" type="email" v-model="form.institution_email"
+                                placeholder="info@sekolah.sch.id" />
+                            <div v-if="fieldError('institution_email')" class="field-error">{{
+                                fieldError('institution_email') }}</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="institution_website">Website Utama <span
+                                    class="optional-tag">(opsional)</span></label>
+                            <input id="institution_website" type="text" v-model="form.institution_website"
+                                placeholder="https://sekolah.sch.id" />
+                            <div v-if="fieldError('institution_website')" class="field-error">{{
+                                fieldError('institution_website') }}</div>
+                        </div>
+
+                        <div class="field">
+                            <label for="address">* Alamat Lengkap (Lembaga)</label>
+                            <textarea id="address" v-model="form.address" rows="3"
+                                placeholder="Jl. Pendidikan No. 1, Bogor, Jawa Barat, 17820."></textarea>
+                            <div v-if="fieldError('address')" class="field-error">{{ fieldError('address') }}</div>
+                        </div>
+
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: Kontak Admin / PIC -->
+                    <div v-else-if="currentStep === 4" key="step4">
+                        <p class="step-intro">Data ini akan digunakan untuk login / masuk ke halaman dashboard
+                            lumiverse
+                            dan juga aplikasi LMS lembaga Kamu.</p>
+
+                        <div class="field">
+                            <label for="admin_name">* Nama Lengkap (Admin / PIC)</label>
+                            <input id="admin_name" type="text" v-model="form.admin_name" placeholder="Budi Santoso" />
+                            <div v-if="fieldError('admin_name')" class="field-error">{{ fieldError('admin_name') }}
                             </div>
                         </div>
 
-                        <!-- WORKSPACE STEP 2: Kontak Perusahaan -->
-                        <div v-else-if="currentStep === 2 && isWorkspace" key="ws-step2">
-                            <p class="step-intro">Informasi kontak ini akan ditampilkan sebagai kontak resmi
-                                perusahaan Anda di platform. Semua field pada step ini bersifat opsional.</p>
-
-                            <div class="field">
-                                <label for="ws_contact_phone">Nomor Telepon <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="ws_contact_phone" type="text" v-model="form.contact_phone"
-                                    placeholder="Masukkan No.Telp Perusahaan" />
-                                <div v-if="fieldError('contact_phone')" class="field-error">{{
-                                    fieldError('contact_phone') }}</div>
-                            </div>
-
-                            <div class="field">
-                                <label for="ws_institution_email">Alamat Email <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="ws_institution_email" type="email" v-model="form.institution_email"
-                                    placeholder="info@perusahaan.co.id" />
-                                <div v-if="fieldError('institution_email')" class="field-error">{{
-                                    fieldError('institution_email') }}</div>
-                            </div>
-
-                            <div class="field">
-                                <label for="ws_institution_website">Website Utama <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="ws_institution_website" type="text" v-model="form.institution_website"
-                                    placeholder="https://perusahaan.co.id" />
-                                <div v-if="fieldError('institution_website')" class="field-error">{{
-                                    fieldError('institution_website') }}</div>
-                            </div>
-
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
+                        <div class="field">
+                            <label for="admin_email">* Alamat Email</label>
+                            <input id="admin_email" type="email" v-model="form.admin_email"
+                                placeholder="budi@sekolah.id" />
+                            <div v-if="fieldError('admin_email')" class="field-error">{{ fieldError('admin_email')
+                            }}
                             </div>
                         </div>
 
-                        <!-- WORKSPACE STEP 3: Akun Admin -->
-                        <div v-else-if="currentStep === 3 && isWorkspace" key="ws-step3">
-                            <p class="step-intro">Data ini akan digunakan untuk login / masuk ke halaman dashboard
-                                Lumiverse Workspace perusahaan Kamu.</p>
-
-                            <div class="field">
-                                <label for="ws_admin_name">* Nama Lengkap (Admin / PIC)</label>
-                                <input id="ws_admin_name" type="text" v-model="form.admin_name"
-                                    placeholder="Budi Santoso" />
-                                <div v-if="fieldError('admin_name')" class="field-error">{{ fieldError('admin_name') }}
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label for="ws_admin_email">* Alamat Email</label>
-                                <input id="ws_admin_email" type="email" v-model="form.admin_email"
-                                    placeholder="budi@perusahaan.co.id" />
-                                <div v-if="fieldError('admin_email')" class="field-error">{{ fieldError('admin_email')
-                                }}
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label for="ws_admin_phone">* Nomor WhatsApp</label>
-                                <input id="ws_admin_phone" type="text" v-model="form.admin_phone"
-                                    placeholder="08123456789" />
-                                <div v-if="fieldError('admin_phone')" class="field-error">{{ fieldError('admin_phone')
-                                }}
-                                </div>
-                            </div>
-
-                            <PasswordFields ref="passwordFieldsRef" v-model:password="form.admin_password"
-                                v-model:password-confirmation="form.admin_password_confirmation"
-                                :password-error="fieldError('admin_password')"
-                                :confirmation-error="fieldError('admin_password_confirmation')" />
-
-                            <div v-if="fieldError('school_name')" class="field-error submit-error">{{
-                                fieldError('school_name') }}</div>
-
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="submit" class="btn-hero step-next" :disabled="form.processing">
-                                    {{ form.processing ? 'Sedang membuat akun...' : 'Daftar Sekarang' }}
-                                </button>
+                        <div class="field">
+                            <label for="admin_phone">* Nomor WhatsApp</label>
+                            <input id="admin_phone" type="text" v-model="form.admin_phone" placeholder="08123456789" />
+                            <div v-if="fieldError('admin_phone')" class="field-error">{{ fieldError('admin_phone')
+                            }}
                             </div>
                         </div>
 
-                        <!-- STEP 1: Jenis Lembaga -->
-                        <div v-else-if="currentStep === 1" key="step1">
-                            <div class="field">
-                                <label>Silakan Pilih Jenis Lembaga Pendidikan</label>
-                                <div class="institution-grid">
-                                    <button v-for="opt in institutionOptions" :key="opt.value" type="button"
-                                        class="institution-card"
-                                        :class="{ 'institution-card-active': form.institution_type === opt.value }"
-                                        @click="form.institution_type = opt.value">
-                                        <span class="institution-icon">{{ opt.icon }}</span>
-                                        <span class="institution-label">{{ opt.label }}</span>
-                                        <span class="institution-desc">{{ opt.desc }}</span>
-                                    </button>
-                                </div>
-                                <div v-if="fieldError('institution_type')" class="field-error">{{
-                                    fieldError('institution_type') }}</div>
-                            </div>
+                        <PasswordFields ref="passwordFieldsRef" v-model:password="form.admin_password"
+                            v-model:password-confirmation="form.admin_password_confirmation"
+                            :password-error="fieldError('admin_password')"
+                            :confirmation-error="fieldError('admin_password_confirmation')" />
 
-                            <transition name="fade-slide">
-                                <div v-if="isLainnya" class="field">
-                                    <label for="institution_type_other">Nama Jenis Lembaga Anda</label>
-                                    <input id="institution_type_other" type="text" v-model="form.institution_type_other"
-                                        placeholder="Contoh: Komunitas Belajar, Tutor, Private, PAUD, Pesantren dll" />
-                                    <div v-if="fieldError('institution_type_other')" class="field-error">{{
-                                        fieldError('institution_type_other') }}</div>
-                                </div>
-                            </transition>
+                        <div v-if="fieldError('school_name')" class="field-error submit-error">{{
+                            fieldError('school_name') }}</div>
 
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
-                            </div>
+                        <div class="step-actions">
+                            <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
+                            <button type="submit" class="btn-hero step-next" :disabled="form.processing">
+                                {{ form.processing ? 'Sedang membuat akun...' : 'Daftar Sekarang' }}
+                            </button>
                         </div>
+                    </div>
+                </transition>
+            </form>
 
-                        <!-- STEP 2: Data Lembaga -->
-                        <div v-else-if="currentStep === 2" key="step2">
-                            <div class="field">
-                                <label for="school_name">* Nama Lengkap Lembaga</label>
-                                <input id="school_name" type="text" :value="form.school_name" @input="onSchoolNameInput"
-                                    placeholder="Lumi Boarding School" />
-                                <div v-if="fieldError('school_name')" class="field-error">{{ fieldError('school_name')
-                                }}
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label for="subdomain">* URL / Link Akses Aplikasi LMS</label>
-                                <div class="subdomain-input">
-                                    <input id="subdomain" type="text" v-model="form.subdomain" @input="onSubdomainInput"
-                                        placeholder="smkluminous" />
-                                    <span class="subdomain-suffix">.{{ centralDomain }}</span>
-                                </div>
-                                <div v-if="fieldError('subdomain')" class="field-error">{{ fieldError('subdomain') }}
-                                </div>
-                                <p class="field-hint">Ini akan jadi alamat khusus sekolah / lembaga yang Anda daftarkan.
-                                </p>
-                            </div>
-
-                            <div class="field">
-                                <label>Logo Utama <span class="optional-tag">(opsional, maks
-                                        15MB)</span></label>
-                                <div v-if="!logoPreview" class="logo-upload">
-                                    <input type="file" accept="image/*" @change="onLogoChange" id="logo"
-                                        class="logo-input" />
-                                    <label for="logo" class="logo-upload-label">
-                                        <span class="logo-upload-icon">📷</span>
-                                        <span>Klik untuk upload logo</span>
-                                        <span class="field-hint">PNG/JPG/WebP, maks 15MB</span>
-                                    </label>
-                                </div>
-                                <div v-else class="logo-preview">
-                                    <img :src="logoPreview" alt="Preview logo" />
-                                    <button type="button" class="logo-remove" @click="removeLogo">✕</button>
-                                </div>
-                                <div v-if="fieldError('logo')" class="field-error">{{ fieldError('logo') }}</div>
-                            </div>
-
-                            <div class="field-divider"></div>
-
-                            <transition name="fade-slide" mode="out-in">
-                                <div v-if="isSchool" key="sekolah-fields" class="field-row">
-
-                                    <div class="field">
-                                        <label for="school_level" class="field-label">* Tingkat / Jenjang</label>
-                                        <select id="school_level" v-model="form.school_level" class="field-input">
-                                            <option value="" disabled>Silakan Pilih jenjang</option>
-                                            <option v-for="lvl in schoolLevelOptions" :key="lvl.value"
-                                                :value="lvl.value">
-                                                {{ lvl.label }}
-                                            </option>
-                                        </select>
-                                        <div v-if="fieldError('school_level')" class="field-error">{{
-                                            fieldError('school_level') }}</div>
-                                    </div>
-
-                                    <div class="field">
-                                        <label for="npsn">* NPSN <span class="optional-tag">(8 digit)</span></label>
-                                        <input id="npsn" type="text" inputmode="numeric" :value="form.npsn"
-                                            @input="onNpsnInput" maxlength="8" placeholder="20123456" />
-                                        <div v-if="fieldError('npsn')" class="field-error">{{ fieldError('npsn') }}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div v-else-if="form.institution_type" key="non-sekolah-fields" class="field">
-                                    <label for="registration_number">{{ registrationNumberLabel }}</label>
-                                    <input id="registration_number" type="text" v-model="form.registration_number"
-                                        placeholder="Masukkan nomor legalitas" />
-                                    <div v-if="fieldError('registration_number')" class="field-error">{{
-                                        fieldError('registration_number') }}</div>
-                                </div>
-                            </transition>
-
-                            <div v-if="isSchool" class="field">
-                                <label for="nss">NSS <span class="optional-tag">(opsional, 12 digit)</span></label>
-                                <input id="nss" type="text" inputmode="numeric" :value="form.nss" @input="onNssInput"
-                                    maxlength="12" placeholder="201234567890" />
-                                <div v-if="fieldError('nss')" class="field-error">{{ fieldError('nss') }}</div>
-                            </div>
-
-                            <div v-if="isSchool" class="field">
-                                <label for="registration_number_school">Nomor Izin Pendirian / Operasional <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="registration_number_school" type="text"
-                                    v-model="form.registration_number_school"
-                                    placeholder="Masukkan nomor izin (jika ada)" />
-                                <div v-if="fieldError('registration_number_school')" class="field-error">{{
-                                    fieldError('registration_number_school') }}</div>
-                            </div>
-
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
-                            </div>
-                        </div>
-
-                        <!-- STEP 3: Kontak Lembaga -->
-                        <div v-else-if="currentStep === 3" key="step3">
-                            <div class="field">
-                                <label for="contact_phone">Nomor Telepon <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="contact_phone" type="text" v-model="form.contact_phone"
-                                    placeholder="Masukkan No.Telp Sekolah / Lembaga Pendidikan" />
-                                <div v-if="fieldError('contact_phone')" class="field-error">{{
-                                    fieldError('contact_phone') }}</div>
-                            </div>
-
-                            <div class="field">
-                                <label for="institution_email">Alamat Email <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="institution_email" type="email" v-model="form.institution_email"
-                                    placeholder="info@sekolah.sch.id" />
-                                <div v-if="fieldError('institution_email')" class="field-error">{{
-                                    fieldError('institution_email') }}</div>
-                            </div>
-
-                            <div class="field">
-                                <label for="institution_website">Website Utama <span
-                                        class="optional-tag">(opsional)</span></label>
-                                <input id="institution_website" type="text" v-model="form.institution_website"
-                                    placeholder="https://sekolah.sch.id" />
-                                <div v-if="fieldError('institution_website')" class="field-error">{{
-                                    fieldError('institution_website') }}</div>
-                            </div>
-
-                            <div class="field">
-                                <label for="address">* Alamat Lengkap (Lembaga)</label>
-                                <textarea id="address" v-model="form.address" rows="3"
-                                    placeholder="Jl. Pendidikan No. 1, Bogor, Jawa Barat, 17820."></textarea>
-                                <div v-if="fieldError('address')" class="field-error">{{ fieldError('address') }}</div>
-                            </div>
-
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="button" class="btn-hero step-next" @click="nextStep">Selanjutnya</button>
-                            </div>
-                        </div>
-
-                        <!-- STEP 4: Kontak Admin / PIC -->
-                        <div v-else-if="currentStep === 4" key="step4">
-                            <p class="step-intro">Data ini akan digunakan untuk login / masuk ke halaman dashboard
-                                lumiverse
-                                dan juga aplikasi LMS lembaga Kamu.</p>
-
-                            <div class="field">
-                                <label for="admin_name">* Nama Lengkap (Admin / PIC)</label>
-                                <input id="admin_name" type="text" v-model="form.admin_name"
-                                    placeholder="Budi Santoso" />
-                                <div v-if="fieldError('admin_name')" class="field-error">{{ fieldError('admin_name') }}
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label for="admin_email">* Alamat Email</label>
-                                <input id="admin_email" type="email" v-model="form.admin_email"
-                                    placeholder="budi@sekolah.id" />
-                                <div v-if="fieldError('admin_email')" class="field-error">{{ fieldError('admin_email')
-                                }}
-                                </div>
-                            </div>
-
-                            <div class="field">
-                                <label for="admin_phone">* Nomor WhatsApp</label>
-                                <input id="admin_phone" type="text" v-model="form.admin_phone"
-                                    placeholder="08123456789" />
-                                <div v-if="fieldError('admin_phone')" class="field-error">{{ fieldError('admin_phone')
-                                }}
-                                </div>
-                            </div>
-
-                            <PasswordFields ref="passwordFieldsRef" v-model:password="form.admin_password"
-                                v-model:password-confirmation="form.admin_password_confirmation"
-                                :password-error="fieldError('admin_password')"
-                                :confirmation-error="fieldError('admin_password_confirmation')" />
-
-                            <div v-if="fieldError('school_name')" class="field-error submit-error">{{
-                                fieldError('school_name') }}</div>
-
-                            <div class="step-actions">
-                                <button type="button" class="btn-ghost-step" @click="prevStep">Kembali</button>
-                                <button type="submit" class="btn-hero step-next" :disabled="form.processing">
-                                    {{ form.processing ? 'Sedang membuat akun...' : 'Daftar Sekarang' }}
-                                </button>
-                            </div>
-                        </div>
-                    </transition>
-                </form>
-
-                <p class="register-footer">
-                    Sudah terdaftar?
-                    <Link :href="route('owner.login')" class="text-cyan">Masuk di sini</Link>
-                </p>
-            </template>
+            <p class="register-footer">
+                Sudah terdaftar?
+                <Link :href="route('owner.login')" class="text-cyan">Masuk di sini</Link>
+            </p>
         </div>
+
+        <ProductSelectModal :show="showProductModal" @close="showProductModal = false" @select="onSwitchProduct" />
     </div>
 </template>
 
@@ -722,7 +717,29 @@ onMounted(() => {
 .register-sub {
     font-size: 0.9rem;
     color: var(--muted);
-    margin-bottom: 2rem;
+    margin-bottom: 1.25rem;
+}
+
+.switch-product-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.switch-product-link {
+    font-size: 0.8rem;
+    color: var(--muted);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.switch-product-link:hover {
+    border-color: rgba(0, 212, 255, 0.35);
+    color: var(--white);
 }
 
 .step-intro {
@@ -851,13 +868,6 @@ onMounted(() => {
     font-weight: 600;
     color: var(--muted);
     letter-spacing: 0.04em;
-}
-
-.field-optional {
-    font-weight: 400;
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 0.74rem;
 }
 
 .field-input:focus {
