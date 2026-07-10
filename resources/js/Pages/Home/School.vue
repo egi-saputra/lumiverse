@@ -18,51 +18,58 @@ import { onMounted } from 'vue'
 defineOptions({ layout: LandingLayout })
 
 useHead({
-    // title: 'Lumi Platforms Smart Learning System',
+    title: 'Lumiverse — Sistem LMS Sekolah Berbasis Cloud',
     meta: [
         {
             name: 'description',
-            content: 'Lumiverse merupakan The All in One Growth System Platform berbasis cloud pertama di Indonesia, yang hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan atau lembaga pendidikan.',
-        },
-        {
-            name: 'keywords',
-            content: 'LMS Indonesia, Learning Management System, platform belajar online, sistem manajemen sekolah, e-learning sekolah, Smart School, Sekolah Digital, Digitalisasi Sekolah, Ujian Online, Guru Pejuang Digital, LMS SD, LMS SMP, LMS SMK, LMS pesantren, LMS Pendidikan, LUMIVERSE, LUMIVERSE SCHOOL, Lumiverse School, LUMI WORKSPACE, Lumi Workspace, LUMI CLASSROOM, Lumi Classroom, PT LUMI PLATFORMS INDONESIA, PT Lumi Platforms Indonesia, pt lumi platforms indonesia',
+            // 145 karakter — aman tidak dipotong Google (< 160)
+            content: 'Lumiverse adalah LMS berbasis cloud untuk sekolah dan lembaga pendidikan di Indonesia: kelola kelas, ujian online, dan nilai dalam satu platform.',
         },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://lumiverse.co.id/' },
-        { property: 'og:title', content: 'Lumiverse — The All in One Growth System Platform' },
+        { property: 'og:title', content: 'Lumiverse — Sistem LMS Sekolah Berbasis Cloud' },
         {
             property: 'og:description',
-            content: 'Platform LMS dan Workspace berbasis cloud yang cepat, aman, dan dirancang khusus untuk sekolah, lembaga pendidikan, perusahaan dan korporasi di Indonesia.',
+            content: 'Platform LMS cloud untuk sekolah, pesantren, dan lembaga pendidikan di Indonesia. Kelola kelas, ujian online, dan nilai siswa dalam satu sistem.',
         },
-        { property: 'og:image', content: 'https://lumiverse.co.id/og-image.jpg' },
+        { property: 'og:image', content: 'https://lumiverse.co.id/og-image-lms.jpg' },
         { property: 'og:locale', content: 'id_ID' },
         { name: 'twitter:card', content: 'summary_large_image' },
-        { name: 'twitter:title', content: 'Lumiverse — Platform LMS dan Workspace Modern' },
-        { name: 'twitter:description', content: 'Platform LMS dan Workspace berbasis cloud untuk sekolah, lembaga pendidikan, perusahaan dan korporasi di Indonesia. Cepat, aman, profesional.' },
-        { name: 'twitter:image', content: 'https://lumiverse.co.id/og-image.jpg' },
+        { name: 'twitter:title', content: 'Lumiverse — Sistem LMS Sekolah Berbasis Cloud' },
+        { name: 'twitter:description', content: 'LMS cloud untuk sekolah dan lembaga pendidikan di Indonesia. Cepat, aman, dan mudah digunakan guru maupun siswa.' },
+        { name: 'twitter:image', content: 'https://lumiverse.co.id/og-image-lms.jpg' },
+    ],
+    link: [
+        { rel: 'canonical', href: 'https://lumiverse.co.id/' },
     ],
     script: [
         {
             type: 'application/ld+json',
             children: JSON.stringify({
                 '@context': 'https://schema.org',
-                '@type': 'Organization',
-                name: 'Lumiverse',
+                '@type': 'SoftwareApplication',
+                name: 'Lumiverse LMS',
+                applicationCategory: 'EducationalApplication',
+                operatingSystem: 'Web',
                 url: 'https://lumiverse.co.id',
-                logo: 'https://lumiverse.co.id/logo.svg',
-                description: 'Platform LMS dan Workspace berbasis cloud untuk sekolah, lembaga pendidikan, perusahaan dan korporasi di Indonesia.',
-                address: { '@type': 'PostalAddress', addressLocality: 'Bogor', addressCountry: 'ID' },
-                contactPoint: {
-                    '@type': 'ContactPoint',
-                    contactType: 'customer support',
-                    email: 'info@lumiverse.co.id',
-                    availableLanguage: ['Indonesian', 'English'],
+                description: 'Platform Learning Management System (LMS) berbasis cloud untuk sekolah, pesantren, dan lembaga pendidikan di Indonesia.',
+                provider: {
+                    '@type': 'Organization',
+                    name: 'PT Lumi Platforms Indonesia',
+                    url: 'https://lumiverse.co.id',
+                    logo: 'https://lumiverse.co.id/logo.svg',
+                    address: { '@type': 'PostalAddress', addressLocality: 'Bogor', addressCountry: 'ID' },
+                    contactPoint: {
+                        '@type': 'ContactPoint',
+                        contactType: 'customer support',
+                        email: 'info@lumiverse.co.id',
+                        availableLanguage: ['Indonesian', 'English'],
+                    },
+                    sameAs: [
+                        'https://linkedin.com/company/lumiverse',
+                        'https://instagram.com/lumiverse',
+                    ],
                 },
-                sameAs: [
-                    'https://linkedin.com/company/lumiverse',
-                    'https://instagram.com/lumiverse',
-                ],
             }),
         },
     ],
