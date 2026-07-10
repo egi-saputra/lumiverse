@@ -134,10 +134,7 @@ const schoolLevelLabel = computed(() => {
     return props.tenant.school_level ? map[props.tenant.school_level] || props.tenant.school_level : null
 })
 
-const logoUrl = computed(() => {
-    if (!props.tenant.logo_path) return null
-    return `/storage/central/${props.tenant.logo_path}`
-})
+const logoUrl = computed(() => props.tenant.logo_url ?? null)
 
 // ─── Label & teks kondisional per product_type ─────────────────────────────────
 const pageLead = computed(() => isWorkspace.value

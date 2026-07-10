@@ -53,6 +53,7 @@ class ProfilController extends Controller
                 'institution_website'    => $tenant->institution_website,
                 'address'                => $tenant->address,
                 'logo_path'              => $tenant->logo_path,
+                'logo_url'               => $tenant->logo_url,
             ],
         ]);
     }

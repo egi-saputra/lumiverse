@@ -126,7 +126,7 @@ textarea,
 /* Cegah gambar bisa di-drag/save */
 img {
     -webkit-user-drag: none;
-    user-drag: none;
+    /* user-drag: none; */
     pointer-events: none; /* opsional: gambar jadi tidak bisa diklik/di-tap sama sekali */
 }
 

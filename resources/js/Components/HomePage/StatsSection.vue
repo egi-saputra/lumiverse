@@ -1,6 +1,6 @@
 <script setup>
 const stats = [
-    { num: '100', suffix: '+', color: 'cyan', label: 'Lembaga Pendidikan, Komunitas Belajar, Perusahaan & Korporasi' },
+    { num: '100', suffix: '+', color: 'cyan', label: 'Sekolah, Komunitas Belajar, Bimbel & Lembaga Pendidikan Lainnya' },
     { num: '75K', suffix: '+', color: 'gold', label: 'Pengguna Aktif Dari Berbagai Institusi' },
     { num: '99.97', suffix: '%', color: 'white', label: 'Uptime Dijamin' },
     { num: '4.9', suffix: '★', color: 'green', label: 'Rating Kepuasan' },
@@ -32,11 +32,10 @@ const stats = [
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border);
     border: 1px solid var(--border);
     border-radius: 20px;
     overflow: hidden;
+    /* hapus gap & background */
 }
 
 .stat-item {
@@ -44,6 +43,12 @@ const stats = [
     padding: 2.5rem 2rem;
     text-align: center;
     transition: background 0.3s;
+    border-right: 1px solid var(--border);
+}
+
+/* item terakhir di tiap baris tidak perlu border kanan */
+.stat-item:last-child {
+    border-right: none;
 }
 
 .stat-item:hover {
@@ -86,6 +91,15 @@ const stats = [
 @media (max-width: 1024px) {
     .stats-grid {
         grid-template-columns: repeat(1, 1fr);
+    }
+
+    .stat-item {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .stat-item:last-child {
+        border-bottom: none;
     }
 }
 

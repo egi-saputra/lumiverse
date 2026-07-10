@@ -305,7 +305,7 @@ class TenantRegistrationController extends Controller
 
     protected function ensureCentralStorageExists(): void
     {
-        $path = public_path('storage/central/tenant-logos');
+        $path = public_path('tenant-assets/tenant-logos');
         if (!file_exists($path)) {
             mkdir($path, 0755, true);
         }

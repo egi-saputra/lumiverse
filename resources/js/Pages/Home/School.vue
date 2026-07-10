@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/vue3'
 import LandingLayout from '@/Layouts/LandingLayout.vue'
 import HeroSection from '@/Components/HomePage/HeroSection.vue'
 // import AboutSection from '@/Components/HomePage/AboutSection.vue'
-// import LogosSection from '@/Components/HomePage/LogosSection.vue'
+import LogosSection from '@/Components/HomePage/LogosSection.vue'
 import StatsSection from '@/Components/HomePage/StatsSection.vue'
 import FeaturesSection from '@/Components/HomePage/FeaturesSection.vue'
 import HowItWorksSection from '@/Components/HomePage/HowItWorksSection.vue'
@@ -15,22 +15,24 @@ import LegalitasSection from '@/Components/HomePage/LegalitasSection.vue'
 import CtaSection from '@/Components/HomePage/CtaSection.vue'
 import { onMounted } from 'vue'
 
-defineOptions({ layout: LandingLayout })
+defineOptions({
+    layout: LandingLayout,
+})
 
 useHead({
-    title: 'Lumiverse — Sistem LMS Sekolah Berbasis Cloud',
+    title: 'Lumiverse — Platform LMS Sekolah Gratis Berbasis Cloud',
     meta: [
         {
             name: 'description',
             // 145 karakter — aman tidak dipotong Google (< 160)
-            content: 'Lumiverse adalah LMS berbasis cloud untuk sekolah dan lembaga pendidikan di Indonesia: kelola kelas, ujian online, dan nilai dalam satu platform.',
+            content: 'Lumiverse adalah sebuah platform Learning Management System (LMS) berbasis cloud untuk sekolah dan lembaga pendidikan di Indonesia: kelola kelas, ujian online, dan nilai dalam satu platform.',
         },
         { property: 'og:type', content: 'website' },
         { property: 'og:url', content: 'https://lumiverse.co.id/' },
-        { property: 'og:title', content: 'Lumiverse — Sistem LMS Sekolah Berbasis Cloud' },
+        { property: 'og:title', content: 'Lumiverse — Platform LMS Sekolah Gratis Berbasis Cloud' },
         {
             property: 'og:description',
-            content: 'Platform LMS cloud untuk sekolah, pesantren, dan lembaga pendidikan di Indonesia. Kelola kelas, ujian online, dan nilai siswa dalam satu sistem.',
+            content: 'Platform LMS gratis berbasis cloud untuk sekolah, pesantren, dan lembaga pendidikan di Indonesia. Kelola kelas, materi pembelajaran online, tugas harian siswa, ujian online, rekap nilai siswa otomatis, rapor digital, presensi siswa, rekap absensi siswa otomatis dalam satu sistem.',
         },
         { property: 'og:image', content: 'https://lumiverse.co.id/og-image-lms.jpg' },
         { property: 'og:locale', content: 'id_ID' },
@@ -48,7 +50,7 @@ useHead({
             children: JSON.stringify({
                 '@context': 'https://schema.org',
                 '@type': 'SoftwareApplication',
-                name: 'Lumiverse LMS',
+                name: 'Lumiverse School',
                 applicationCategory: 'EducationalApplication',
                 operatingSystem: 'Web',
                 url: 'https://lumiverse.co.id',
@@ -86,7 +88,7 @@ onMounted(() => {
     <Head title="Lumiverse" />
     <HeroSection />
     <!-- <AboutSection /> -->
-    <!-- <LogosSection /> -->
+    <LogosSection />
     <StatsSection />
     <FeaturesSection />
     <HowItWorksSection />

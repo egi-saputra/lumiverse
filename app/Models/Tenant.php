@@ -8,6 +8,7 @@ use Stancl\Tenancy\Database\Concerns\HasDatabase;
 use Stancl\Tenancy\Database\Concerns\HasDomains;
 use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 
 class Tenant extends BaseTenant implements TenantWithDatabase
@@ -43,6 +44,16 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'registration_number', 'contact_phone', 'institution_email',
             'institution_website', 'address', 'logo_path',
         ];
+    }
+
+    /**
+     * URL publik logo tenant, null kalau belum upload.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->logo_path
+            ? Storage::disk('central_public')->url($this->logo_path)
+            : null;
     }
 
     /**

@@ -69,9 +69,11 @@ return [
 
         'central_public' => [
             'driver' => 'local',
-            'root' => public_path('storage/central'),
-            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/central',
+            'root' => public_path('tenant-assets'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/tenant-assets',
             'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
         ],
 
     ],
