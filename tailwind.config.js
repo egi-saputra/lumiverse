@@ -21,6 +21,7 @@ export default {
                 montserrat: ["Montserrat", "sans-serif"],
                 display: ["Cormorant Garamond"],
                 body: ["Plus Jakarta Sans"],
+                geist: ["Geist"],
                 poppins: ["Poppins", "sans-serif"],
                 raleway: ["Raleway", "sans-serif"],
                 inter: ["Inter", "sans-serif"],

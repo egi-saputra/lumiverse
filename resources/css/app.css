@@ -8,20 +8,21 @@
    ─────────────────────────────────────────────────────── */
 /* ─── TOKENS ──────────────────────────────────────────── */
 :root {
-    --midnight: #f8f9ff; /* sebelumnya selalu gelap, sekarang default terang */
+    --midnight: #f8f9ff;
     --navy: #ffffff;
     --navy-light: #f1f3f9;
-    --cyan: #0ea5c4; /* opsional: sesuaikan supaya kontras cukup di light */
+    --cyan: #0ea5c4;
     --cyan-dim: #0b8aa6;
     --gold: #f5a623;
     --gold-dim: #c98a1a;
-    --white: #0b1120; /* nama "white" tapi fungsinya text utama, jadi gelap di light mode */
+    --white: #0b1120;
     --muted: #64748b;
     --border: rgba(15, 23, 42, 0.08);
     --glass: rgba(15, 23, 42, 0.03);
     --font-display: "Plus Jakarta Sans", sans-serif;
     --font-body: "Inter", sans-serif;
     --font-mono: "JetBrains Mono", monospace;
+    --font-geist: "Geist Sans", "Inter", sans-serif;
 }
 
 .dark {
@@ -56,6 +57,7 @@ body {
     font-family: var(--font-body);
     line-height: 1.6;
     overflow-x: hidden;
+    height: 100%;
     -webkit-font-smoothing: antialiased;
 }
 a {
@@ -78,11 +80,11 @@ body {
     -ms-user-select: none;
     user-select: none;
 
-    -webkit-touch-callout: none; /* nonaktifkan popup "Copy/Save Image" saat long-press di iOS */
-    -webkit-tap-highlight-color: transparent; /* hilangkan efek highlight abu-abu saat tap */
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
-/* Tetap izinkan select untuk input & textarea, biar user masih bisa isi form */
+/* Tetap izinkan select untuk input & textarea, agar user masih bisa isi form */
 input,
 textarea,
 [contenteditable="true"] {
@@ -121,7 +123,7 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
     -webkit-box-shadow: 0 0 0px 1000px white inset !important;
-    -webkit-text-fill-color: #1f2937 !important; /* gray-800 */
+    -webkit-text-fill-color: #1f2937 !important;
     caret-color: #1f2937;
     transition: background-color 5000s ease-in-out 0s;
 }
@@ -548,6 +550,8 @@ svg path {
 .container {
     /* max-width: 1400px; */
     max-width: 95vw;
+    height: 100vh;
+    overflow-y: auto;
     margin: 0 auto;
     padding: 0 1.5rem;
 }

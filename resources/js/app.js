@@ -1,6 +1,6 @@
 import "../css/app.css";
 import "./bootstrap";
-// import "./anti-copy.js";
+import "./anti-copy.js";
 
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
@@ -34,7 +34,7 @@ createInertiaApp({
         ? {
               color: "#2563EB",
               includeCSS: true,
-              showSpinner: true,
+              showSpinner: false,
           }
         : false,
     // progress: {

@@ -74,22 +74,17 @@ onUnmounted(() => {
                     <img src="/images/logo-dark.png" alt="Lumiverse" class="h-8 object-cover scale-150 flex" />
                     <div class="text-2xl font-semibold logo-text-static">
                         Lumiverse
-                        <!-- <span class="logo-text-wrap sm:inline-flex hidden">
-                            <Transition name="slide-up">
-                                <span :key="activeBrand" class="logo-text-inner text-cyan">{{
-                                    brandVariants[activeBrand].suffix }}</span>
-                            </Transition>
-                        </span> -->
                     </div>
                 </a>
 
                 <ul class="nav-links" role="list">
                     <li><a href="#hero" @click.prevent="scrollTo('#hero')">Beranda</a></li>
                     <!-- <li><a href="#about" @click.prevent="scrollTo('#about')">Tentang Kami</a></li> -->
-                    <li><a href="#fitur" @click.prevent="scrollTo('#fitur')">Fitur Aplikasi</a></li>
+                    <li><a href="#hero" @click.prevent="scrollTo('#hero')">Artikel</a></li>
+                    <li><a href="#fitur" @click.prevent="scrollTo('#fitur')">Fitur & Layanan</a></li>
                     <li><a href="#cara-kerja" @click.prevent="scrollTo('#cara-kerja')">Dokumentasi</a></li>
-                    <li><a href="#harga" @click.prevent="scrollTo('#harga')">Paket Harga</a></li>
-                    <li><a href="#testimonial" @click.prevent="scrollTo('#testimonial')">Testimoni</a></li>
+                    <!-- <li><a href="#harga" @click.prevent="scrollTo('#harga')">Paket Harga</a></li> -->
+                    <!-- <li><a href="#testimonial" @click.prevent="scrollTo('#testimonial')">Testimoni</a></li> -->
                     <!-- <li><a href="#legalitas" @click.prevent="scrollTo('#legalitas')">Legalitas</a></li> -->
                 </ul>
 
@@ -130,14 +125,14 @@ onUnmounted(() => {
 <style scoped>
 /* ── Navbar ─────────────────────────────────────────── */
 .navbar {
-    position: sticky;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 100;
     /* GPU layer — tidak ada reflow saat scroll */
-    /* transform: translateZ(0);
-    will-change: transform; */
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 /* Backdrop sebagai layer terpisah — tidak menggeser layout konten */

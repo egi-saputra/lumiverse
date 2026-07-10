@@ -14,15 +14,25 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+// $centralDomains = config('tenancy.central_domains');
+
+// Route::domain('{domain}')
+//     ->where(['domain' => implode('|', array_map('preg_quote', $centralDomains))])
+//     ->middleware(['web'])
+//     ->group(function () {
+
 $centralDomains = config('tenancy.central_domains');
 
-Route::domain('{domain}')
-    ->where(['domain' => implode('|', array_map('preg_quote', $centralDomains))])
-    ->middleware(['web'])
-    ->group(function () {
+foreach ($centralDomains as $domain) {
+
+    Route::domain($domain)
+        ->middleware('web')
+        ->group(function () {
 
         Route::get('/', function () {
-            return Inertia::render('Landing/Home', [
+            return Inertia::render('Home/School', [
+                // 'canLogin' => Route::has('login'),
+                // 'canRegister' => Route::has('register'),
                 'laravelVersion' => Application::VERSION,
                 'phpVersion' => PHP_VERSION,
             ]);
@@ -106,4 +116,6 @@ Route::domain('{domain}')
 
         Route::post('/registration/suggest-subdomain', [TenantRegistrationController::class, 'suggestSubdomain'])
             ->name('tenant.suggest-subdomain');
+    // });
     });
+}

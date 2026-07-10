@@ -313,7 +313,7 @@ onMounted(() => {
                                 <input id="ws_school_name" type="text" :value="form.school_name"
                                     @input="onSchoolNameInput" placeholder="PT Lumi Platforms Indonesia" />
                                 <div v-if="fieldError('school_name')" class="field-error">{{ fieldError('school_name')
-                                    }}
+                                }}
                                 </div>
                             </div>
 
@@ -427,7 +427,7 @@ onMounted(() => {
                                 <input id="ws_admin_email" type="email" v-model="form.admin_email"
                                     placeholder="budi@perusahaan.co.id" />
                                 <div v-if="fieldError('admin_email')" class="field-error">{{ fieldError('admin_email')
-                                    }}
+                                }}
                                 </div>
                             </div>
 
@@ -436,7 +436,7 @@ onMounted(() => {
                                 <input id="ws_admin_phone" type="text" v-model="form.admin_phone"
                                     placeholder="08123456789" />
                                 <div v-if="fieldError('admin_phone')" class="field-error">{{ fieldError('admin_phone')
-                                    }}
+                                }}
                                 </div>
                             </div>
 
@@ -497,7 +497,7 @@ onMounted(() => {
                                 <input id="school_name" type="text" :value="form.school_name" @input="onSchoolNameInput"
                                     placeholder="Lumi Boarding School" />
                                 <div v-if="fieldError('school_name')" class="field-error">{{ fieldError('school_name')
-                                    }}
+                                }}
                                 </div>
                             </div>
 
@@ -653,7 +653,7 @@ onMounted(() => {
                                 <input id="admin_email" type="email" v-model="form.admin_email"
                                     placeholder="budi@sekolah.id" />
                                 <div v-if="fieldError('admin_email')" class="field-error">{{ fieldError('admin_email')
-                                    }}
+                                }}
                                 </div>
                             </div>
 
@@ -662,7 +662,7 @@ onMounted(() => {
                                 <input id="admin_phone" type="text" v-model="form.admin_phone"
                                     placeholder="08123456789" />
                                 <div v-if="fieldError('admin_phone')" class="field-error">{{ fieldError('admin_phone')
-                                    }}
+                                }}
                                 </div>
                             </div>
 

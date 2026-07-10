@@ -6,8 +6,9 @@ const variants = [
     {
         platform: 'LMS',
         audience: 'sekolah Indonesia',
+        title: 'Digitalisasi',
         subject: 'Pembelajaran',
-        pace: 'Cepat,'
+        pace: 'Cerdas,'
     },
     // {
     //     platform: 'Classroom',
@@ -18,8 +19,9 @@ const variants = [
     {
         platform: 'Workspace',
         audience: 'Bisnis Anda',
-        subject: 'Pengembangan',
-        pace: 'Cerdas,'
+        title: 'Kelola Sistem',
+        subject: 'Administrasi',
+        pace: 'Cepat,'
         // pace: 'Cermat,'
     }
 ]
@@ -71,7 +73,13 @@ onUnmounted(() => {
                     </div>
 
                     <h1 class="hero-title" id="hero-title">
-                        Kelola Sistem
+                        <span class="word-slot-h word-slot-h-title">
+                            <Transition name="slide-up">
+
+                                <span :key="variants[activeIndex].title" class="word-inner-h">{{
+                                    variants[activeIndex].title }}</span>
+                            </Transition>
+                        </span>
                         <span class="word-slot-h word-slot-h-title">
                             <Transition name="slide-horizontal">
                                 <span :key="variants[activeIndex].subject" class="word-inner-h">{{

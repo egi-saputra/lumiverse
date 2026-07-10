@@ -20,6 +20,9 @@ return [
         '127.0.0.1',
         'localhost',
         env('CENTRAL_DOMAIN'),
+        'lumiverse.co.id',
+        'www.lumiverse.co.id',
+        'workspace.lumiverse.co.id',
     ]),
 
     /**
