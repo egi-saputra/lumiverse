@@ -74,7 +74,7 @@ watch(() => props.show, (val) => {
                                 </span>
 
                                 <span class="product-name">{{ p.brand }} <span class="text-cyan">{{ p.name
-                                        }}</span></span>
+                                }}</span></span>
                                 <span class="product-tagline">{{ p.tagline }}</span>
                                 <span class="product-desc">{{ p.desc }}</span>
 
@@ -108,7 +108,7 @@ watch(() => props.show, (val) => {
     display: flex;
     align-items: center;
     justify-content: center;
-    /* padding: 1.5rem; */
+    padding: 1.5rem;
     z-index: 1000;
 }
 
@@ -116,7 +116,7 @@ watch(() => props.show, (val) => {
     position: relative;
     width: 100%;
     max-width: 760px;
-    max-height: 100vh;
+    max-height: 90vh;
     overflow-y: auto;
     background: var(--navy);
     border: 1px solid var(--border);

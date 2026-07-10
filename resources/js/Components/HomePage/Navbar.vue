@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, inject } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
 const isScrolled = ref(false)
 const isMenuOpen = ref(false)
+const scrollRoot = inject('scrollRoot')
 
 const navItems = [
     { id: 'hero', href: '#hero', label: 'Beranda' },
@@ -27,12 +28,11 @@ const activeBrand = ref(0)
 let brandIntervalId = null
 
 function handleScroll() {
-    isScrolled.value = window.scrollY > 40
+    isScrolled.value = (scrollRoot?.value?.scrollTop ?? 0) > 40
 }
 
 function scrollTo(id) {
     isMenuOpen.value = false
-    // Delay sedikit biar dropdown selesai tutup dulu
     setTimeout(() => {
         const el = document.querySelector(id)
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -41,25 +41,24 @@ function scrollTo(id) {
 
 function handleLogoClick() {
     if (window.location.pathname === '/') {
-        // Sudah di homepage — scroll ke atas saja
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+        scrollRoot?.value?.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
-        // Dari halaman lain — navigate biasa
         window.location.href = '/'
     }
 }
 
 onMounted(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    scrollRoot?.value?.addEventListener('scroll', handleScroll, { passive: true })
     brandIntervalId = setInterval(() => {
         activeBrand.value = (activeBrand.value + 1) % brandVariants.length
     }, 2500)
 })
 
 onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll)
+    scrollRoot?.value?.removeEventListener('scroll', handleScroll)
     if (brandIntervalId) clearInterval(brandIntervalId)
 })
+
 </script>
 
 <template>

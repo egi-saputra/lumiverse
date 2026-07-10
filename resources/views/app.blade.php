@@ -5,6 +5,21 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
+        <!-- Theme color untuk address bar browser (Chrome Android) -->
+        <meta name="theme-color" content="#0b1120">
+
+        <!-- iOS Safari -->
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="Lumiverse">
+
+        <!-- Windows/Edge tile -->
+        <meta name="msapplication-navbutton-color" content="#0b1120">
+        <meta name="msapplication-TileColor" content="#0b1120">
+
+        <!-- Beritahu browser bahwa page ini dark themed -->
+        <meta name="color-scheme" content="dark">
+
         <!-- Mencegah Google Translate & browser menerjemahkan otomatis -->
         <meta name="google" content="notranslate">
         <meta http-equiv="Content-Language" content="{{ str_replace('_', '-', app()->getLocale()) }}">

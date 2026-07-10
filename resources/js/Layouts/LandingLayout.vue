@@ -1,10 +1,21 @@
 <script setup>
 import { useHead } from '@vueuse/head'
-import { onMounted } from 'vue'
+import { onMounted, ref, provide } from 'vue'
 import Navbar from '@/Components/HomePage/Navbar.vue'
 import Footer from '@/Components/HomePage/Footer.vue'
 
+const scrollRoot = ref(null)
+provide('scrollRoot', scrollRoot) // dipakai Navbar buat scroll & deteksi posisi
+
 useHead({
+    meta: [
+        // Warna address bar browser (Chrome Android, Safari iOS 15+)
+        { name: 'theme-color', content: '#0b1120' },
+        { name: 'msapplication-navbutton-color', content: '#0b1120' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'color-scheme', content: 'dark' },
+    ],
     link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
@@ -15,7 +26,6 @@ useHead({
     ],
 })
 
-// Scroll reveal observer — runs once layout mounts
 onMounted(() => {
     const observer = new IntersectionObserver(
         (entries) => {
@@ -26,16 +36,19 @@ onMounted(() => {
                 }
             })
         },
-        { threshold: 0.1, rootMargin: '0px 0px -40px 0px' },
+        {
+            root: scrollRoot.value, // penting: root sekarang container, bukan viewport document
+            threshold: 0.1,
+            rootMargin: '0px 0px -40px 0px',
+        },
     )
 
-    // Observe all .reveal elements (including those in slots)
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+    scrollRoot.value?.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
 })
 </script>
 
 <template>
-    <div>
+    <div ref="scrollRoot" class="scroll-viewport" id="scroll-root">
         <Navbar />
         <main>
             <slot />

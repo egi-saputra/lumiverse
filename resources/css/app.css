@@ -71,6 +71,27 @@ ul {
     list-style: none;
 }
 
+/* ─── LOCK WINDOW SCROLL (biar address bar browser tidak collapse) ─── */
+html,
+body {
+    height: 100%;
+    overflow: hidden; /* window tidak pernah scroll */
+    overscroll-behavior: none;
+}
+
+#app {
+    height: 100%;
+}
+
+.scroll-viewport {
+    height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain; /* cegah pull-to-refresh ikut narik address bar */
+    scroll-behavior: smooth;
+}
+
 /* ─── ANTI COPY / SELECT / TOUCH CALLOUT ─────────────── */
 html,
 body {
