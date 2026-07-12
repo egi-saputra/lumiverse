@@ -40,7 +40,7 @@ const supportLinks = [
                     <p class="footer-brand-desc">
                         Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang hadir untuk
                         memberikan solusi dan kemudahan bagi satuan pendidikan seperti sekolah atau instansi lembaga
-                        pendidikan lainnya.
+                        pendidikan lainnya di seluruh Indonesia.
                     </p>
                     <!-- <p class="footer-brand-desc">
                         The All in One Growth System Platform berbasis cloud terpercaya,

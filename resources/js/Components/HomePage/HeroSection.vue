@@ -103,12 +103,10 @@ onUnmounted(() => {
                     </h1>
 
                     <!-- The All in One Growth System Platform -->
-                    <!-- <p class="hero-desc">
-                        Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang
-                        hadir untuk
-                        memberikan solusi dan kemudahan bagi satuan pendidikan seperti sekolah atau instansi lembaga
-                        pendidikan lainnya.
-                    </p> -->
+                    <p class="hero-desc">
+                        Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang hadir untuk
+                        memberikan solusi dan kemudahan bagi sekolah atau instansi lembaga pendidikan lainnya.
+                    </p>
 
                     <div class="hero-actions">
                         <Link href="/registration" class="btn-hero">
