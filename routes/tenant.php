@@ -30,6 +30,11 @@ Route::middleware([
     EnsureTenantIsActive::class,
     \App\Http\Middleware\ShareTenantRouteDefaults::class,
 ])->group(function () {
+    Route::get('/robots.txt', function () {
+        return response("User-agent: *\nDisallow: /")
+            ->header('Content-Type', 'text/plain');
+    })->name('robots.tenant');
+
     Route::get('/tenant-storage/{path}', [TenantAssetController::class, 'show'])
     ->where('path', '.*')
     ->name('tenant.storage');

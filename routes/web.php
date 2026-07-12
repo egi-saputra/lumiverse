@@ -82,6 +82,14 @@ Route::domain('{domain}')
     ->where(['domain' => implode('|', array_map('preg_quote', $centralDomains))])
     ->middleware('web')
     ->group(function () {
+        Route::get('/robots.txt', function () {
+            $content = "User-agent: *\nAllow: /\nSitemap: https://lumiverse.co.id/sitemap.xml";
+            return response($content)->header('Content-Type', 'text/plain');
+        })->name('robots.central');
+
+        Route::get('/sitemap.xml', function () {
+            return response()->file(public_path('sitemap.xml'), ['Content-Type' => 'application/xml']);
+        })->name('sitemap.central');
 
         Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect.central');
         Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback.central');
