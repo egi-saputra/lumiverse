@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/vue3'
 import LandingLayout from '@/Layouts/LandingLayout.vue'
 import HeroSection from '@/Components/HomePage/HeroSection.vue'
 // import AboutSection from '@/Components/HomePage/AboutSection.vue'
-import LogosSection from '@/Components/HomePage/LogosSection.vue'
+// import LogosSection from '@/Components/HomePage/LogosSection.vue'
 import StatsSection from '@/Components/HomePage/StatsSection.vue'
 import FeaturesSection from '@/Components/HomePage/FeaturesSection.vue'
 import HowItWorksSection from '@/Components/HomePage/HowItWorksSection.vue'
@@ -88,7 +88,7 @@ onMounted(() => {
     <Head title="Lumiverse" />
     <HeroSection />
     <!-- <AboutSection /> -->
-    <LogosSection />
+    <!-- <LogosSection /> -->
     <StatsSection />
     <FeaturesSection />
     <HowItWorksSection />
