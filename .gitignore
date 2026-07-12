@@ -29,6 +29,7 @@ yarn-error.log
 /public/build
 /public/hot
 /public/storage
+/public/robots.txt
 
 # ==========================
 # IDE / Editors

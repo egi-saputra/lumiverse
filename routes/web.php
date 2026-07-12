@@ -83,7 +83,12 @@ Route::domain('{domain}')
     ->middleware('web')
     ->group(function () {
         Route::get('/robots.txt', function () {
-            $content = "User-agent: *\nAllow: /\nSitemap: https://lumiverse.co.id/sitemap.xml";
+            $content = "User-agent: *\n"
+                . "Allow: /\n\n"
+                . "User-agent: GPTBot\nDisallow: /\n\n"
+                . "User-agent: ClaudeBot\nDisallow: /\n\n"
+                . "User-agent: CCBot\nDisallow: /\n\n"
+                . "Sitemap: https://lumiverse.co.id/sitemap.xml";
             return response($content)->header('Content-Type', 'text/plain');
         })->name('robots.central');
 
