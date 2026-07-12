@@ -38,11 +38,16 @@ const supportLinks = [
                         </div>
                     </div>
                     <p class="footer-brand-desc">
+                        Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang hadir untuk
+                        memberikan solusi dan kemudahan bagi satuan pendidikan seperti sekolah atau instansi lembaga
+                        pendidikan lainnya.
+                    </p>
+                    <!-- <p class="footer-brand-desc">
                         The All in One Growth System Platform berbasis cloud terpercaya,
                         hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan, korporasi, sekolah,
                         komunitas belajar dan lembaga
                         pendidikan lainnya.
-                    </p>
+                    </p> -->
                     <div class="footer-socials">
                         <a href="https://instagram.com/lumiplatforms" class="social-link" aria-label="Instagram"
                             target="_blank" rel="noopener">
