@@ -131,7 +131,11 @@ const isPasswordValid = computed(() =>
                             class="directory-row">
                             <span class="directory-index">{{ String(i + 1).padStart(2, '0') }}</span>
                             <span class="flex-1 capitalize">{{ item.label }}</span>
-                            <i class="bi bi-arrow-up-right text-[#C9A227]/70" aria-hidden="true"></i>
+                            <!-- <i class="bi bi-arrow-up-right text-[#C9A227]/70" aria-hidden="true"></i> -->
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                                stroke-width="1.5" class="text-[#C9A227]/70" aria-hidden="true">
+                                <path d="M6 11L11 6M11 6H7M11 6V10" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
                         </a>
                         <Link v-else :href="route(item.routeName)" prefetch preserve-scroll preserve-state
                             class="directory-row">
