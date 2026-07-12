@@ -22,7 +22,7 @@ const payTo = {
     address: 'Jl. Citayam - Parung No. 30 Ragajaya, Kabupaten Bogor, Jawa Barat 16920',
     email: 'billing@lumiverse.co.id',
     phone: '+62 21 5555 0123',
-    npwp: '63.303.749.4-403.000',
+    npwp: '1000 0000 1032 5710',
 }
 
 function formatPrice(amount) {
@@ -128,7 +128,7 @@ function print() {
             <div class="inv-top">
                 <div>
                     <div class="flex flex-row">
-                        <img src="/images/logo-light.png" alt="Lumiverse School"
+                        <img src="/images/logo-light.webp" alt="Lumiverse School"
                             class="h-10 object-cover mt-1 scale-150 sm:flex hidden" />
                         <div class="inv-brand mt-0.5">LUMIVERSE <span class="inv-brand-accent">SCHOOL</span></div>
                     </div>

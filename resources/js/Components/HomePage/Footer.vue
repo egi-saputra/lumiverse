@@ -33,7 +33,7 @@ const supportLinks = [
                 <!-- Brand -->
                 <div>
                     <div class="footer-brand-row">
-                        <img src="/images/logo-dark.png" alt="Lumiverse" class="h-8 object-cover scale-150" />
+                        <img src="/images/logo-dark.webp" alt="Lumiverse" class="h-8 object-cover scale-150" />
                         <div class="font-semibold text-3xl">Lumiverse <span class="text-cyan">School</span>
                         </div>
                     </div>

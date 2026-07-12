@@ -64,7 +64,7 @@ onMounted(() => {
         <!-- ── Sidebar ── -->
         <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
             <div class="sidebar-logo font-poppins">
-                <img src="/images/logo-dark.png" alt="Lumiverse" class="h-7 object-cover scale-150 sm:flex hidden" />
+                <img src="/images/logo-dark.webp" alt="Lumiverse" class="h-7 object-cover scale-150 sm:flex hidden" />
                 <span>LUMIVERSE</span>
             </div>
 
