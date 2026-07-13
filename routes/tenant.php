@@ -92,7 +92,7 @@ Route::get('/dashboard', function () {
         'user'    => redirect()->route('user.dashboard'),
         default   => abort(403),
     };
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified'])->name('user.dashboard');
 
 // ── Dashboard Role Auth ──────────────────────────────────────
 Route::middleware('auth', 'verified')->group(function () {
