@@ -279,6 +279,14 @@ class SubscriptionController extends Controller
         $grossAmount  = $payload['gross_amount'] ?? null;
         $signatureKey = hash('sha512', $orderId . $statusCode . $grossAmount . config('midtrans.server_key'));
 
+        Log::debug('Midtrans webhook debug', [
+            'computed_signature' => $signatureKey,
+            'received_signature' => $payload['signature_key'] ?? null,
+            'server_key_length'  => strlen(config('midtrans.server_key')),
+            'server_key_prefix'  => substr(config('midtrans.server_key'), 0, 15), // cukup prefix, jangan log full key
+            'is_production'      => config('midtrans.is_production'),
+        ]);
+
         if ($signatureKey !== ($payload['signature_key'] ?? '')) {
             Log::warning('Midtrans webhook: invalid signature', ['order_id' => $orderId]);
             return response()->json(['message' => 'Invalid signature'], 403);
