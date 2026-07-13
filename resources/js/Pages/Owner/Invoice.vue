@@ -22,7 +22,8 @@ const payTo = {
     address: 'Jl. Citayam - Parung No. 30 Ragajaya, Kabupaten Bogor, Jawa Barat 16920',
     email: 'billing@lumiverse.co.id',
     phone: '+62 21 5555 0123',
-    npwp: '1000 0000 1032 5710',
+    // npwp: '1000 0000 1032 5710',
+    npwp: '10.000.000.1-032.5710',
 }
 
 function formatPrice(amount) {
