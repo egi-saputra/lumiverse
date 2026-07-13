@@ -38,6 +38,7 @@ class TenantController extends Controller
         ]);
     }
 
+    // public function show(String $domain, Tenant $tenant)
     public function show(Tenant $tenant)
     {
         $tenant->load(['domains', 'planData']);

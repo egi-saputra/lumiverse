@@ -138,11 +138,6 @@ onMounted(() => {
             <main class="content-scroll">
                 <div class="content-inner">
                     <slot />
-
-                    <!-- Sandbox -->
-                    <script src="https://app.midtrans.com/snap/snap.js"
-                        data-client-key="{{ config('midtrans.client_key') }}"></script>
-                    <!-- Production: ganti URL ke https://app.midtrans.com/snap/snap.js -->
                 </div>
             </main>
         </div>

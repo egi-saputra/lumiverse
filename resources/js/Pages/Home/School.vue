@@ -44,7 +44,7 @@ onMounted(() => {
             content="LMS cloud untuk sekolah dan lembaga pendidikan di Indonesia. Cepat, aman, dan mudah digunakan guru maupun siswa." />
         <meta head-key="twitter:image" name="twitter:image" content="https://lumiverse.co.id/og-image-lms.jpg" />
         <link head-key="canonical" rel="canonical" href="https://lumiverse.co.id/" />
-        <script type="application/ld+json">
+        <!-- <script type="application/ld+json">
             {
                 "@context": "https://schema.org",
                 "@type": "WebSite",
@@ -80,7 +80,7 @@ onMounted(() => {
                     ]
                 }
             }
-        </script>
+        </script> -->
     </Head>
     <HeroSection />
     <!-- <AboutSection /> -->

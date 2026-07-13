@@ -38,7 +38,7 @@
         <meta name="google" content="notranslate">
         <meta http-equiv="Content-Language" content="{{ str_replace('_', '-', app()->getLocale()) }}">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Lumiverse') }}</title>
 
         <!-- Favicon -->
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
@@ -55,9 +55,56 @@
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
+
+        <script type="application/ld+json">
+            @verbatim
+            {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Lumiverse School",
+                "alternateName": ["Lumiverse"],
+                "url": "https://lumiverse.co.id"
+            }
+            @endverbatim
+        </script>
+        <script type="application/ld+json">
+            @verbatim
+            {
+                "@context": "https://schema.org",
+                "@type": "SoftwareApplication",
+                "name": "Lumiverse School",
+                "applicationCategory": "EducationalApplication",
+                "operatingSystem": "Web",
+                "url": "https://lumiverse.co.id",
+                "description": "Platform Learning Management System (LMS) berbasis cloud untuk sekolah, pesantren, dan lembaga pendidikan di Indonesia.",
+                "provider": {
+                    "@type": "Organization",
+                    "name": "PT Lumi Platforms Indonesia",
+                    "url": "https://lumiverse.co.id",
+                    "logo": "https://lumiverse.co.id/logo.svg",
+                    "address": { "@type": "PostalAddress", "addressLocality": "Bogor", "addressCountry": "ID" },
+                    "contactPoint": {
+                        "@type": "ContactPoint",
+                        "contactType": "customer support",
+                        "email": "info@lumiverse.co.id",
+                        "availableLanguage": ["Indonesian", "English"]
+                    },
+                    "sameAs": [
+                        "https://linkedin.com/company/lumiverse",
+                        "https://instagram.com/lumiverse"
+                    ]
+                }
+            }
+            @endverbatim
+        </script>
     </head>
 
     <body class="font-sans antialiased" oncontextmenu="true false;" oncopy="return true;" oncut="return true;">
         @inertia
+
+        <!-- Sandbox -->
+                    <script src="https://app.midtrans.com/snap/snap.js"
+                        data-client-key="{{ config('midtrans.client_key') }}"></script>
+                    <!-- Production: ganti URL ke https://app.midtrans.com/snap/snap.js -->
     </body>
 </html>
