@@ -1,6 +1,5 @@
 import "../css/app.css";
 import "./bootstrap";
-// import "./anti-copy.js";
 
 import { createInertiaApp } from "@inertiajs/vue3";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
@@ -10,8 +9,10 @@ import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
 const appName = import.meta.env.VITE_APP_NAME || "Lumiverse School";
 
+// Deteksi mobile — aman untuk SSR karena ada guard typeof window
+const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
 createInertiaApp({
-    // title: (title) => `${title} | ${appName}`,
     title: (title) => `${title}`,
     resolve: (name) =>
         resolvePageComponent(
@@ -19,10 +20,6 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.vue"),
         ),
     setup({ el, App, props, plugin }) {
-        // deteksi apakah mobile
-        const isMobile =
-            typeof window !== "undefined" && window.innerWidth < 768;
-
         const head = createHead();
 
         return createApp({ render: () => h(App, props) })
@@ -38,8 +35,4 @@ createInertiaApp({
               showSpinner: false,
           }
         : false,
-    // progress: {
-    //     color: "#00D4FF",
-    //     showSpinner: false,
-    // },
 });
