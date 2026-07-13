@@ -50,6 +50,16 @@ useHead({
             type: 'application/ld+json',
             children: JSON.stringify({
                 '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: 'Lumiverse School',
+                alternateName: ['Lumiverse'],
+                url: 'https://lumiverse.co.id',
+            }),
+        },
+        {
+            type: 'application/ld+json',
+            children: JSON.stringify({
+                '@context': 'https://schema.org',
                 '@type': 'SoftwareApplication',
                 name: 'Lumiverse School',
                 applicationCategory: 'EducationalApplication',
