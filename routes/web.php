@@ -65,7 +65,7 @@ Route::domain('www.lumiverse.co.id')->middleware('web')->group(function () {
 // Workspace — subdomain khusus
 Route::domain('workspace.lumiverse.co.id')->middleware('web')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Landing/Workspace', [
+        return Inertia::render('Home/Workspace', [
             'laravelVersion' => Application::VERSION,
             'phpVersion' => PHP_VERSION,
         ]);
