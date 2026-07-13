@@ -1,4 +1,3 @@
-// resources/js/ssr.js
 import { createSSRApp, h } from "vue";
 import { renderToString } from "@vue/server-renderer";
 import { createInertiaApp } from "@inertiajs/vue3";
@@ -18,12 +17,10 @@ createServer((page) =>
             ),
         setup({ App, props, plugin }) {
             const head = createHead();
-            const app = createSSRApp({ render: () => h(App, props) })
+            return createSSRApp({ render: () => h(App, props) })
                 .use(plugin)
                 .use(ZiggyVue)
                 .use(head);
-
-            return { app, head };
         },
     }),
 );
