@@ -21,11 +21,18 @@ createServer((page) => {
     return createInertiaApp({
         page,
         render: renderToString,
-        resolve: (name) =>
-            resolvePageComponent(
+        resolve: async (name) => {
+            console.log("INERTIA PAGE:", name);
+
+            const page = await resolvePageComponent(
                 `./Pages/${name}.vue`,
                 import.meta.glob("./Pages/**/*.vue"),
-            ),
+            );
+
+            console.log("RESOLVED:", page);
+
+            return page;
+        },
         setup({ App, props, plugin }) {
             return createSSRApp({ render: () => h(App, props) })
                 .use(plugin)
