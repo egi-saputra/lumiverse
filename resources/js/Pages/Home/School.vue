@@ -20,16 +20,17 @@ defineOptions({
 })
 
 useHead({
-    title: 'Lumiverse — Platform LMS Sekolah Gratis Berbasis Cloud',
+    title: 'Lumiverse School',
     meta: [
         {
             name: 'description',
             // 145 karakter — aman tidak dipotong Google (< 160)
-            content: 'Lumiverse adalah sebuah platform Learning Management System (LMS) berbasis cloud untuk sekolah dan lembaga pendidikan di Indonesia: kelola kelas, ujian online, dan nilai dalam satu platform.',
+            content: 'Lumiverse merupakan sebuah platform Learning Management System berbasis cloud yang hadir untuk memberikan solusi dan kemudahan bagi sekolah dan intansi lembaga pendidikan lainnya di Indonesia.',
         },
         { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'Lumiverse School' },
         { property: 'og:url', content: 'https://lumiverse.co.id/' },
-        { property: 'og:title', content: 'Lumiverse — Platform LMS Sekolah Gratis Berbasis Cloud' },
+        { property: 'og:title', content: 'Lumiverse School' },
         {
             property: 'og:description',
             content: 'Platform LMS gratis berbasis cloud untuk sekolah, pesantren, dan lembaga pendidikan di Indonesia. Kelola kelas, materi pembelajaran online, tugas harian siswa, ujian online, rekap nilai siswa otomatis, rapor digital, presensi siswa, rekap absensi siswa otomatis dalam satu sistem.',
@@ -85,7 +86,7 @@ onMounted(() => {
 
 <template>
 
-    <Head title="Lumiverse" />
+    <Head title="Lumiverse School" />
     <HeroSection />
     <!-- <AboutSection /> -->
     <!-- <LogosSection /> -->

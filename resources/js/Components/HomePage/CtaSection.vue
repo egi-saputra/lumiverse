@@ -14,7 +14,7 @@ import { Link } from '@inertiajs/vue3'
                     Pendaftaran gratis. Tanpa kartu kredit. Setup mudah dalam 5 menit.
                 </p>
                 <div class="cta-actions">
-                    <Link href="/regisration" class="btn-hero">
+                    <Link href="/registration" class="btn-hero">
                         Mulai Gratis Sekarang →
                     </Link>
                     <!-- <a href="https://wa.me/628987504976" class="btn-outline" target="_blank" rel="noopener noreferrer">
