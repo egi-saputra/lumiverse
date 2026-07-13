@@ -1,9 +1,11 @@
+// resources/js/ssr.js
 import { createSSRApp, h } from "vue";
 import { renderToString } from "@vue/server-renderer";
 import { createInertiaApp } from "@inertiajs/vue3";
 import createServer from "@inertiajs/vue3/server";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
-import { createHead, renderHeadToString } from "@vueuse/head";
+import { createHead } from "@vueuse/head";
+import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
 createServer((page) =>
     createInertiaApp({
@@ -18,6 +20,7 @@ createServer((page) =>
             const head = createHead();
             const app = createSSRApp({ render: () => h(App, props) })
                 .use(plugin)
+                .use(ZiggyVue)
                 .use(head);
 
             return { app, head };

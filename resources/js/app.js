@@ -10,9 +10,6 @@ import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 
 const appName = import.meta.env.VITE_APP_NAME || "Lumiverse School";
 
-// deteksi apakah mobile
-const isMobile = window.innerWidth < 768;
-
 createInertiaApp({
     // title: (title) => `${title} | ${appName}`,
     title: (title) => `${title}`,
@@ -22,6 +19,10 @@ createInertiaApp({
             import.meta.glob("./Pages/**/*.vue"),
         ),
     setup({ el, App, props, plugin }) {
+        // deteksi apakah mobile
+        const isMobile =
+            typeof window !== "undefined" && window.innerWidth < 768;
+
         const head = createHead();
 
         return createApp({ render: () => h(App, props) })
