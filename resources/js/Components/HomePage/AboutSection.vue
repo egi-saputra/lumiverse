@@ -3,33 +3,60 @@ import { ref, reactive } from 'vue'
 
 const values = [
     {
-        icon: '🎯',
-        title: 'Fokus pada Dampak',
-        desc: 'Setiap fitur yang kami bangun lahir dari kebutuhan nyata sekolah Indonesia, bukan sekadar tren teknologi.',
+        icon: '⚡',
+        title: 'Fast by Default',
+        desc: 'Pengalaman yang cepat bukan fitur tambahan, tetapi standar kualitas produk. Kami menghilangkan proses manual yang tidak perlu dan memakan waktu.',
     },
     {
-        icon: '🤝',
-        title: 'Kemitraan Jangka Panjang',
-        desc: 'Kami bukan sekadar vendor — kami mitra transformasi digital sekolah Anda dari hari pertama hingga seterusnya.',
+        icon: '🚀',
+        title: 'Performance Matters',
+        desc: 'Setiap fitur dirancang agar tetap cepat, responsif, dan stabil, bahkan saat digunakan secara bersamaan.',
+    },
+    {
+        icon: '🤖',
+        title: 'Automate Everything',
+        desc: 'Setiap proses yang dapat diotomatisasi akan kami sederhanakan agar pengguna dapat fokus pada hal yang lebih bermakna.',
+    },
+    {
+        icon: '🎯',
+        title: 'Built for Simplicity',
+        desc: 'Teknologi yang kompleks kami sembunyikan di balik pengalaman pengguna yang sederhana dan mudah dipahami.',
     },
     {
         icon: '🔒',
-        title: 'Keamanan & Privasi',
-        desc: 'Data siswa adalah amanah. Kami menjaganya dengan standar keamanan internasional tanpa kompromi.',
+        title: 'Security by Design',
+        desc: 'Keamanan dan privasi data menjadi bagian dari fondasi sistem, bukan sekadar fitur tambahan.',
+    },
+    // {
+    //     icon: '📈',
+    //     title: 'Scalable by Default',
+    //     desc: 'Platform dirancang untuk tumbuh bersama sekolah, mulai dari puluhan hingga ribuan pengguna.',
+    // },
+    {
+        icon: '✨',
+        title: 'Thoughtful Experience',
+        desc: 'Kami percaya pengalaman pengguna yang baik lebih penting daripada daftar fitur yang panjang.',
     },
     {
-        icon: '⚡',
-        title: 'Inovasi Berkelanjutan',
-        desc: 'Platform kami terus berkembang. Update rutin, fitur baru, dan peningkatan performa tanpa biaya tambahan.',
+        icon: '❤️',
+        title: 'Built with Passion',
+        desc: 'Kami membangun Lumiverse sebagai produk yang terus berkembang, bukan sekadar proyek yang selesai setelah diluncurkan.',
+    },
+    {
+        icon: '🔄',
+        title: 'Continuous Improvement',
+        desc: 'Kami terus mendengarkan masukan pengguna untuk menghadirkan pembaruan yang bermakna.'
     },
 ]
 
 const milestones = [
-    { year: '2021', title: 'Lahirnya KREATICRAFT', desc: 'Didirikan oleh tim pengembang yang frustasi melihat sekolah masih kelola nilai pakai Excel.' },
-    { year: '2022', title: 'Pilot 12 Sekolah', desc: 'Meluncur ke 12 sekolah pertama di Jabodetabek. Feedback langsung dari guru & kepala sekolah jadi fondasi produk.' },
-    { year: '2023', title: 'Ekspansi Nasional', desc: 'Menjangkau 150+ sekolah di 15 provinsi. Fitur WhatsApp gateway & ujian online diluncurkan.' },
-    { year: '2024', title: '500+ Sekolah', desc: 'Dipercaya lebih dari 500 lembaga pendidikan. ISO 27001 diraih. Tim berkembang jadi 30+ orang.' },
-    { year: '2025', title: 'Platform Ekosistem', desc: 'Meluncurkan REST API publik & marketplace plugin. Visi: jadi infrastruktur digital pendidikan Indonesia.' },
+    { year: '2021', title: 'Lahirnya Aplikasi Pembelajaran Lumiverse School', desc: 'Berawal dari rasa frustasi terhadap sistem administrasi sekolah yang masih dikelola secara manual, sehingga perlu menghabiskan banyak waktu dan tenaga hanya untuk urusan administrasi yang kaku.' },
+    { year: '2022', title: 'Mewujudkan ide di kepala menjadi sebuah produk nyata', desc: 'Membangun struktur dan menciptakan sebuah sistem aplikasi pembelajaran yang sustainable, cepat, aman dan stabil namun tetap intuitif serta mudah digunakan oleh para guru dan siswa tanpa keahlian teknis khusus apapun dalam menghadapi perkembangan teknologi digital di era IOT 4.0.' },
+    { year: '2023', title: 'Proses uji coba dan pengembangan bertahap', desc: 'Melihat, mempelajari, dan memperbaiki setiap kendala yang dihadapi, serta mengembangkan sistem aplikasi agar memiliki performa tinggi dan memberikan pengalaman yang lebih baik bagi pengguna.' },
+    { year: '2024', title: 'Upgrade micro engine sistem', desc: 'Penerapan micro-engine pada sistem backend guna memfasilitasi beberapa fitur yang memerlukan performa tinggi secara realtime untuk menghindari gangguan seperti bottleneck atau server down karena traffic pooling yang tinggi di waktu-waktu paling krusial seperti pada saat pelaksanaan ujian.' },
+    { year: '2025', title: 'Piloting 6 sekolah terdekat', desc: 'Meluncur ke 6 sekolah pertama di area terdekat dalam proses transformasi digitalisasi sekolah. Feedback langsung dari guru & kepala sekolah menjadi motivasi dan fondasi produk kami.' },
+    { year: '2026', title: 'Ekspansi Nasional & Legalitas Hukum', desc: 'Menjangkau 70+ sekolah di 6 provinsi dan pendirian serta pembentukan legalitas badan hukum menjadi sebuah Perusahaan Perseroan (PT) dengan nomor SK AHU-A099848.AH.01.30.Tahun 2026.' },
+    // { year: '2026', title: 'Take Experiencing & Ekspansi Nasional', desc: 'Menjangkau 70+ sekolah di 6 provinsi dan sudah berpengalaman dalam menghadapi ribuan siswa untuk pelaksanaan ujian sekolah secara online dan serentak tanpa kendala selama bertahun-tahun.' },
 ]
 
 const team = [
@@ -104,31 +131,34 @@ function closeProfile() {
     <section id="about" class="about-section" aria-labelledby="about-title">
 
         <!-- ── Header ─────────────────────────────────────── -->
-        <div class="container">
+        <!-- <div class="container sm:block hidden">
             <div class="section-header centered reveal">
                 <span class="section-eyebrow">Tentang Kami</span>
                 <h2 class="section-title" id="about-title">
-                    Dibangun oleh orang yang<br>
-                    <span class="text-gradient-cyan">peduli terhadap pendidikan di Indonesia</span>
+                    Lumiverse School<br>
                 </h2>
-                <p class="section-desc">
+                <span class="section-desc">Merupakan sebuah platform yang hadir untuk
+                    memberikan solusi dan kemudahan dalam transformasi digitalisasi sekolah atau lembaga pendidikan di
+                    Indonesia</span> -->
+
+        <!-- <p class="section-desc">
                     Lumiverse School lahir dari satu pertanyaan sederhana: <em>kenapa guru di Indonesia disibukkan
                         dengan urusan administrasi sekolah?</em>
                     Seharusnya guru lebih fokus dengan inovasi dalam mengembangkan sistem pembelajaran dan pendidikan di
                     Indonesia demi
                     membangun generasi penerus bangsa yang kompeten dan berintegritas, Kami pun hadir untuk membantu
                     dalam mengatasi hal tersebut.
-                </p>
-            </div>
+                </p> -->
+        <!-- </div> -->
 
-            <!-- ── Visi & Misi ──────────────────────────────── -->
-            <div class="visi-misi-grid reveal">
+        <!-- ── Visi & Misi ──────────────────────────────── -->
+        <!-- <div class="visi-misi-grid reveal">
                 <div class="vm-card vm-visi">
                     <div class="vm-icon" aria-hidden="true">🌟</div>
                     <div class="vm-label">Visi</div>
                     <p class="vm-text">
                         Menjadi infrastruktur digital pendidikan yang menggerakkan setiap sekolah di Indonesia menuju
-                        kualitas pembelajaran kelas dunia.
+                        kualitas pembelajaran kelas dunia pada era Internet of Things (IOT 4.0).
                     </p>
                 </div>
                 <div class="vm-divider" aria-hidden="true">
@@ -140,21 +170,23 @@ function closeProfile() {
                     <div class="vm-icon" aria-hidden="true">🚀</div>
                     <div class="vm-label">Misi</div>
                     <ul class="vm-list">
-                        <li>Menyederhanakan administrasi sekolah lewat teknologi yang intuitif</li>
+                        <li>Menyederhanakan administrasi sekolah melalui teknologi yang intuitif</li>
                         <li>Memberdayakan guru agar fokus mengajar, bukan mengurus administrasi</li>
                         <li>Menghubungkan orang tua, siswa, dan sekolah dalam satu ekosistem digital</li>
                         <li>Menghadirkan data & analitik yang membantu pengambilan keputusan berbasis fakta</li>
                     </ul>
                 </div>
-            </div>
-        </div>
+            </div> -->
+        <!-- </div> -->
 
         <!-- ── Nilai-Nilai ──────────────────────────────────── -->
         <div class="values-band">
             <div class="container">
-                <div class="values-header reveal">
-                    <span class="section-eyebrow">Nilai Kami</span>
-                    <h3 class="values-title">Prinsip yang memandu setiap keputusan kami</h3>
+                <div class="section-header centered reveal">
+                    <span class="section-eyebrow">Mengapa Memilih Lumiverse?</span>
+                    <h3 class="section-title">
+                        Pengalaman modern yang dirancang untuk sekolah masa kini.
+                    </h3>
                 </div>
                 <div class="values-grid">
                     <div v-for="(val, i) in values" :key="val.title" class="value-card reveal"
@@ -168,10 +200,10 @@ function closeProfile() {
         </div>
 
         <!-- ── Timeline / Sejarah ───────────────────────────── -->
-        <div class="container">
+        <!-- <div class="container">
             <div class="timeline-header section-header centered reveal">
                 <span class="section-eyebrow">Perjalanan Kami</span>
-                <h3 class="section-title">Dari ide di kafe<br>jadi platform nasional</h3>
+                <h3 class="section-title">Dari ide di sekolah menjadi platform nasional</h3>
             </div>
 
             <div class="timeline" role="list">
@@ -189,14 +221,14 @@ function closeProfile() {
                     </div>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- ── Tim ─────────────────────────────────────────── -->
-        <div class="team-band">
+        <!-- <div class="team-band">
             <div class="container">
                 <div class="section-header centered reveal">
                     <span class="text-4xl font-semibold text-[var(--cyan)] mb-10 tracking-wide">Executives</span>
-                    <!-- <h3 class="section-title">Meet Lumi's executives and access their biographies and headshots.</h3> -->
+                    <h3 class="section-title">Meet Lumi's executives and access their biographies and headshots.</h3>
                     <h3 class="text-xl font-semibold mt-3">Meet Lumi's executives and access their biographies and
                         headshots.
                     </h3>
@@ -224,10 +256,10 @@ function closeProfile() {
                             Read bio
                         </button>
                     </div>
-                </div>
+                </div> -->
 
-                <!-- Hiring CTA -->
-                <div class="hiring-cta reveal">
+        <!-- Hiring CTA -->
+        <!-- <div class="hiring-cta reveal">
                     <div class="hiring-icon" aria-hidden="true">✨</div>
                     <div class="hiring-text">
                         <strong>Kami sedang berkembang!</strong>
@@ -236,10 +268,10 @@ function closeProfile() {
                     <a href="/karir" class="hiring-btn">Lihat Lowongan →</a>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Modal Profil Tim -->
-        <Transition name="team-modal-fade">
+        <!-- <Transition name="team-modal-fade">
             <div v-if="activeMember" class="team-modal-overlay" @click.self="closeProfile">
                 <div class="team-modal" role="dialog" aria-modal="true">
                     <button type="button" class="team-modal-close" @click="closeProfile" aria-label="Tutup">✕</button>
@@ -255,7 +287,7 @@ function closeProfile() {
                     <p class="team-modal-bio">{{ activeMember.bio }}</p>
                 </div>
             </div>
-        </Transition>
+        </Transition> -->
 
     </section>
 </template>
@@ -378,7 +410,9 @@ function closeProfile() {
 }
 
 .values-header {
-    margin-bottom: 3rem;
+    padding: 7rem 0;
+    position: relative;
+    z-index: 1;
 }
 
 .values-title {
@@ -816,6 +850,14 @@ function closeProfile() {
 }
 
 @media (max-width: 768px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.45rem, 3.5vw, 2.75rem);
+    }
+
     .visi-misi-grid {
         grid-template-columns: 1fr;
     }
@@ -844,7 +886,7 @@ function closeProfile() {
 
     /* Timeline mobile: single column */
     .timeline::before {
-        left: 20px;
+        left: 7.5px;
     }
 
     .timeline-item,

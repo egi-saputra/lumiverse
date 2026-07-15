@@ -272,7 +272,7 @@ onMounted(() => {
             <p class="register-sub flex sm:flex-row flex-col justify-center text-center gap-1"><span>Daftar gratis
                     sekarang
                     juga!
-                </span><span>Setup
+                </span><span>Provisioning
                     otomatis
                     dalam hitungan menit.</span></p>
 
@@ -457,7 +457,7 @@ onMounted(() => {
                     <!-- STEP 1: Jenis Lembaga -->
                     <div v-else-if="currentStep === 1" key="step1">
                         <div class="field">
-                            <label>Silakan Pilih Jenis Lembaga Pendidikan</label>
+                            <label>Apa Jenis Instansi Lembaga Pendidikanmu ?</label>
                             <div class="institution-grid">
                                 <button v-for="opt in institutionOptions" :key="opt.value" type="button"
                                     class="institution-card"
@@ -508,7 +508,7 @@ onMounted(() => {
                             </div>
                             <div v-if="fieldError('subdomain')" class="field-error">{{ fieldError('subdomain') }}
                             </div>
-                            <p class="field-hint">Ini akan jadi alamat khusus sekolah / lembaga yang Anda daftarkan.
+                            <p class="field-hint">Ini akan jadi alamat khusus untuk sekolah / lembaga Anda.
                             </p>
                         </div>
 
@@ -520,8 +520,7 @@ onMounted(() => {
                                     class="logo-input" />
                                 <label for="logo" class="logo-upload-label">
                                     <span class="logo-upload-icon">📷</span>
-                                    <span>Klik untuk upload logo</span>
-                                    <span class="field-hint">PNG/JPG/WebP, maks 15MB</span>
+                                    <span>Klik untuk upload logo sekolah / lembaga</span>
                                 </label>
                             </div>
                             <div v-else class="logo-preview">
@@ -1140,6 +1139,17 @@ select.field-input option {
         border: 1px solid var(--border);
         border-radius: 0;
         padding: 1.5rem;
+    }
+
+    .register-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
+
+    .register-sub {
+        font-size: 0.875rem;
+        line-height: 1rem;
+        margin-bottom: 2rem;
     }
 
     .field-row,

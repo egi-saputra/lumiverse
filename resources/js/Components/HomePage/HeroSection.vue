@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 
 const variants = [
     {
-        platform: 'LMS',
+        platform: 'Learning',
         audience: 'sekolah Indonesia',
         title: 'Digitalisasi',
         subject: 'Pembelajaran',
@@ -18,7 +18,7 @@ const variants = [
     // },
     {
         platform: 'Workspace',
-        audience: 'Bisnis Anda',
+        audience: 'sekolah indonesia',
         title: 'Kelola Sistem',
         subject: 'Administrasi',
         pace: 'Cepat,'
@@ -65,10 +65,7 @@ onUnmounted(() => {
                         </span>
                         <span>#1 untuk</span>
                         <span class="word-slot">
-                            <Transition name="slide-up">
-                                <span :key="variants[activeIndex].audience" class="word-inner">{{
-                                    variants[activeIndex].audience }}</span>
-                            </Transition>
+                            Sekolah Indonesia
                         </span>
                     </div>
 
@@ -104,9 +101,15 @@ onUnmounted(() => {
 
                     <!-- The All in One Growth System Platform -->
                     <p class="hero-desc">
+                        Daftarkan sekolah Anda dan mulai gunakan Lumiverse School hanya dalam hitungan menit. Proses
+                        aktivasi dilakukan secara otomatis, tanpa perlu menghubungi sales atau menunggu proses
+                        integrasi
+                        manual.
+                    </p>
+                    <!-- <p class="hero-desc">
                         Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang hadir untuk
                         memberikan solusi dan kemudahan bagi sekolah atau instansi lembaga pendidikan lainnya.
-                    </p>
+                    </p> -->
 
                     <div class="hero-actions">
                         <Link href="/registration" class="btn-hero">

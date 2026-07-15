@@ -62,7 +62,7 @@ onMounted(() => {
         <div v-if="sidebarOpen" class="sidebar-backdrop" @click="sidebarOpen = false" />
 
         <!-- ── Sidebar ── -->
-        <aside class="sidebar" :class="{ 'sidebar-open': sidebarOpen }">
+        <aside class="sidebar no-scrollbar" :class="{ 'sidebar-open': sidebarOpen }">
             <div class="sidebar-logo font-poppins">
                 <img src="/images/logo-dark.webp" alt="Lumiverse" class="h-7 object-cover scale-150 sm:flex hidden" />
                 <span>LUMIVERSE</span>
@@ -135,7 +135,7 @@ onMounted(() => {
                 </button>
             </header>
 
-            <main class="content-scroll">
+            <main class="content-scroll no-scrollbar">
                 <div class="content-inner">
                     <slot />
                 </div>
@@ -164,6 +164,14 @@ onMounted(() => {
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
+
+    /* ─── Sembunyikan scrollbar visual ─── */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none;
 }
 
 /* Logo area */
@@ -350,6 +358,14 @@ onMounted(() => {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
+
+    /* ─── Sembunyikan scrollbar visual ─── */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.content-scroll::-webkit-scrollbar {
+    display: none;
 }
 
 .content-inner {

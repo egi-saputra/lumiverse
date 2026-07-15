@@ -8,24 +8,15 @@ const isMenuOpen = ref(false)
 const scrollRoot = inject('scrollRoot')
 
 const navItems = [
-    { id: 'hero', href: '#hero', label: 'Beranda' },
+    { id: 'hero', href: '#hero', label: 'Beranda Utama' },
     // { id: 'about', href: '#about', label: 'Tentang Kami' },
     { id: 'fitur', href: '#fitur', label: 'Fitur Aplikasi' },
     { id: 'cara-kerja', href: '#cara-kerja', label: 'Dokumentasi' },
     // { id: 'harga', href: '#harga', label: 'Paket Harga' },
-    { id: 'testimonial', href: '#testimonial', label: 'Testimoni' },
-    { id: 'legalitas', href: '#legalitas', label: 'Legalitas' },
-    { id: 'kontak', href: '#kontak', label: 'Kontak' },
+    // { id: 'testimonial', href: '#testimonial', label: 'Testimoni' },
+    // { id: 'legalitas', href: '#legalitas', label: 'Legalitas' },
+    { id: 'kontak', href: '#kontak', label: 'Kontak Layanan' },
 ]
-
-// Varian nama brand — bergantian tiap 2.5 detik, sinkron dengan tema Hero (LMS/Workspace)
-const brandVariants = [
-    { prefix: 'Lumi', suffix: 'School' },
-    // { prefix: 'Lumi', suffix: 'Class' },
-    { prefix: 'Lumi', suffix: 'Workspace' },
-]
-const activeBrand = ref(0)
-let brandIntervalId = null
 
 function handleScroll() {
     isScrolled.value = (scrollRoot?.value?.scrollTop ?? 0) > 40
@@ -49,14 +40,10 @@ function handleLogoClick() {
 
 onMounted(() => {
     scrollRoot?.value?.addEventListener('scroll', handleScroll, { passive: true })
-    brandIntervalId = setInterval(() => {
-        activeBrand.value = (activeBrand.value + 1) % brandVariants.length
-    }, 2500)
 })
 
 onUnmounted(() => {
     scrollRoot?.value?.removeEventListener('scroll', handleScroll)
-    if (brandIntervalId) clearInterval(brandIntervalId)
 })
 
 </script>
@@ -79,7 +66,7 @@ onUnmounted(() => {
                 <ul class="nav-links" role="list">
                     <li><a href="#hero" @click.prevent="scrollTo('#hero')">Beranda</a></li>
                     <!-- <li><a href="#about" @click.prevent="scrollTo('#about')">Tentang Kami</a></li> -->
-                    <li><a href="#hero" @click.prevent="scrollTo('#hero')">Artikel</a></li>
+                    <!-- <li><a href="#hero" @click.prevent="scrollTo('#hero')">Artikel</a></li> -->
                     <li><a href="#fitur" @click.prevent="scrollTo('#fitur')">Fitur & Layanan</a></li>
                     <li><a href="#cara-kerja" @click.prevent="scrollTo('#cara-kerja')">Dokumentasi</a></li>
                     <!-- <li><a href="#harga" @click.prevent="scrollTo('#harga')">Paket Harga</a></li> -->
@@ -193,35 +180,11 @@ onUnmounted(() => {
     flex-shrink: 0;
 }
 
-/* Wrapper teks logo — overflow hidden supaya animasi tidak dorong elemen lain */
+/* Wrapper teks logo */
 .logo-text-static {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-}
-
-.logo-text-wrap {
-    position: relative;
-    overflow: hidden;
-    height: 1.75rem;
-    line-height: 1.75rem;
-    vertical-align: middle;
-}
-
-.logo-text-inner {
-    display: inline-block;
-    white-space: nowrap;
-}
-
-.nav-logo-text {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 0.95rem;
-    line-height: 1.1;
-}
-
-.nav-logo-text span {
-    color: var(--cyan);
 }
 
 /* Desktop links */
@@ -328,6 +291,31 @@ onUnmounted(() => {
     .nav-toggle {
         display: flex;
         grid-column: 2;
+    }
+
+    /* Menu mobile memenuhi sisa layar, CTA menempel di bawah */
+    .navbar.menu-open {
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    .navbar.menu-open .container {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .navbar.menu-open .mobile-menu {
+        flex: 1;
+        max-height: none;
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+    }
+
+    .navbar.menu-open .mobile-cta-group {
+        margin-top: auto;
     }
 }
 
@@ -480,28 +468,6 @@ onUnmounted(() => {
 .btn-mob-cta:hover {
     transform: translateY(-1px);
     box-shadow: 0 0 36px rgba(0, 212, 255, 0.4);
-}
-
-/* ── Transisi slide-up untuk logo text (sama gaya dengan badge Hero) ── */
-.slide-up-enter-active,
-.slide-up-leave-active {
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-}
-
-.slide-up-leave-active {
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-
-.slide-up-enter-from {
-    opacity: 0;
-    transform: translateY(100%);
-}
-
-.slide-up-leave-to {
-    opacity: 0;
-    transform: translateY(-100%);
 }
 
 /* ── Responsive ──────────────────────────────────────── */
