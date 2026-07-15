@@ -161,7 +161,7 @@ const legalityPlaceholder = computed(() => isWorkspace.value ? 'Nomor NPWP / akt
 
 const phoneFieldLabel = computed(() => isWorkspace.value ? 'Telepon Kantor' : 'Telepon Sekolah / Lembaga')
 
-const addressFieldLabel = computed(() => isWorkspace.value ? 'Alamat Kantor / Perusahaan' : 'Alamat Sekolah / Lembaga Pendidikan')
+const addressFieldLabel = computed(() => isWorkspace.value ? 'Alamat Kantor / Perusahaan' : 'Alamat Sekolah')
 
 const addressPlaceholder = computed(() => isWorkspace.value ? 'Alamat lengkap kantor / perusahaan' : 'Alamat lengkap lembaga')
 

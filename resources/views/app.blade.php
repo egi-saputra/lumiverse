@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" translate="no" class="dark">
     <head>
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-W3J9TRYW6B"></script>

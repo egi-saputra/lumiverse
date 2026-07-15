@@ -378,6 +378,10 @@ onMounted(() => {
         position: fixed;
         left: 0;
         top: 0;
+        bottom: 0;
+        /* ⬅️ kunci ke viewport, bukan height:100vh saja */
+        height: 100dvh;
+        /* ⬅️ fallback lebih akurat di mobile */
         z-index: 50;
         transform: translateX(-100%);
         transition: transform 0.25s ease;

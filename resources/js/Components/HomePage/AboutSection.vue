@@ -184,9 +184,10 @@ function closeProfile() {
             <div class="container">
                 <div class="section-header centered reveal">
                     <span class="section-eyebrow">Mengapa Memilih Lumiverse?</span>
-                    <h3 class="section-title">
+                    <!-- <h3 class="section-title">
                         Pengalaman modern yang dirancang untuk sekolah masa kini.
-                    </h3>
+                    </h3> -->
+                    <h3 class="section-title">Fokus pada pembelajaran,<br>biarkan teknologi menangani sisanya.</h3>
                 </div>
                 <div class="values-grid">
                     <div v-for="(val, i) in values" :key="val.title" class="value-card reveal"

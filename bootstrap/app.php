@@ -27,6 +27,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'activated' => \App\Http\Middleware\CheckActivated::class,
             'backup.ujian' => \App\Http\Middleware\BackupJawabanUjian::class,
         ]);
+
+        $middleware->redirectUsersTo(function (Illuminate\Http\Request $request) {
+            if (Illuminate\Support\Facades\Auth::guard('owner')->check()) {
+                return route('owner.dashboard');
+            }
+
+            if (Illuminate\Support\Facades\Auth::guard('developer')->check()) {
+                return route('developer.dashboard');
+            }
+
+            return route('dashboard'); // fallback untuk guard 'web' biasa (tenant)
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
