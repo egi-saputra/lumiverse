@@ -2,26 +2,31 @@
 import { Link } from '@inertiajs/vue3'
 
 const productLinks = [
-    { href: '/', label: 'Produk', anchor: true },
-    { href: '/', label: 'Harga', anchor: true },
-    { href: '/', label: 'Dokumentasi', anchor: true },
-    { href: '/', label: 'Changelog' },
-    { href: '/', label: 'Roadmap' },
-    { href: '/', label: 'Status Sistem' },
+    { href: '/', label: 'LMS Platform', anchor: true },
+    { href: '/', label: 'Pricing List', anchor: true },
+    // { href: '/', label: 'Blog' },
+    // { href: '/', label: 'Cashtify Lite', anchor: true },
+    // { href: '/', label: 'Lumi Workspace', anchor: true },
+    // { href: '/', label: 'KreatiCraft ID', anchor: true },
+    // { href: '/', label: 'Roadmap' },
+    // { href: '/', label: 'Changelog' },
+    // { href: '/', label: 'Status Sistem' },
 ]
 const companyLinks = [
-    { href: '/', label: 'Tentang Kami' },
-    { href: '/', label: 'Blog' },
-    { href: '/', label: 'Karir' },
-    { href: '/', label: 'Program Partner' },
-    { href: '#testimonial', label: 'Testimoni', anchor: true },
+    { href: '/', label: 'Company Info' },
+    // { href: '/', label: 'Careers Info' },
+    { href: '/', label: 'Media Gallery' },
+    { href: '/', label: 'Brand Resources' },
+    { href: '/', label: 'Partner Programs' },
+    // { href: '#testimonial', label: 'Testimoni', anchor: true },
     // { href: '/', label: 'Press Kit' },
 ]
 const supportLinks = [
-    { href: '/', label: 'Pusat Bantuan' },
-    { href: '#docs', label: 'API Docs', anchor: true },
-    { href: '/', label: 'Video Tutorial' },
-    { href: 'mailto:info@lumiverse.co.id', label: 'info@lumiverse.co.id' },
+    { href: '/', label: 'Help Center' },
+    { href: '/', label: 'Documentation', anchor: true },
+    // { href: '#docs', label: 'API Docs', anchor: true },
+    // { href: '/', label: 'Video Tutorial' },
+    { href: 'mailto:info@lumiverse.co.id', label: 'Email Support' },
     { href: 'https://wa.me/+628987504976', label: 'WhatsApp Support', external: true },
 ]
 </script>
@@ -30,24 +35,16 @@ const supportLinks = [
     <footer class="footer" id="kontak" role="contentinfo">
         <div class="container">
             <div class="footer-grid">
-                <!-- Brand -->
                 <div>
+                    <!-- Brand -->
                     <div class="footer-brand-row">
-                        <img src="/images/logo-dark.webp" alt="Lumiverse" class="h-8 object-cover scale-150" />
-                        <div class="font-semibold text-3xl">Lumiverse <span class="text-cyan">School</span>
+                        <img src="/images/logo-dark.webp" alt="Lumiverse"
+                            class="sm:h-10 h-9 object-cover scale-150 mt-1" />
+                        <div class="font-semibold sm:text-3xl text-2xl">Lumiverse <span class="text-cyan">School</span>
                         </div>
                     </div>
-                    <p class="footer-brand-desc">
-                        Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang hadir untuk
-                        memberikan solusi dan kemudahan bagi satuan pendidikan seperti sekolah atau instansi lembaga
-                        pendidikan lainnya di seluruh Indonesia.
-                    </p>
-                    <!-- <p class="footer-brand-desc">
-                        The All in One Growth System Platform berbasis cloud terpercaya,
-                        hadir untuk memberikan solusi dan kemudahan bagi sebuah bisnis, perusahaan, korporasi, sekolah,
-                        komunitas belajar dan lembaga
-                        pendidikan lainnya.
-                    </p> -->
+
+                    <!-- Social Links -->
                     <div class="footer-socials">
                         <a href="https://instagram.com/lumiplatforms" class="social-link" aria-label="Instagram"
                             target="_blank" rel="noopener">
@@ -58,7 +55,9 @@ const supportLinks = [
                                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                             </svg>
                         </a>
-                        <a href="https://linkedin.com/company/lumiplatforms" class="social-link" aria-label="LinkedIn"
+
+                        <!-- LinkedIn -->
+                        <!-- <a href="https://linkedin.com/company/lumiplatforms" class="social-link" aria-label="LinkedIn"
                             target="_blank" rel="noopener">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">
@@ -67,7 +66,9 @@ const supportLinks = [
                                 <rect x="2" y="9" width="4" height="12" />
                                 <circle cx="4" cy="4" r="2" />
                             </svg>
-                        </a>
+                        </a> -->
+
+                        <!-- Youtube -->
                         <a href="https://youtube.com/@lumiverse" class="social-link" aria-label="YouTube"
                             target="_blank" rel="noopener">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -77,12 +78,48 @@ const supportLinks = [
                                 <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
                             </svg>
                         </a>
+
+                        <!-- X (Twitter) -->
+                        <a href="https://x.com/lumiplatforms" class="social-link" aria-label="X" target="_blank"
+                            rel="noopener">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                            </svg>
+                        </a>
+
+                        <!-- Facebook -->
+                        <a href="https://facebook.com/lumiplatforms" class="social-link" aria-label="Facebook"
+                            target="_blank" rel="noopener">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M22 12.06C22 6.505 17.523 2 12 2S2 6.505 2 12.06c0 5.02 3.657 9.184 8.438 9.94v-7.03H7.898v-2.91h2.54V9.845c0-2.507 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.462h-1.26c-1.243 0-1.63.774-1.63 1.567v1.88h2.773l-.443 2.91h-2.33V22c4.78-.756 8.437-4.92 8.437-9.94z" />
+                            </svg>
+                        </a>
+
+                        <!-- Threads -->
+                        <!-- <a href="https://threads.net/@lumiplatforms" class="social-link" aria-label="Threads"
+                            target="_blank" rel="noopener">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.028-3.574.878-6.428 2.523-8.482C5.845 1.205 8.598.024 12.179 0h.014c2.746.02 5.032.725 6.79 2.098 1.657 1.294 2.81 3.13 3.428 5.458l-2.007.537c-1.02-3.842-3.6-5.79-7.665-5.79h-.011c-3.44.024-6.207 1.31-7.696 3.635-1.29 2.014-1.55 4.618-1.575 6.055.025 1.436.284 4.038 1.575 6.052 1.489 2.323 4.256 3.61 7.696 3.635h.008c3.02-.021 4.939-1.06 6.055-3.264.635-1.256.895-2.646.99-3.87-.53.297-1.16.532-1.885.696-1.395.317-2.98.234-4.375-.42-1.66-.78-2.58-2.24-2.53-4.01.05-1.756 1.15-3.19 2.94-3.83 1.87-.665 3.9-.29 5.365.98a4.94 4.94 0 0 1 .89 1.05c.31-1.03.31-2.13-.06-3.05-.62-1.54-2.29-2.44-4.71-2.53l-.02-2.002c3.135.113 5.42 1.49 6.44 4.033.63 1.57.575 3.335-.16 5.02.01.05.02.1.03.15.29 1.61.02 4.15-1.08 6.28-1.42 2.75-3.85 4.15-7.18 4.176z" />
+                            </svg>
+                        </a> -->
+
+                        <!-- TikTok -->
+                        <a href="https://tiktok.com/@lumiplatforms" class="social-link" aria-label="TikTok"
+                            target="_blank" rel="noopener">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path
+                                    d="M16.6 5.82c-1.02-.9-1.6-2.19-1.6-3.51V2h-3.34v13.61c0 1.5-1.22 2.72-2.72 2.72a2.72 2.72 0 0 1 0-5.44c.28 0 .55.04.8.12v-3.4a6.08 6.08 0 0 0-.8-.06 6.12 6.12 0 0 0 0 12.24c3.38 0 6.12-2.74 6.12-6.12V8.34a8.9 8.9 0 0 0 5.14 1.65V6.65c-1.13 0-2.18-.35-3.6-1.6z" />
+                            </svg>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Produk -->
                 <div>
-                    <div class="footer-col-title">Produk</div>
+                    <div class="footer-col-title">Products</div>
                     <nav class="footer-links" aria-label="Product links">
                         <a v-for="link in productLinks" :key="link.label" :href="link.href">
                             {{ link.label }}
@@ -92,7 +129,7 @@ const supportLinks = [
 
                 <!-- Perusahaan -->
                 <div>
-                    <div class="footer-col-title">Perusahaan</div>
+                    <div class="footer-col-title">About us</div>
                     <nav class="footer-links" aria-label="Company links">
                         <a v-for="link in companyLinks" :key="link.label" :href="link.href">
                             {{ link.label }}
@@ -102,7 +139,7 @@ const supportLinks = [
 
                 <!-- Bantuan -->
                 <div>
-                    <div class="footer-col-title">Bantuan</div>
+                    <div class="footer-col-title">Contact us</div>
                     <nav class="footer-links" aria-label="Support links">
                         <a v-for="link in supportLinks" :key="link.label" :href="link.href"
                             :target="link.external ? '_blank' : undefined"
@@ -126,7 +163,7 @@ const supportLinks = [
                 <nav class="footer-legal-links" aria-label="Legal links">
                     <a href="/privasi">Kebijakan Privasi</a>
                     <a href="/syarat">Syarat & Ketentuan</a>
-                    <a href="/cookie">Cookie Policy</a>
+                    <a href="/cookie">Kelola Cookie</a>
                     <!-- <a href="#legalitas">Legalitas</a> -->
                 </nav>
             </div>
@@ -185,12 +222,12 @@ const supportLinks = [
 
 .footer-socials {
     display: flex;
-    gap: 0.75rem;
+    gap: 1.15rem;
 }
 
 .social-link {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border-radius: 8px;
     border: 1px solid var(--border);
     display: flex;
@@ -208,7 +245,7 @@ const supportLinks = [
 
 .footer-col-title {
     font-family: var(--font-display);
-    font-size: 0.875rem;
+    font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 1.25rem;
 }
@@ -220,7 +257,7 @@ const supportLinks = [
 }
 
 .footer-links a {
-    font-size: 0.875rem;
+    font-size: 1rem;
     color: var(--muted);
     transition: color 0.2s;
 }
@@ -283,6 +320,21 @@ const supportLinks = [
     .footer-bottom {
         flex-direction: column;
         text-align: center;
+    }
+
+    .footer-col-title {
+        font-size: 1rem;
+    }
+
+    .footer-socials {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .footer-links a {
+        font-size: 0.875rem;
+        color: var(--muted);
+        transition: color 0.2s;
     }
 }
 </style>

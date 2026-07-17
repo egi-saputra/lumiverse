@@ -26,10 +26,10 @@ const faqs = [
         q: 'Berapa biaya berlangganan dan apakah ada masa uji coba?',
         a: 'Biaya disesuaikan dengan jumlah pengguna aktif dan modul yang digunakan. Kami menyediakan masa uji coba gratis untuk sekolah yang ingin melihat dan merasakan secara langsung bagaimana Lumiverse School bekerja sebelum berkomitmen jangka panjang. Hubungi tim kami untuk penawaran yang sesuai.',
     },
-    // {
-    //     q: 'Apakah tersedia dukungan teknis jika terjadi kendala?',
-    //     a: 'Tim support kami tersedia melalui WhatsApp, email, dan panduan dokumentasi lengkap. Untuk isu krusial seperti pelaksanaan ujian, kami menyediakan jalur prioritas agar kendala dapat ditangani secepat mungkin.',
-    // },
+    {
+        q: 'Apakah tersedia dukungan teknis jika terjadi kendala?',
+        a: 'Tim support kami tersedia melalui WhatsApp, email, dan panduan dokumentasi lengkap. Untuk isu krusial seperti pelaksanaan ujian, kami menyediakan jalur prioritas agar kendala dapat ditangani secepat mungkin.',
+    },
 ]
 
 const openIndex = ref(-1)
@@ -57,17 +57,23 @@ function toggle(i) {
                     </p>
 
                     <div class="contact-card sm:flex hidden">
-                        <div class="contact-icon">💬</div>
+                        <!-- <div class="contact-icon">💬</div> -->
                         <div class="contact-text">
-                            <div class="contact-title">Belum menemukan jawabannya?</div>
-                            <div class="contact-sub">Tim kami siap membantu Anda secara langsung melalui
-                                WhatsApp.</div>
+                            <!-- <div class="contact-title">Belum menemukan jawabannya?</div> -->
+                            <!-- <div class="contact-sub">Tim support kami siap membantu Anda secara langsung melalui
+                                WhatsApp.</div> -->
+                            <div class="contact-title">Selalu ada untuk membantu Anda</div>
+                            <div class="contact-sub">Apabila Anda ingin mengetahui lebih lanjut mengenai fitur produk,
+                                harga layanan, atau solusi atas kendala yang dialami, kami selalu siap membantu Anda.
+                                Hubungi kami melaui email atau media sosial. Anda juga dapat
+                                mengunjungi Pusat Bantuan kami.</div>
                         </div>
-                        <a href="https://wa.me/6281234567890" class="contact-btn" target="_blank" rel="noopener">
+                        <a href="https://wa.me/6281234567890" class="btn-hero" target="_blank" rel="noopener">
                             Hubungi Kami
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5">
-                                <path d="M5 12h14M13 6l6 6-6 6" />
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 12H20"></path>
+                                <path d="M14 6L20 12L14 18"></path>
                             </svg>
                         </a>
                     </div>
@@ -96,14 +102,15 @@ function toggle(i) {
                 </div>
 
                 <div class="contact-card flex sm:hidden">
-                    <div class="contact-icon">💬</div>
                     <div class="contact-text">
-                        <div class="contact-title">Belum menemukan jawabannya?</div>
-                        <div class="contact-sub">Tim kami siap membantu Anda secara langsung melalui
-                            WhatsApp.
-                        </div>
+                        <div class="contact-icon">💬</div>
+                        <div class="contact-title">Kami selalu ada,<br>untuk membantu Anda</div>
+                        <div class="contact-sub">Apabila Anda ingin mengetahui lebih lanjut mengenai fitur produk,
+                            harga layanan, atau solusi atas kendala yang dialami, kami selalu siap membantu Anda.
+                            Hubungi kami melaui email atau media sosial. Anda juga dapat
+                            mengunjungi Pusat Bantuan kami.</div>
                     </div>
-                    <a href="https://wa.me/6281234567890" class="contact-btn" target="_blank" rel="noopener">
+                    <a href="https://wa.me/6281234567890" class="btn-hero" target="_blank" rel="noopener">
                         Hubungi Kami
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2.5">
@@ -191,19 +198,25 @@ function toggle(i) {
     align-items: center;
     justify-content: center;
     font-size: 1.05rem;
+    margin-bottom: 0.5rem;
 }
 
 .contact-title {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 1.75rem;
     margin-bottom: 0.2rem;
 }
 
 .contact-sub {
-    font-size: 0.82rem;
+    font-size: 0.875rem;
     color: var(--muted);
     line-height: 1.5;
+}
+
+.btn-hero {
+    /* border-radius: 100px; */
+    font-family: var(--font-body);
 }
 
 .contact-btn {
@@ -362,6 +375,12 @@ function toggle(i) {
 }
 
 @media (max-width: 640px) {
+    .contact-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.2rem;
+        line-height: 1.5rem;
+    }
+
     .section-desc {
         font-size: 0.875rem;
         line-height: 1.5;

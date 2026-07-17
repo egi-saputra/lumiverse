@@ -139,7 +139,7 @@ body::before {
 }
 
 /* ─── SHARED BUTTON STYLES ───────────────────────────── */
-.btn-hero {
+/* .btn-hero {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
@@ -162,6 +162,27 @@ body::before {
     box-shadow:
         0 0 60px rgba(0, 212, 255, 0.45),
         0 8px 24px rgba(0, 0, 0, 0.4);
+} */
+
+.btn-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 0.9rem 2rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+    color: var(--midnight);
+    transition: all 0.25s;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-hero:hover {
+    transform: translateY(-2px);
+    /* background: linear-gradient(135deg, #00b8d9, #0099cc); */
 }
 .btn-outline {
     display: inline-flex;

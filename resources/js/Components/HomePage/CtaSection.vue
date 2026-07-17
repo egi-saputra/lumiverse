@@ -7,18 +7,23 @@ import { Link } from '@inertiajs/vue3'
         <div class="container">
             <div class="cta-box reveal">
                 <h2 class="cta-title" id="cta-title">
-                    Siap transformasi<br>
+                    Siap transformasi <span class="sm:inline-flex hidden">digital</span><br>
                     <span class="gradient-text">bersama kami?</span>
                 </h2>
                 <p class="cta-desc">
-                    Pendaftaran gratis. Tanpa kartu kredit. Setup mudah kurang dari 2 menit.
+                    Pendaftaran gratis. Tanpa kartu kredit. Setup mudah dalam 2 menit.
                 </p>
                 <div class="cta-actions">
                     <a href="https://wa.me/628987504976" class="btn-outline" target="_blank" rel="noopener noreferrer">
                         💬 Chat via WhatsApp
                     </a>
                     <Link href="/registration" class="btn-hero">
-                        Mulai Gratis Sekarang →
+                        Daftar Gratis Sekarang
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12H21"></path>
+                            <path d="M15 6L21 12L15 18"></path>
+                        </svg>
                     </Link>
                 </div>
             </div>
@@ -101,6 +106,10 @@ import { Link } from '@inertiajs/vue3'
 
     .cta-box {
         padding: 3rem 1.5rem;
+    }
+
+    .btn-outline {
+        display: none;
     }
 }
 </style>

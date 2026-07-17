@@ -53,7 +53,7 @@ onUnmounted(() => {
             <div class="hero-layout">
                 <!-- Content -->
                 <div class="hero-content">
-                    <div class="hero-badge sm:inline-flex hidden"
+                    <div class="hero-badge hidden"
                         :aria-label="`Platform ${variants[activeIndex].platform} #1 untuk ${variants[activeIndex].audience}`">
                         <div class="hero-badge-dot"></div>
                         <span>Platform</span>
@@ -100,12 +100,18 @@ onUnmounted(() => {
                     </h1>
 
                     <!-- The All in One Growth System Platform -->
-                    <p class="hero-desc">
+                    <p class="hero-desc sm:flex hidden">
                         Daftarkan sekolah Anda dan mulai gunakan Lumiverse School hanya dalam hitungan menit. Proses
                         aktivasi dilakukan secara otomatis, tanpa perlu menghubungi sales atau menunggu proses
                         integrasi
                         manual.
                     </p>
+
+                    <p class="hero-desc sm:hidden flex">
+                        Bersama Lumiverse School, fokus pada pembelajaran Anda. Biarkan teknologi kami yang mengatasi
+                        sisanya.
+                    </p>
+
                     <!-- <p class="hero-desc">
                         Lumiverse merupakan sebuah platform Learning Management System berbasis cloud, yang hadir untuk
                         memberikan solusi dan kemudahan bagi sekolah atau instansi lembaga pendidikan lainnya.
@@ -135,8 +141,8 @@ onUnmounted(() => {
                             <div class="trust-avatar">SN</div>
                             <div class="trust-avatar">+</div>
                         </div>
-                        <p class="trust-text"><strong>1000+ pengguna</strong> telah bergabung <span
-                                class="sm:inline-flex hidden">— tanpa kartu kredit</span><span
+                        <p class="trust-text"><strong>100+ Lembaga pendidikan</strong> telah bergabung <span
+                                class="sm:inline-flex hidden">- Sekarang giliran Anda!</span><span
                                 class="inline-flex sm:hidden">bersama kami, sekarang giliranmu!</span></p>
                     </div>
                 </div>
@@ -308,15 +314,15 @@ onUnmounted(() => {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4rem;
-    align-items: center;
+    /* align-items: center; */
     position: relative;
     z-index: 1;
     min-width: 0;
-    /* tambahan */
 }
 
 .hero-content {
     min-width: 0;
+    margin-top: -1.5rem;
 }
 
 .hero-badge {
@@ -813,6 +819,11 @@ onUnmounted(() => {
 
     .hero {
         padding: 6rem 0 4rem;
+    }
+
+    .hero-content {
+        min-width: 0;
+        margin-top: 0;
     }
 
     .hero-title {

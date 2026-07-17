@@ -10,7 +10,7 @@ const scrollRoot = inject('scrollRoot')
 const navItems = [
     { id: 'hero', href: '#hero', label: 'Beranda Utama' },
     // { id: 'about', href: '#about', label: 'Tentang Kami' },
-    { id: 'fitur', href: '#fitur', label: 'Fitur Aplikasi' },
+    { id: 'layanan', href: '#layanan', label: 'Fitur Aplikasi' },
     { id: 'cara-kerja', href: '#cara-kerja', label: 'Dokumentasi' },
     // { id: 'harga', href: '#harga', label: 'Paket Harga' },
     // { id: 'testimonial', href: '#testimonial', label: 'Testimoni' },
@@ -57,8 +57,9 @@ onUnmounted(() => {
         <div class="container">
             <div class="navbar-content">
                 <a href="/" class="nav-logo" @click.prevent="handleLogoClick">
-                    <img src="/images/logo-dark.webp" alt="Lumiverse School" class="h-8 object-cover scale-150 flex" />
-                    <div class="text-2xl font-semibold logo-text-static">
+                    <img src="/images/logo-dark.webp" alt="Lumiverse School"
+                        class="h-9 object-cover scale-150 flex mt-1" />
+                    <div class="text-2xl  font-semibold logo-text-static">
                         Lumiverse <span class="text-cyan">School</span>
                     </div>
                 </a>
@@ -69,15 +70,12 @@ onUnmounted(() => {
                     <!-- <li><a href="#hero" @click.prevent="scrollTo('#hero')">Artikel</a></li> -->
                     <li><a href="#layanan" @click.prevent="scrollTo('#layanan')">Fitur & Layanan</a></li>
                     <li><a href="#cara-kerja" @click.prevent="scrollTo('#cara-kerja')">Dokumentasi</a></li>
-                    <!-- <li><a href="#harga" @click.prevent="scrollTo('#harga')">Paket Harga</a></li> -->
-                    <!-- <li><a href="#testimonial" @click.prevent="scrollTo('#testimonial')">Testimoni</a></li> -->
-                    <!-- <li><a href="#legalitas" @click.prevent="scrollTo('#legalitas')">Legalitas</a></li> -->
-                    <li><a href="#kontak" @click.prevent="scrollTo('#kontak')">Kontak</a></li>
+                    <li><a href="#kontak" @click.prevent="scrollTo('#kontak')">Kontak Kami</a></li>
                 </ul>
 
                 <div class="nav-actions">
-                    <Link href="/lumiverse/login" class="btn-ghost">Login</Link>
-                    <Link href="/registration" class="btn-primary">Coba Gratis</Link>
+                    <Link href="/lumiverse/login" class="btn-ghost">Log In</Link>
+                    <Link href="/registration" class="btn-primary">Daftar Sekarang</Link>
                     <!-- <Link href="/lumiverse/login" class="btn-primary">Login</Link> -->
                 </div>
 
@@ -102,7 +100,7 @@ onUnmounted(() => {
 
                 <div class="mobile-cta-group">
                     <Link href="/lumiverse/login" class="btn-mob-ghost" @click="isMenuOpen = false">Masuk</Link>
-                    <Link href="/registration" class="btn-mob-cta" @click="isMenuOpen = false">Coba Gratis</Link>
+                    <Link href="/registration" class="btn-mob-cta" @click="isMenuOpen = false">Daftar Sekarang</Link>
                 </div>
             </div>
         </div>
@@ -154,7 +152,7 @@ onUnmounted(() => {
     grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
     gap: 1rem;
-    padding: 0.875rem 0;
+    padding: 1.5rem 0;
 }
 
 /* Logo */
@@ -199,8 +197,9 @@ onUnmounted(() => {
 
 .nav-links a {
     font-size: 1rem;
-    font-weight: 500;
+    /* font-weight: 600; */
     color: var(--muted);
+    font-family: var(--font-body);
     transition: color 0.15s;
     white-space: nowrap;
     cursor: pointer;
@@ -223,6 +222,7 @@ onUnmounted(() => {
     font-size: 1rem;
     font-weight: 600;
     color: var(--muted);
+    font-family: var(--font-body);
     padding: 0.45rem 0.9rem;
     border-radius: 8px;
     border: none;
@@ -239,10 +239,12 @@ onUnmounted(() => {
 
 .btn-primary {
     font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
     padding: 0.45rem 1.1rem;
-    border-radius: 8px;
+    border-radius: 100px;
+    /* border-radius: 8px; */
     background: linear-gradient(135deg, var(--cyan), var(--cyan-dim));
+    font-family: var(--font-body);
     color: var(--midnight);
     border: none;
     cursor: pointer;
@@ -473,6 +475,10 @@ onUnmounted(() => {
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
+    .navbar-content {
+        padding: 1rem 0;
+    }
+
     .nav-links {
         display: none;
     }
