@@ -129,9 +129,13 @@ function closeProfile() {
 
 <template>
     <section id="about" class="about-section" aria-labelledby="about-title">
+        <div class="ambient" aria-hidden="true">
+            <div class="orb orb--cyan"></div>
+            <div class="orb orb--violet"></div>
+        </div>
 
         <!-- ── Header ─────────────────────────────────────── -->
-        <!-- <div class="container sm:block hidden">
+        <div class="container sm:block hidden">
             <div class="section-header centered reveal">
                 <span class="section-eyebrow">Tentang Kami</span>
                 <h2 class="section-title" id="about-title">
@@ -139,20 +143,20 @@ function closeProfile() {
                 </h2>
                 <span class="section-desc">Merupakan sebuah platform yang hadir untuk
                     memberikan solusi dan kemudahan dalam transformasi digitalisasi sekolah atau lembaga pendidikan di
-                    Indonesia</span> -->
+                    Indonesia</span>
 
-        <!-- <p class="section-desc">
+                <p class="section-desc">
                     Lumiverse School lahir dari satu pertanyaan sederhana: <em>kenapa guru di Indonesia disibukkan
                         dengan urusan administrasi sekolah?</em>
                     Seharusnya guru lebih fokus dengan inovasi dalam mengembangkan sistem pembelajaran dan pendidikan di
                     Indonesia demi
                     membangun generasi penerus bangsa yang kompeten dan berintegritas, Kami pun hadir untuk membantu
                     dalam mengatasi hal tersebut.
-                </p> -->
-        <!-- </div> -->
+                </p>
+            </div>
 
-        <!-- ── Visi & Misi ──────────────────────────────── -->
-        <!-- <div class="visi-misi-grid reveal">
+            <!-- ── Visi & Misi ──────────────────────────────── -->
+            <div class="visi-misi-grid reveal">
                 <div class="vm-card vm-visi">
                     <div class="vm-icon" aria-hidden="true">🌟</div>
                     <div class="vm-label">Visi</div>
@@ -176,32 +180,11 @@ function closeProfile() {
                         <li>Menghadirkan data & analitik yang membantu pengambilan keputusan berbasis fakta</li>
                     </ul>
                 </div>
-            </div> -->
-        <!-- </div> -->
-
-        <!-- ── Nilai-Nilai ──────────────────────────────────── -->
-        <div class="values-band">
-            <div class="container">
-                <div class="section-header centered reveal">
-                    <span class="section-eyebrow">Mengapa Memilih Lumiverse?</span>
-                    <!-- <h3 class="section-title">
-                        Pengalaman modern yang dirancang untuk sekolah masa kini.
-                    </h3> -->
-                    <h3 class="section-title">Fokus pada pembelajaran,<br>biarkan teknologi menangani sisanya.</h3>
-                </div>
-                <div class="values-grid">
-                    <div v-for="(val, i) in values" :key="val.title" class="value-card reveal"
-                        :style="`transition-delay: ${i * 0.1}s`">
-                        <div class="value-icon" aria-hidden="true">{{ val.icon }}</div>
-                        <h4 class="value-title">{{ val.title }}</h4>
-                        <p class="value-desc">{{ val.desc }}</p>
-                    </div>
-                </div>
             </div>
         </div>
 
         <!-- ── Timeline / Sejarah ───────────────────────────── -->
-        <!-- <div class="container">
+        <div class="container">
             <div class="timeline-header section-header centered reveal">
                 <span class="section-eyebrow">Perjalanan Kami</span>
                 <h3 class="section-title">Dari ide di sekolah menjadi platform nasional</h3>
@@ -222,10 +205,10 @@ function closeProfile() {
                     </div>
                 </div>
             </div>
-        </div> -->
+        </div>
 
         <!-- ── Tim ─────────────────────────────────────────── -->
-        <!-- <div class="team-band">
+        <div class="team-band">
             <div class="container">
                 <div class="section-header centered reveal">
                     <span class="text-4xl font-semibold text-[var(--cyan)] mb-10 tracking-wide">Executives</span>
@@ -257,10 +240,10 @@ function closeProfile() {
                             Read bio
                         </button>
                     </div>
-                </div> -->
+                </div>
 
-        <!-- Hiring CTA -->
-        <!-- <div class="hiring-cta reveal">
+                <!-- Hiring CTA -->
+                <div class="hiring-cta reveal">
                     <div class="hiring-icon" aria-hidden="true">✨</div>
                     <div class="hiring-text">
                         <strong>Kami sedang berkembang!</strong>
@@ -269,10 +252,10 @@ function closeProfile() {
                     <a href="/karir" class="hiring-btn">Lihat Lowongan →</a>
                 </div>
             </div>
-        </div> -->
+        </div>
 
         <!-- Modal Profil Tim -->
-        <!-- <Transition name="team-modal-fade">
+        <Transition name="team-modal-fade">
             <div v-if="activeMember" class="team-modal-overlay" @click.self="closeProfile">
                 <div class="team-modal" role="dialog" aria-modal="true">
                     <button type="button" class="team-modal-close" @click="closeProfile" aria-label="Tutup">✕</button>
@@ -288,7 +271,7 @@ function closeProfile() {
                     <p class="team-modal-bio">{{ activeMember.bio }}</p>
                 </div>
             </div>
-        </Transition> -->
+        </Transition>
 
     </section>
 </template>
@@ -299,6 +282,58 @@ function closeProfile() {
     padding: 7rem 0 0;
     position: relative;
     z-index: 1;
+}
+
+/* ── Ambient background ──────────────────────────────── */
+.ambient {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.16;
+    animation: float 18s ease-in-out infinite;
+}
+
+.orb--cyan {
+    width: 480px;
+    height: 480px;
+    top: -10%;
+    left: -8%;
+    background: radial-gradient(circle, var(--cyan), transparent 70%);
+}
+
+.orb--violet {
+    width: 420px;
+    height: 420px;
+    bottom: -12%;
+    right: -6%;
+    background: radial-gradient(circle, #a78bfa, transparent 70%);
+    animation-delay: -9s;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(3%, -4%) scale(1.06);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .orb {
+        animation: none;
+    }
 }
 
 /* ── Visi Misi ──────────────────────────────────────── */

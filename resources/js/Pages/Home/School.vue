@@ -1,21 +1,22 @@
 <script setup>
 import { Head } from '@inertiajs/vue3'
-import LandingLayout from '@/Layouts/LandingLayout.vue'
+import HomeLayout from '@/Layouts/HomeLayout.vue'
 import HeroSection from '@/Components/HomePage/HeroSection.vue'
-import AboutSection from '@/Components/HomePage/AboutSection.vue'
-// import LogosSection from '@/Components/HomePage/LogosSection.vue'
+import ValuesSection from '@/Components/HomePage/ValuesSection.vue'
+import LogosSection from '@/Components/HomePage/LogosSection.vue'
 import StatsSection from '@/Components/HomePage/StatsSection.vue'
-import FeaturesSection from '@/Components/HomePage/FeaturesSection.vue'
+import ServicesSection from '@/Components/HomePage/ServicesSection.vue'
 import HowItWorksSection from '@/Components/HomePage/HowItWorksSection.vue'
-// import DocsSection from '@/Components/HomePage/DocsSection.vue'
-// import PricingSection from '@/Components/HomePage/PricingSection.vue'
+import FaqSection from '@/Components/HomePage/FaqSection.vue'
+import DocsSection from '@/Components/HomePage/DocsSection.vue'
+import PricingSection from '@/Components/HomePage/PricingSection.vue'
 import TestimonialsSection from '@/Components/HomePage/TestimonialsSection.vue'
 import LegalitasSection from '@/Components/HomePage/LegalitasSection.vue'
 import CtaSection from '@/Components/HomePage/CtaSection.vue'
 import { onMounted } from 'vue'
 
 defineOptions({
-    layout: LandingLayout,
+    layout: HomeLayout,
 })
 
 /* ─── Dark Mode — dipaksa selalu aktif ──── */
@@ -85,12 +86,13 @@ onMounted(() => {
     <HeroSection />
     <!-- <LogosSection /> -->
     <StatsSection />
-    <AboutSection />
+    <ServicesSection />
+    <ValuesSection />
     <HowItWorksSection />
-    <FeaturesSection />
+    <TestimonialsSection />
+    <CtaSection />
+    <FaqSection />
     <!-- <DocsSection /> -->
     <!-- <PricingSection /> -->
-    <TestimonialsSection />
-    <LegalitasSection />
-    <CtaSection />
+    <!-- <LegalitasSection /> -->
 </template>

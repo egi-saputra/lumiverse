@@ -11,10 +11,11 @@ const steps = [
     <section class="how-section" id="cara-kerja" aria-labelledby="how-title">
         <div class="container">
             <div class="section-header centered reveal">
-                <div class="section-eyebrow">How It Works</div>
+                <div class="section-eyebrow">Cara Memulai</div>
                 <h2 class="section-title" id="how-title">Mulai dalam 4 langkah mudah</h2>
-                <p class="section-desc">Tidak perlu keahlian teknis secara khusus. Lembaga Anda bisa langsung aktif
-                    hanya dalam hitungan menit.</p>
+                <p class="section-desc">
+                    Proses pendaftaran hingga aktivasi dirancang sederhana, cepat, mudah dan sepenuhnya otomatis.
+                </p>
             </div>
 
             <div class="steps-grid">

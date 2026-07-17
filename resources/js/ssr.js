@@ -6,7 +6,12 @@ import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 import { ZiggyVue } from "../../vendor/tightenco/ziggy";
 import { Ziggy } from "./ziggy.js";
 
-const SSR_ALLOWED = ["Home/School", "Home/Workspace"];
+const SSR_ALLOWED = [
+    "Home/School",
+    "Home/About",
+    "Home/Article",
+    "Home/Workspace",
+];
 
 createServer((page) => {
     // Halaman selain landing page: skip render Vue di server,

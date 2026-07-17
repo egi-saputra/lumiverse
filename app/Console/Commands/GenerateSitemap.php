@@ -18,6 +18,16 @@ class GenerateSitemap extends Command
         $lms->add(Url::create('https://lumiverse.co.id/')->setPriority(1.0));
         $lms->writeToFile(public_path('sitemap-lms.xml'));
 
+        // Sitemap untuk About
+        $about = Sitemap::create();
+        $about->add(Url::create('https://about.lumiverse.co.id/')->setPriority(1.0));
+        $about->writeToFile(public_path('sitemap-about.xml'));
+
+        // Sitemap untuk Article
+        $article = Sitemap::create();
+        $article->add(Url::create('https://article.lumiverse.co.id/')->setPriority(1.0));
+        $article->writeToFile(public_path('sitemap-article.xml'));
+
         // Sitemap untuk Workspace
         $workspace = Sitemap::create();
         $workspace->add(Url::create('https://workspace.lumiverse.co.id/')->setPriority(1.0));

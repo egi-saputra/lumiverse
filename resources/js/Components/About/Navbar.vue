@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, inject } from 'vue'
+import { ref, onMounted, onUnmounted, inject, computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
 
 const page = usePage()
@@ -7,35 +7,52 @@ const isScrolled = ref(false)
 const isMenuOpen = ref(false)
 const scrollRoot = inject('scrollRoot')
 
+// ─── Utilities ──────────────────────────────────────────────────────────
+function isIpOrLocalhost(hostname) {
+    return hostname === 'localhost' || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)
+}
+
+const centralDomain = computed(() => {
+    const hostname = window.location.hostname
+    if (isIpOrLocalhost(hostname)) return 'localhost'
+    return page.props.centralDomain ?? hostname
+})
+
+const protocolPort = computed(() => {
+    const protocol = window.location.protocol
+    const port = window.location.port ? `:${window.location.port}` : ''
+    return { protocol, port }
+})
+
+// Subdomain aktif saat ini — null kalau di central domain (halaman "/")
+const currentSubdomain = computed(() => {
+    const hostname = window.location.hostname
+    const base = centralDomain.value
+    if (hostname === base) return null
+    return hostname.replace(`.${base}`, '')
+})
+
+function subdomainUrl(prefix) {
+    const { protocol, port } = protocolPort.value
+    if (!prefix) return `${protocol}//${centralDomain.value}${port}/`
+    return `${protocol}//${prefix}.${centralDomain.value}${port}/`
+}
+
+// ─── Menu — tiap item = 1 subdomain (kosong berarti central domain "/") ───
 const navItems = [
-    { id: 'hero', href: '#hero', label: 'Beranda Utama' },
-    // { id: 'about', href: '#about', label: 'Tentang Kami' },
-    { id: 'fitur', href: '#fitur', label: 'Fitur Aplikasi' },
-    { id: 'cara-kerja', href: '#cara-kerja', label: 'Dokumentasi' },
-    // { id: 'harga', href: '#harga', label: 'Paket Harga' },
-    // { id: 'testimonial', href: '#testimonial', label: 'Testimoni' },
-    // { id: 'legalitas', href: '#legalitas', label: 'Legalitas' },
-    { id: 'kontak', href: '#kontak', label: 'Kontak Layanan' },
+    { key: null, label: 'Beranda' },
+    { key: 'about', label: 'Tentang Kami' },
+    { key: 'article', label: 'Artikel' },
+    { key: 'docs', label: 'Dokumentasi' },
 ]
 
+function isCurrent(key) {
+    return currentSubdomain.value === key
+}
+
+// ─── Efek blur/background navbar saat scroll ───────────────────────────
 function handleScroll() {
     isScrolled.value = (scrollRoot?.value?.scrollTop ?? 0) > 40
-}
-
-function scrollTo(id) {
-    isMenuOpen.value = false
-    setTimeout(() => {
-        const el = document.querySelector(id)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
-}
-
-function handleLogoClick() {
-    if (window.location.pathname === '/') {
-        scrollRoot?.value?.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-        window.location.href = '/'
-    }
 }
 
 onMounted(() => {
@@ -45,18 +62,16 @@ onMounted(() => {
 onUnmounted(() => {
     scrollRoot?.value?.removeEventListener('scroll', handleScroll)
 })
-
 </script>
 
 <template>
     <nav class="navbar" :class="{ scrolled: isScrolled, 'menu-open': isMenuOpen }" role="navigation"
         aria-label="Main navigation">
-        <!-- Layer backdrop terpisah — tidak mempengaruhi layout konten -->
         <div class="navbar-bg" aria-hidden="true"></div>
 
         <div class="container">
             <div class="navbar-content">
-                <a href="/" class="nav-logo" @click.prevent="handleLogoClick">
+                <a :href="subdomainUrl(null)" class="nav-logo">
                     <img src="/images/logo-dark.webp" alt="Lumiverse School" class="h-8 object-cover scale-150 flex" />
                     <div class="text-2xl font-semibold logo-text-static">
                         Lumiverse <span class="text-cyan">School</span>
@@ -64,24 +79,18 @@ onUnmounted(() => {
                 </a>
 
                 <ul class="nav-links" role="list">
-                    <li><a href="#hero" @click.prevent="scrollTo('#hero')">Beranda</a></li>
-                    <!-- <li><a href="#about" @click.prevent="scrollTo('#about')">Tentang Kami</a></li> -->
-                    <!-- <li><a href="#hero" @click.prevent="scrollTo('#hero')">Artikel</a></li> -->
-                    <li><a href="#layanan" @click.prevent="scrollTo('#layanan')">Fitur & Layanan</a></li>
-                    <li><a href="#cara-kerja" @click.prevent="scrollTo('#cara-kerja')">Dokumentasi</a></li>
-                    <!-- <li><a href="#harga" @click.prevent="scrollTo('#harga')">Paket Harga</a></li> -->
-                    <!-- <li><a href="#testimonial" @click.prevent="scrollTo('#testimonial')">Testimoni</a></li> -->
-                    <!-- <li><a href="#legalitas" @click.prevent="scrollTo('#legalitas')">Legalitas</a></li> -->
-                    <li><a href="#kontak" @click.prevent="scrollTo('#kontak')">Kontak</a></li>
+                    <li v-for="item in navItems" :key="item.label">
+                        <a v-if="!isCurrent(item.key)" :href="subdomainUrl(item.key)">{{ item.label }}</a>
+                        <span v-else class="nav-current">{{ item.label }}</span>
+                    </li>
+                    <li><a :href="subdomainUrl(null) + '#kontak'">Kontak</a></li>
                 </ul>
 
                 <div class="nav-actions">
                     <Link href="/lumiverse/login" class="btn-ghost">Login</Link>
                     <Link href="/registration" class="btn-primary">Coba Gratis</Link>
-                    <!-- <Link href="/lumiverse/login" class="btn-primary">Login</Link> -->
                 </div>
 
-                <!-- Burger animasi (rotate jadi X) menggantikan icon SVG statis -->
                 <button class="nav-toggle" :aria-expanded="isMenuOpen" aria-label="Buka menu"
                     @click="isMenuOpen = !isMenuOpen">
                     <span class="burger-line" :class="{ open: isMenuOpen }"></span>
@@ -90,13 +99,16 @@ onUnmounted(() => {
                 </button>
             </div>
 
-            <!-- Mobile dropdown menu — max-height + staggered slide-in, menggantikan full-screen overlay -->
             <div class="mobile-menu" :class="{ open: isMenuOpen }">
                 <ul class="mobile-links">
-                    <li v-for="(item, i) in navItems" :key="item.id" :style="`--i: ${i}`">
-                        <a class="mobile-link" :href="item.href" @click.prevent="scrollTo(item.href)">
+                    <li v-for="(item, i) in navItems" :key="item.label" :style="`--i: ${i}`">
+                        <a v-if="!isCurrent(item.key)" class="mobile-link" :href="subdomainUrl(item.key)">
                             {{ item.label }}
                         </a>
+                        <span v-else class="mobile-link nav-current">{{ item.label }}</span>
+                    </li>
+                    <li :style="`--i: ${navItems.length}`">
+                        <a class="mobile-link" :href="subdomainUrl(null) + '#kontak'">Kontak</a>
                     </li>
                 </ul>
 
@@ -155,6 +167,12 @@ onUnmounted(() => {
     align-items: center;
     gap: 1rem;
     padding: 0.875rem 0;
+}
+
+.nav-current {
+    color: var(--cyan);
+    font-weight: 700;
+    cursor: default;
 }
 
 /* Logo */
