@@ -11,7 +11,7 @@ import { Link } from '@inertiajs/vue3'
                     <span class="gradient-text">bersama kami?</span>
                 </h2>
                 <p class="cta-desc">
-                    Pendaftaran gratis. Tanpa kartu kredit. Setup mudah dalam 2 menit.
+                    Pendaftaran gratis. Tanpa skill teknis. Setup mudah dalam 2 menit.
                 </p>
                 <div class="cta-actions">
                     <a href="https://wa.me/628987504976" class="btn-outline" target="_blank" rel="noopener noreferrer">

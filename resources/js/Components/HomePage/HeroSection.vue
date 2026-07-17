@@ -141,9 +141,7 @@ onUnmounted(() => {
                             <div class="trust-avatar">SN</div>
                             <div class="trust-avatar">+</div>
                         </div>
-                        <p class="trust-text"><strong>100+ Lembaga pendidikan</strong> telah bergabung <span
-                                class="sm:inline-flex hidden">- Sekarang giliran Anda!</span><span
-                                class="inline-flex sm:hidden">bersama kami, sekarang giliranmu!</span></p>
+                        <p class="trust-text"><strong>100+ Lembaga pendidikan</strong> telah bergabung bersama kami, Sekarang giliran Anda!</p>
                     </div>
                 </div>
 

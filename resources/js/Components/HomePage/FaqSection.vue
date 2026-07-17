@@ -377,7 +377,7 @@ function toggle(i) {
 @media (max-width: 640px) {
     .contact-title {
         font-size: 1.25rem;
-        margin-bottom: 0.2rem;
+        margin-bottom: 0.5rem;
         line-height: 1.5rem;
     }
 
