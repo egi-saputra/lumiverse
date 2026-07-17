@@ -1,6 +1,6 @@
 <script setup>
 import { Head } from '@inertiajs/vue3'
-import LandingLayout from '@/Layouts/LandingLayout.vue'
+import HomeLayout from '@/Layouts/HomeLayout.vue'
 // import HeroSection from '@/Components/WorkspacePage/HeroSection.vue'
 // import StatsSection from '@/Components/WorkspacePage/StatsSection.vue'
 // import FeaturesSection from '@/Components/WorkspacePage/FeaturesSection.vue'
@@ -10,7 +10,7 @@ import LegalitasSection from '@/Components/HomePage/LegalitasSection.vue'
 // import CtaSection from '@/Components/WorkspacePage/CtaSection.vue'
 import { onMounted } from 'vue'
 
-defineOptions({ layout: LandingLayout })
+defineOptions({ layout: HomeLayout })
 
 /* ─── Dark Mode — dipaksa selalu aktif ──── */
 onMounted(() => {
