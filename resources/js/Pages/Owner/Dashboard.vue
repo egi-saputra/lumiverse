@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { useTenant } from '@/Composables/useTenant.js'
 import SubscriptionInvoiceModal from '@/Components/SubscriptionInvoiceModal.vue'
 import OwnerLayout from '@/Layouts/OwnerLayout.vue'
+import QRCode from 'qrcode'
 
 const props = defineProps({
     owner: Object,
@@ -171,6 +172,151 @@ async function confirmPay() {
         paySubmitting.value = false
     }
 }
+
+// ─── Share QR Code ID lembaga via WhatsApp ─────────────────────────────────
+const sharingBarcode = ref(false)
+
+async function shareBarcode() {
+    if (sharingBarcode.value) return
+    sharingBarcode.value = true
+
+    let canvas
+    try {
+        canvas = await generateQrCanvas()
+    } catch (e) {
+        alert('Gagal membuat QR code. Pastikan kode ID lembaga valid.')
+        sharingBarcode.value = false
+        return
+    }
+
+    canvas.toBlob(async (blob) => {
+        sharingBarcode.value = false
+        if (!blob) return
+
+        const file = new File([blob], `qr-${props.tenant.code}.png`, { type: 'image/png' })
+        const shareText = `QR Code ID Lembaga ${props.tenant.name} (${props.tenant.code})`
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: 'QR Code ID Lembaga', text: shareText })
+            } catch (e) {
+                // dibatalkan user, diamkan
+            }
+            return
+        }
+
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `qr-${props.tenant.code}.png`
+        link.click()
+        URL.revokeObjectURL(link.href)
+
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank')
+    }, 'image/png')
+}
+
+async function generateQrCanvas() {
+    // Faktor skala biar hasil PNG tajam (retina-quality), bukan blur
+    const scale = 3
+
+    // 1. Generate QR code langsung di resolusi tinggi
+    const qrSize = 260
+    const qrCanvas = document.createElement('canvas')
+    await QRCode.toCanvas(qrCanvas, tenantAppUrl.value ?? props.tenant.code, {
+        width: qrSize * scale,
+        margin: 0,
+        color: {
+            dark: '#0a0f1e',
+            light: '#ffffff',
+        },
+    })
+
+    // 2. Ukuran logis kartu
+    const padding = 32
+    const qrBoxPadding = 20
+    const cardWidth = qrSize + padding * 2
+    const headerHeight = 90
+    const footerHeight = 70
+    const qrBoxSize = qrSize + qrBoxPadding * 2
+    const cardHeight = headerHeight + qrBoxSize + footerHeight
+
+    // 3. Canvas utama di-scale up, ctx di-scale supaya kode gambar tetap pakai koordinat logis
+    const canvas = document.createElement('canvas')
+    canvas.width = cardWidth * scale
+    canvas.height = cardHeight * scale
+    canvas.style.width = `${cardWidth}px`
+    canvas.style.height = `${cardHeight}px`
+
+    const ctx = canvas.getContext('2d')
+    ctx.scale(scale, scale)
+
+    // 4. Background kartu — persegi penuh, TANPA radius
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, cardHeight)
+    bgGradient.addColorStop(0, '#0f1730')
+    bgGradient.addColorStop(1, '#0a0f1e')
+    ctx.fillStyle = bgGradient
+    ctx.fillRect(0, 0, cardWidth, cardHeight)
+
+    // 5. Border tipis cyan — persegi penuh
+    ctx.strokeStyle = 'rgba(0, 212, 255, 0.35)'
+    ctx.lineWidth = 2
+    ctx.strokeRect(1, 1, cardWidth - 2, cardHeight - 2)
+
+    // 6. Header: nama tenant
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 20px Arial, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'alphabetic'
+    wrapText(ctx, props.tenant.name, cardWidth / 2, 38, cardWidth - padding * 2, 24)
+
+    ctx.fillStyle = '#00d4ff'
+    ctx.font = '600 12px Arial, sans-serif'
+    ctx.fillText('ID LEMBAGA · ' + props.tenant.code, cardWidth / 2, headerHeight - 14)
+
+    // 7. Kotak putih pembungkus QR — persegi penuh, TANPA radius
+    const qrBoxX = (cardWidth - qrBoxSize) / 2
+    const qrBoxY = headerHeight
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize)
+
+    // 8. Tempel QR code ke tengah kotak putih
+    ctx.drawImage(qrCanvas, qrBoxX + qrBoxPadding, qrBoxY + qrBoxPadding, qrSize, qrSize)
+
+    // 9. Footer: teks "Scan Here"
+    const footerY = qrBoxY + qrBoxSize + 32
+    ctx.fillStyle = '#00d4ff'
+    ctx.font = 'bold 16px Arial, sans-serif'
+    ctx.fillText('SCAN DI SINI', cardWidth / 2, footerY)
+
+    ctx.fillStyle = 'rgba(255,255,255,0.55)'
+    ctx.font = '11px Arial, sans-serif'
+    ctx.fillText('untuk membuka aplikasi lembaga', cardWidth / 2, footerY + 18)
+
+    return canvas
+}
+
+// ─── Helper: wrap teks panjang jadi beberapa baris ──────────────────────────
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ')
+    let line = ''
+    let lines = []
+    for (const word of words) {
+        const testLine = line + word + ' '
+        if (ctx.measureText(testLine).width > maxWidth && line !== '') {
+            lines.push(line.trim())
+            line = word + ' '
+        } else {
+            line = testLine
+        }
+    }
+    lines.push(line.trim())
+
+    // kalau kepanjangan (>2 baris), potong biar gak numpuk
+    if (lines.length > 2) lines = [lines[0], lines[1].slice(0, -1) + '…']
+
+    const startY = y - (lines.length - 1) * (lineHeight / 2)
+    lines.forEach((l, i) => ctx.fillText(l, x, startY + i * lineHeight))
+}
 </script>
 
 <template>
@@ -219,7 +365,7 @@ async function confirmPay() {
                     </span>
                     <span style="display:flex;flex-direction:column;gap:1px;line-height:1;">
                         <span class="text-gray-900" style="font-size:0.8rem;font-weight:800;">Premium {{ tenant.plan
-                        }}</span>
+                            }}</span>
                     </span>
                 </Link>
             </div>
@@ -242,7 +388,20 @@ async function confirmPay() {
 
                 <div class="info-card-row">
                     <span>{{ idRowLabel }}</span>
-                    <strong class="mono">{{ tenant.code }}</strong>
+                    <span class="id-with-share">
+                        <strong class="mono">{{ tenant.code }}</strong>
+                        <button type="button" class="share-icon-btn" :disabled="sharingBarcode"
+                            title="Bagikan barcode via WhatsApp" @click="shareBarcode">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="18" cy="5" r="3" />
+                                <circle cx="6" cy="12" r="3" />
+                                <circle cx="18" cy="19" r="3" />
+                                <line x1="8.6" y1="10.5" x2="15.4" y2="6.5" />
+                                <line x1="8.6" y1="13.5" x2="15.4" y2="17.5" />
+                            </svg>
+                        </button>
+                    </span>
                 </div>
                 <div class="info-card-row">
                     <span>Jumlah Pengguna</span>
@@ -464,6 +623,38 @@ async function confirmPay() {
 .info-card-row a {
     text-align: right;
     word-break: break-word;
+}
+
+.id-with-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.share-icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    /* border-radius: 2px; */
+    /* border: 1px solid var(--border); */
+    /* background: rgba(255, 255, 255, 0.03); */
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.share-icon-btn:hover:not(:disabled) {
+    color: var(--cyan);
+    border-color: var(--cyan);
+}
+
+.share-icon-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* ── Status pills ──────────────────────────────────────────────────────────── */

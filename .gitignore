@@ -30,6 +30,7 @@ yarn-error.log
 /public/hot
 /public/storage
 /public/robots.txt
+/docker/
 
 # ==========================
 # IDE / Editors
@@ -64,3 +65,4 @@ Account/
 # ==========================
 github.md
 Seeder.md
+prompt-audit-postgresql.md

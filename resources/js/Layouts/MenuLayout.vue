@@ -464,7 +464,7 @@ const logout = () => router.post(route('logout'))
         </div>
 
         <!-- Mobile Bottom Bar -->
-        <div class="fixed bottom-0 left-0 right-0 z-40
+        <!-- <div class="fixed bottom-0 left-0 right-0 z-40
                     bg-white/90 dark:bg-[#020617] backdrop-blur
                     border-t border-gray-200 dark:border-gray-700
                     md:hidden safe-bottom">
@@ -475,7 +475,7 @@ const logout = () => router.post(route('logout'))
                     · All rights reserved
                 </p>
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 

@@ -245,8 +245,8 @@ const supportLinks = [
 
 .footer-col-title {
     font-family: var(--font-display);
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1rem;
+    font-weight: 600;
     margin-bottom: 1.25rem;
 }
 
@@ -257,7 +257,7 @@ const supportLinks = [
 }
 
 .footer-links a {
-    font-size: 1rem;
+    font-size: 0.875rem;
     color: var(--muted);
     transition: color 0.2s;
 }

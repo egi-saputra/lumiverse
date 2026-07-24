@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('id')->primary();
 
             // Kode unik lembaga (6 digit angka, autogenerate)
-            $table->string('code', 6)->nullable()->unique();
+            $table->string('code')->nullable()->unique();
 
             // Data Tenant
             $table->string('name')->nullable();

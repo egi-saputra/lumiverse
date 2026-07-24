@@ -84,11 +84,25 @@ return [
             ]) : [],
         ],
 
+        'central' => [
+            'driver' => 'pgsql',
+            'host' => env('DB_ADMIN_HOST', '127.0.0.1'),
+            'port' => env('DB_ADMIN_PORT', '5432'), // langsung ke PostgreSQL, bukan PgBouncer
+            'database' => env('DB_DATABASE', 'master_db'), // database pusat/landlord
+            'username' => env('DB_USERNAME', 'lumiverse'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode' => env('DB_SSLMODE', 'prefer'),
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
             'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '5432'),
+            'port' => env('DB_PORT', '6432'), // lewat PgBouncer
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
             'password' => env('DB_PASSWORD', ''),

@@ -141,7 +141,8 @@ onUnmounted(() => {
                             <div class="trust-avatar">SN</div>
                             <div class="trust-avatar">+</div>
                         </div>
-                        <p class="trust-text"><strong>100+ Lembaga pendidikan</strong> telah bergabung bersama kami, Sekarang giliran Anda!</p>
+                        <p class="trust-text"><strong>100+ Lembaga pendidikan</strong> telah bergabung bersama kami,
+                            Sekarang giliran Anda!</p>
                     </div>
                 </div>
 
@@ -320,7 +321,7 @@ onUnmounted(() => {
 
 .hero-content {
     min-width: 0;
-    margin-top: -1.5rem;
+    /* margin-top: -1.5rem; */
 }
 
 .hero-badge {

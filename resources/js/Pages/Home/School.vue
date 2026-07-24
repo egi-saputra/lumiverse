@@ -30,7 +30,7 @@ onMounted(() => {
     <Head>
         <title>Lumiverse School</title>
         <meta head-key="description" name="description"
-            content="Lumiverse merupakan sebuah platform Learning Management System berbasis cloud yang hadir untuk memberikan solusi dan kemudahan bagi sekolah dan intansi lembaga pendidikan lainnya di Indonesia." />
+            content="Lumiverse merupakan sebuah platform Learning Management System berbasis cloud yang hadir untuk memberikan solusi dan kemudahan bagi sekolah dan instansi lembaga pendidikan lainnya di Indonesia." />
         <meta head-key="og:type" property="og:type" content="website" />
         <meta head-key="og:site_name" property="og:site_name" content="Lumiverse School" />
         <meta head-key="og:url" property="og:url" content="https://lumiverse.co.id/" />
