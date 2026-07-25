@@ -1,11 +1,14 @@
 <script setup>
-import { ref, onMounted, onUnmounted, inject } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { ref, onMounted, onUnmounted, inject, computed } from 'vue'
+import { useCentralUrl } from '@/Composables/useCentralUrl'
 
-const page = usePage()
 const isScrolled = ref(false)
 const isMenuOpen = ref(false)
 const scrollRoot = inject('scrollRoot')
+
+const { centralUrl } = useCentralUrl()
+const loginUrl = computed(() => centralUrl('/login'))
+const registerUrl = computed(() => centralUrl('/registration'))
 
 const navItems = [
     { id: 'hero', href: '#hero', label: 'Beranda Utama' },
@@ -74,9 +77,8 @@ onUnmounted(() => {
                 </ul>
 
                 <div class="nav-actions">
-                    <Link href="/lumiverse/login" class="btn-ghost">Log In</Link>
-                    <Link href="/registration" class="btn-primary">Daftar Sekarang</Link>
-                    <!-- <Link href="/lumiverse/login" class="btn-primary">Login</Link> -->
+                    <a :href="loginUrl" class="btn-ghost">Log In</a>
+                    <a :href="registerUrl" class="btn-primary">Daftar Sekarang</a>
                 </div>
 
                 <!-- Burger animasi (rotate jadi X) menggantikan icon SVG statis -->
@@ -99,8 +101,8 @@ onUnmounted(() => {
                 </ul>
 
                 <div class="mobile-cta-group">
-                    <Link href="/lumiverse/login" class="btn-mob-ghost" @click="isMenuOpen = false">Masuk</Link>
-                    <Link href="/registration" class="btn-mob-cta" @click="isMenuOpen = false">Daftar Sekarang</Link>
+                    <a :href="loginUrl" class="btn-mob-ghost" @click="isMenuOpen = false">Masuk</a>
+                    <a :href="registerUrl" class="btn-mob-cta" @click="isMenuOpen = false">Daftar Sekarang</a>
                 </div>
             </div>
         </div>

@@ -1,5 +1,9 @@
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { computed } from 'vue'
+import { useCentralUrl } from '@/Composables/useCentralUrl'
+
+const { centralUrl } = useCentralUrl()
+const registerUrl = computed(() => centralUrl('/registration'))
 </script>
 
 <template>
@@ -17,14 +21,14 @@ import { Link } from '@inertiajs/vue3'
                     <a href="https://wa.me/628987504976" class="btn-outline" target="_blank" rel="noopener noreferrer">
                         💬 Chat via WhatsApp
                     </a>
-                    <Link href="/registration" class="btn-hero">
+                    <a :href="registerUrl" class="btn-hero">
                         Daftar Gratis Sekarang
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 12H21"></path>
                             <path d="M15 6L21 12L15 18"></path>
                         </svg>
-                    </Link>
+                    </a>
                 </div>
             </div>
         </div>

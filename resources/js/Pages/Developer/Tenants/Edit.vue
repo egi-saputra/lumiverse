@@ -8,6 +8,22 @@ const props = defineProps({
     plans: Array,
 })
 
+const domainForm = useForm({ domain: '' })
+
+function addDomain() {
+    domainForm.post(route('developer.tenants.domains.store', props.tenant.id), {
+        preserveScroll: true,
+        onSuccess: () => { domainForm.reset() },
+    })
+}
+
+function removeDomain(domain) {
+    if (!confirm(`Hapus domain "${domain.domain}"?`)) return
+    useForm({}).delete(route('developer.tenants.domains.destroy', [props.tenant.id, domain.id]), {
+        preserveScroll: true,
+    })
+}
+
 const logoPreview = ref(props.tenant.logo_path)
 
 // Hitung sisa hari dari expires_at yang ada
@@ -119,12 +135,47 @@ function submit() {
                         <p v-if="form.errors.name" class="text-xs text-rose-400">{{ form.errors.name }}</p>
                     </div>
 
+                    <!-- Domain -->
+                    <div class="rounded-2xl border border-[var(--border)] bg-[var(--navy)] p-5">
+                        <p class="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3">Domain</p>
+
+                        <div class="flex flex-wrap gap-2 mb-4" v-if="tenant.domains?.length">
+                            <div v-for="d in tenant.domains" :key="d.id"
+                                class="flex items-center gap-2 font-mono text-xs bg-[var(--cyan)]/8 text-[var(--cyan)] pl-2.5 pr-1.5 py-1 rounded-lg">
+                                {{ d.domain }}
+                                <button type="button" @click="removeDomain(d)"
+                                    class="text-[var(--muted)] hover:text-rose-400 transition px-1"
+                                    title="Hapus domain">
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                        <p v-else class="text-xs text-[var(--muted)] mb-4">Belum ada domain terdaftar.</p>
+
+                        <div class="flex gap-2">
+                            <input v-model="domainForm.domain" placeholder="contoh: smpislamnusantara.id"
+                                class="flex-1 px-3 py-2 bg-white/5 border border-[var(--border)] rounded-lg text-sm outline-none focus:border-[var(--cyan)] transition"
+                                @keyup.enter="addDomain" />
+                            <button type="button" @click="addDomain"
+                                :disabled="domainForm.processing || !domainForm.domain"
+                                class="px-4 py-2 text-sm font-bold rounded-lg bg-[var(--cyan)] text-[#0a0f1e] hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                Tambah
+                            </button>
+                        </div>
+                        <p v-if="domainForm.errors.domain" class="text-xs text-rose-400 mt-2">{{
+                            domainForm.errors.domain }}</p>
+                        <p class="text-xs text-[var(--muted)] mt-2">
+                            Tambahkan hanya setelah CNAME & SSL di Cloudflare for SaaS sudah aktif — domain langsung
+                            live begitu ditambahkan di sini.
+                        </p>
+                    </div>
+
                     <div class="flex flex-col gap-1.5">
                         <label class="text-xs font-bold uppercase tracking-wider text-[var(--muted)]">Telepon</label>
                         <input v-model="form.contact_phone"
                             class="w-full px-3 py-2 bg-white/5 border border-[var(--border)] rounded-lg text-sm outline-none focus:border-[var(--cyan)] transition" />
                         <p v-if="form.errors.contact_phone" class="text-xs text-rose-400">{{ form.errors.contact_phone
-                            }}</p>
+                        }}</p>
                     </div>
 
                     <div class="flex flex-col gap-1.5">

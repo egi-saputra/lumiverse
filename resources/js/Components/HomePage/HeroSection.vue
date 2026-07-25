@@ -1,6 +1,9 @@
 <script setup>
-import { Link } from '@inertiajs/vue3'
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { useCentralUrl } from '@/Composables/useCentralUrl'
+
+const { centralUrl } = useCentralUrl()
+const registerUrl = computed(() => centralUrl('/registration'))
 
 const variants = [
     {
@@ -118,13 +121,13 @@ onUnmounted(() => {
                     </p> -->
 
                     <div class="hero-actions">
-                        <Link href="/registration" class="btn-hero">
+                        <a :href="registerUrl" class="btn-hero">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5">
                                 <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                             </svg>
                             Coba Gratis Sekarang
-                        </Link>
+                        </a>
                         <a href="#demo" class="btn-outline">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2">

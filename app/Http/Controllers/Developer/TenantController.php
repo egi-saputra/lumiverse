@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class TenantController extends Controller
 {
@@ -103,6 +105,10 @@ class TenantController extends Controller
                     ? \Carbon\Carbon::parse($tenant->expires_at)->format('Y-m-d')
                     : null,
                 'is_active'              => (bool) $tenant->is_active,
+                'domains'                => $tenant->domains->map(fn ($d) => [
+                    'id'     => $d->id,
+                    'domain' => $d->domain,
+                ]),
             ],
             'plans' => $plans,
         ]);
@@ -192,5 +198,33 @@ class TenantController extends Controller
 
         return redirect()->route('developer.tenants.index')
             ->with('success', 'Tenant beserta seluruh data, database, dan owner berhasil dihapus.');
+    }
+
+    public function storeDomain(Request $request, Tenant $tenant)
+    {
+        $validated = $request->validate([
+            'domain' => [
+                'required', 'string', 'max:255',
+                'regex:/^([a-z0-9]([a-z0-9\-]*[a-z0-9])?\.)+[a-z]{2,}$/i',
+                Rule::unique('domains', 'domain'),
+            ],
+        ], [
+            'domain.required' => 'Domain wajib diisi.',
+            'domain.regex'    => 'Format domain tidak valid, contoh: smpislamnusantara.id',
+            'domain.unique'   => 'Domain ini sudah digunakan tenant lain.',
+        ]);
+
+        $tenant->domains()->create([
+            'domain' => Str::lower($validated['domain']),
+        ]);
+
+        return back()->with('success', 'Domain berhasil ditambahkan.');
+    }
+
+    public function destroyDomain(Tenant $tenant, int $domain)
+    {
+        $tenant->domains()->where('id', $domain)->delete();
+
+        return back()->with('success', 'Domain berhasil dihapus.');
     }
 }

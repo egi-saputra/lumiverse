@@ -165,9 +165,52 @@ Route::domain('{domain}')
                 Route::put('/plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
                 Route::delete('/plans/{plan}', [PlanController::class, 'destroy'])->name('plans.destroy');
             });
+
+            Route::post('/tenants/{tenant}/domains', [TenantController::class, 'storeDomain'])->name('tenants.domains.store');
+            
+            Route::delete('/tenants/{tenant}/domains/{domain}', [TenantController::class, 'destroyDomain'])->name('tenants.domains.destroy');
         });
 
-        Route::prefix('lumiverse')->name('owner.')->group(function () {
+        // Route::prefix('lumiverse')->name('owner.')->group(function () {
+        //     Route::middleware('guest:owner')->group(function () {
+        //         Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
+        //         Route::post('/login', [AdminAuthController::class, 'login']);
+        //     });
+
+        //     Route::middleware('auth:owner')->group(function () {
+        //         Route::get('/dashboard', [AdminAuthController::class, 'dashboard'])->name('dashboard');
+        //         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        //         Route::get('/profil', [ProfilController::class, 'edit'])->name('profil');
+        //         Route::post('/update/profile', [ProfilController::class, 'updateProfile'])->name('update.profile');
+        //         Route::patch('/update/account', [ProfilController::class, 'updateAccount'])->name('update.account');
+
+        //         Route::prefix('users')->name('users.')->group(function () {
+        //             Route::get('/', [UserController::class, 'index'])->name('index');
+        //             Route::get('/create', [UserController::class, 'create'])->name('create');
+        //             Route::post('/', [UserController::class, 'store'])->name('store');
+        //             Route::get('/{id}', [UserController::class, 'show'])->name('show');
+        //             Route::get('/{id}/edit', [UserController::class, 'edit'])->name('edit');
+        //             Route::put('/{id}', [UserController::class, 'update'])->name('update');
+        //             Route::delete('/{id}', [UserController::class, 'destroy'])->name('destroy');
+        //         });
+
+        //         Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
+
+        //         Route::post('/subscription/preview', [SubscriptionController::class, 'preview'])->name('subscription.preview');
+        //         Route::post('/subscription/charge', [SubscriptionController::class, 'charge'])->name('subscription.charge');
+        //         Route::post('/subscription/cancel-downgrade', [SubscriptionController::class, 'cancelDowngrade'])->name('subscription.cancel-downgrade');
+        //         Route::get('/subscription/finish', [SubscriptionController::class, 'finish'])->name('subscription.finish');
+        //         Route::get('/subscription/history', [SubscriptionController::class, 'history'])->name('subscription.history');
+        //         Route::get('/subscription/invoice/{order_id}', [SubscriptionController::class, 'invoice'])->name('subscription.invoice');
+        //         Route::post('/subscription/retry/{order_id}', [SubscriptionController::class, 'retryPayment'])->name('subscription.retry');
+        //         Route::post('/subscription/cancel-order/{order_id}', [SubscriptionController::class, 'cancelOrder'])->name('subscription.cancel-order');
+        //         Route::get('/subscription/order-preview/{order_id}', [SubscriptionController::class, 'orderPreview'])->name('subscription.order-preview');
+        //     });
+
+        //     Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])->name('subscription.webhook');
+        // });
+
+        Route::name('owner.')->group(function () {
             Route::middleware('guest:owner')->group(function () {
                 Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('login');
                 Route::post('/login', [AdminAuthController::class, 'login']);
