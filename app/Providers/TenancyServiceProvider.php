@@ -122,8 +122,28 @@ class TenancyServiceProvider extends ServiceProvider
     {
         $this->app->booted(function () {
             if (file_exists(base_path('routes/tenant.php'))) {
+                
+                // Group 1: Subdomain (tenant.lumiverse.co.id) — existing
                 Route::domain('{tenant}.{centralDomain}')
                     ->where(['centralDomain' => implode('|', array_map(fn($d) => preg_quote($d, '/'), config('tenancy.central_domains')))])
+                    ->middleware([
+                        'web',
+                        Middleware\InitializeTenancyBySubdomain::class,
+                        Middleware\PreventAccessFromCentralDomains::class,
+                        \App\Http\Middleware\EnsureTenantIsActive::class,
+                        \App\Http\Middleware\ShareTenantRouteDefaults::class,
+                    ])
+                    ->namespace(static::$controllerNamespace)
+                    ->group(base_path('routes/tenant.php'));
+
+                // Group 2: Custom domain (smpislamnusantara.id, dst) — baru
+                Route::middleware([
+                    'web',
+                    Middleware\InitializeTenancyByDomain::class,
+                    Middleware\PreventAccessFromCentralDomains::class,
+                    \App\Http\Middleware\EnsureTenantIsActive::class,
+                    \App\Http\Middleware\ShareTenantRouteDefaults::class,
+                ])
                     ->namespace(static::$controllerNamespace)
                     ->group(base_path('routes/tenant.php'));
             }

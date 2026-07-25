@@ -255,20 +255,4 @@ require __DIR__.'/user.php';
 require __DIR__.'/tenant-api.php';
 };
 
-// Group 1: untuk subdomain tenant.lumiverse.co.id (existing)
-Route::middleware([
-    'web',
-    InitializeTenancyBySubdomain::class,
-    PreventAccessFromCentralDomains::class,
-    EnsureTenantIsActive::class,
-    \App\Http\Middleware\ShareTenantRouteDefaults::class,
-])->group($registerTenantRoutes);
-
-// Group 2: untuk custom domain (smpislamnusantara.id, dst)
-Route::middleware([
-    'web',
-    InitializeTenancyByDomain::class,
-    PreventAccessFromCentralDomains::class,
-    EnsureTenantIsActive::class,
-    \App\Http\Middleware\ShareTenantRouteDefaults::class,
-])->group($registerTenantRoutes);
+$registerTenantRoutes();
