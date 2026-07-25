@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
+use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use App\Http\Middleware\EnsureTenantIsActive;
 use App\Http\Controllers\Auth\GoogleController;
@@ -23,31 +24,24 @@ use Illuminate\Support\Facades\Response;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
-Route::middleware([
-    'web',
-    InitializeTenancyBySubdomain::class,
-    PreventAccessFromCentralDomains::class,
-    EnsureTenantIsActive::class,
-    \App\Http\Middleware\ShareTenantRouteDefaults::class,
-])->group(function () {
+$registerTenantRoutes = function () {
     Route::get('/robots.txt', function () {
         return response("User-agent: *\nDisallow: /")
             ->header('Content-Type', 'text/plain');
     })->name('robots.tenant');
 
     Route::get('/tenant-storage/{path}', [TenantAssetController::class, 'show'])
-    ->where('path', '.*')
-    ->name('tenant.storage');
+        ->where('path', '.*')
+        ->name('tenant.storage');
 
     Route::get('/', function () {
-    // return Inertia::render('HomePage', [
-    return Inertia::render('Auth/Login', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
+        return Inertia::render('Auth/Login', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    });
 
 // ====================================================================================
 
@@ -259,4 +253,22 @@ require __DIR__.'/siswa.php';
 require __DIR__.'/user.php';
 
 require __DIR__.'/tenant-api.php';
-});
+};
+
+// Group 1: untuk subdomain tenant.lumiverse.co.id (existing)
+Route::middleware([
+    'web',
+    InitializeTenancyBySubdomain::class,
+    PreventAccessFromCentralDomains::class,
+    EnsureTenantIsActive::class,
+    \App\Http\Middleware\ShareTenantRouteDefaults::class,
+])->group($registerTenantRoutes);
+
+// Group 2: untuk custom domain (smpislamnusantara.id, dst)
+Route::middleware([
+    'web',
+    InitializeTenancyByDomain::class,
+    PreventAccessFromCentralDomains::class,
+    EnsureTenantIsActive::class,
+    \App\Http\Middleware\ShareTenantRouteDefaults::class,
+])->group($registerTenantRoutes);
