@@ -140,7 +140,10 @@ onMounted(() => {
                             class="directory-row">
                             <span class="directory-index">{{ String(i + 1).padStart(2, '0') }}</span>
                             <span class="flex-1 capitalize">{{ item.label }}</span>
-                            <i class="bi bi-arrow-up-right text-[#C9A227]/70" aria-hidden="true"></i>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
+                                stroke-width="1.5" class="text-[#C9A227]/70" aria-hidden="true">
+                                <path d="M6 11L11 6M11 6H7M11 6V10" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
                         </a>
                         <Link v-else :href="route(item.routeName)" prefetch preserve-scroll preserve-state
                             class="directory-row">
@@ -163,7 +166,7 @@ onMounted(() => {
 
         <!-- ── Right Panel ─────────────────────────────────────────────────── -->
         <main
-            class="flex flex-1 flex-col items-center sm:justify-center sm:mt-0 mt-4 overflow-y-auto bg-[#FAF9F5] sm:px-6 px-8 py-10">
+            class="relative flex flex-1 flex-col items-center justify-center overflow-y-auto bg-[#FAF9F5] sm:px-6 px-8 py-10 pb-24 sm:pb-10">
             <div class="w-full max-w-sm">
 
                 <!-- Header -->
@@ -241,11 +244,16 @@ onMounted(() => {
                     </a>
                 </form>
 
-                <p
-                    class="text-xs font-semibold sm:hidden flex absolute bottom-4 right-0 left-0 justify-center text-[#6B7086] font-poppins">
-                    Lumi Platforms,
-                    Inc.
-                </p>
+                <!-- <div
+                    class="sm:hidden fixed bottom-0 left-0 right-0 flex justify-center py-3 bg-[#FAF9F5]/95 backdrop-blur-sm border-t border-black/5">
+                    <a href="https://lumiverse.co.id" class="flex items-center justify-center">
+                        <img src="/images/logo-dark.webp" alt="Lumiverse School"
+                            class="h-7 w-auto object-contain mt-1 grayscale" />
+                        <span class="text-sm font-semibold text-[#6B7086] leading-none">
+                            Lumiverse School
+                        </span>
+                    </a>
+                </div> -->
             </div>
         </main>
     </div>

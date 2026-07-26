@@ -154,7 +154,7 @@ const isPasswordValid = computed(() =>
 
         <!-- ── Right Panel ─────────────────────────────────────────────────── -->
         <main
-            class="flex flex-1 flex-col items-center sm:justify-center overflow-y-auto bg-[#FAF9F5] sm:px-6 px-8 py-10">
+            class="relative flex flex-1 flex-col items-center justify-center overflow-y-auto bg-[#FAF9F5] sm:px-6 px-8 py-10 pb-24 sm:pb-10">
             <div class="w-full max-w-sm">
 
                 <!-- Header -->
@@ -258,20 +258,14 @@ const isPasswordValid = computed(() =>
                         </Link>
                     </p>
 
-                    <div class="divider-stars"><span>OR</span></div>
+                    <!-- <div class="divider-stars"><span>OR</span></div>
 
                     <a :href="`/auth/google?from_tenant=${page.props.tenant?.id}`" class="btn-outline">
                         <img src="https://img.icons8.com/color/20/000000/google-logo.png" alt="" width="18"
                             height="18" />
                         <span>Register with Google</span>
-                    </a>
+                    </a> -->
                 </form>
-
-                <p
-                    class="text-xs font-semibold sm:hidden flex absolute bottom-4 right-0 left-0 justify-center text-[#6B7086] font-poppins">
-                    Lumi Platforms,
-                    Inc.
-                </p>
             </div>
         </main>
     </div>

@@ -39,6 +39,30 @@ class Siswa extends Model
         'tanggal_lahir' => 'date',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function (Siswa $siswa) {
+            if (empty($siswa->id_siswa)) {
+                $siswa->id_siswa = self::generateIdSiswa();
+            }
+        });
+    }
+
+    /**
+     * Generate ID siswa unik.
+     * $length bisa disesuaikan sesuai kebutuhan.
+     */
+    public static function generateIdSiswa(int $length = 10): string
+    {
+        do {
+            $id = str_pad((string) random_int(0, (10 ** $length) - 1), $length, '0', STR_PAD_LEFT);
+        } while (self::where('id_siswa', $id)->exists());
+
+        return $id;
+    }
+
     public function kelas()
     {
         return $this->belongsTo(Kelas::class, 'kelas_id');
@@ -52,6 +76,11 @@ class Siswa extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function wali()
+    {
+        return $this->belongsToMany(User::class, 'siswa_wali');
     }
 
     public function assignments()

@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\URL;
 class SetRouteDomainDefault
 {
     /**
-     * Set parameter 'domain' sebagai default untuk generate URL/route,
+     * Set parameter 'centralHost' sebagai default untuk generate URL/route,
      * supaya route('nama.route') di Vue (via Ziggy) atau di Blade/PHP
-     * tidak perlu menyebutkan domain secara manual setiap kali.
+     * tidak perlu menyebutkan host secara manual setiap kali.
      */
     public function handle(Request $request, Closure $next)
     {
-        URL::defaults(['domain' => $request->getHost()]);
+        URL::defaults(['centralHost' => $request->getHost()]);
 
         return $next($request);
     }

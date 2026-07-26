@@ -19,27 +19,12 @@ const tenantName = computed(() => page.props.tenant?.name ?? 'Lumi Platforms, In
 // ─── Product type ───────────────────────────────────────────────────────────
 const { isWorkspace } = useTenant(computed(() => props.tenant))
 
-// ─── Plan Badge Style ───────────────────────────────────────────────────────
-const planBadgeStyle = computed(() => {
-    // Trial atau belum berlangganan → null = tampil badge upgrade
-    if (!props.tenant.plan_key || props.tenant.plan_key === 'trial') return null
-
-    const accent = props.tenant.plan_accent ?? '#60a5fa'
-
-    // Deteksi apakah warna terang/gelap untuk warna teks
-    const hex = accent.replace('#', '')
-    const r = parseInt(hex.substring(0, 2), 16)
-    const g = parseInt(hex.substring(2, 4), 16)
-    const b = parseInt(hex.substring(4, 6), 16)
-    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
-    const textColor = luminance > 0.5 ? '#0a0f1e' : '#ffffff'
-
-    return {
-        bg: `linear-gradient(135deg, ${accent}ee 0%, ${accent}aa 100%)`,
-        color: textColor,
-        border: `${accent}66`,
-        shadow: `${accent}44`,
-    }
+// ─── Plan Badge Visibility ────────────────────────────────────────────────────
+// Badge upgrade cuma tampil kalau plan tergolong free: plan_key kosong/null,
+// 'trial', atau 'free'. Selain itu (paket berbayar) badge disembunyikan total.
+const isFreePlan = computed(() => {
+    const key = props.tenant.plan_key
+    return !key || key === 'trial' || key === 'free'
 })
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
@@ -198,7 +183,7 @@ async function shareBarcode() {
 
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
-                await navigator.share({ files: [file], title: 'QR Code ID Lembaga', text: shareText })
+                await navigator.share({ files: [file] })
             } catch (e) {
                 // dibatalkan user, diamkan
             }
@@ -338,35 +323,14 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
                 <p class="welcome-sub mb-gap sm:flex hidden">{{ welcomeSub }}</p>
             </div>
 
-            <!-- Badge -->
-            <div class="flex justify-end sm:w-auto w-full sm:mr-10 mr-0">
-                <Link v-if="!planBadgeStyle" :href="route('owner.pricing')" class="upgrade-badge" prefetch>
-                    <span
-                        style="width:24px;height:24px;background:rgba(0,0,0,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        +
-                    </span>
-                    <span style="display:flex;flex-direction:column;gap:1px;line-height:1;">
-                        <span
-                            style="font-size:0.6rem;font-weight:600;opacity:0.65;letter-spacing:0.06em;text-transform:uppercase;">Akses
-                            Fitur Lengkap</span>
-                        <span style="font-size:0.8rem;font-weight:800;">Upgrade ke Premium</span>
-                    </span>
-                </Link>
-
-                <Link v-else :href="route('owner.pricing')" class="upgrade-badge" prefetch :style="{
-                    background: planBadgeStyle.bg,
-                    color: planBadgeStyle.color,
-                    border: `1px solid ${planBadgeStyle.border}`,
-                    boxShadow: `0 1px 0 rgba(255,255,255,0.18) inset, 0 2px 8px ${planBadgeStyle.shadow}`,
-                }">
-                    <span class="text-gray-900"
-                        style="width:24px;height:24px;background:rgba(0,0,0,0.10);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        ✦
-                    </span>
-                    <span style="display:flex;flex-direction:column;gap:1px;line-height:1;">
-                        <span class="text-gray-900" style="font-size:0.8rem;font-weight:800;">Premium {{ tenant.plan
-                            }}</span>
-                    </span>
+            <!-- Badge — cuma muncul kalau plan free -->
+            <div v-if="isFreePlan" class="flex justify-end sm:w-auto w-full sm:mr-10 mr-0">
+                <Link :href="route('owner.pricing')" class="upgrade-badge" prefetch>
+                    <svg class="upgrade-badge-icon" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                        viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z" />
+                    </svg>
+                    <span class="upgrade-badge-text">Upgrade ke Premium</span>
                 </Link>
             </div>
         </div>
@@ -494,26 +458,25 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
 /* ── Upgrade badge ─────────────────────────────────────────────────────────── */
 .upgrade-badge {
     display: inline-flex;
-    justify-content: center;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 1rem;
+    gap: 0.4rem;
+    font-size: 0.82rem;
     font-weight: 700;
-    padding: 0.3rem 0.75rem 0.3rem 0.5rem;
+    padding: 0.45rem 0.9rem;
     border-radius: 100px;
     margin-top: 1rem;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-    color: #1c0f00;
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.16), rgba(245, 166, 35, 0.08));
+    color: var(--gold);
     text-decoration: none;
     white-space: nowrap;
-    border: 1px solid rgba(251, 191, 36, 0.45);
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.18) inset,
-        0 2px 8px rgba(245, 158, 11, 0.35);
-    transition: all 0.2s ease;
-    letter-spacing: 0.01em;
+    border: 1px solid rgba(245, 166, 35, 0.35);
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
     position: relative;
     overflow: hidden;
+}
+
+.upgrade-badge-icon {
+    flex-shrink: 0;
 }
 
 .upgrade-badge::before {
@@ -521,30 +484,30 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     position: absolute;
     top: 0;
     left: -100%;
-    width: 60%;
+    width: 50%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+    background: linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.18), transparent);
     transform: skewX(-20deg);
-    animation: badge-shimmer 3s infinite;
+    animation: badge-shimmer 8s ease-in-out infinite;
 }
 
 @keyframes badge-shimmer {
-    0% {
-        left: -100%;
+
+    0%,
+    15% {
+        left: -60%;
     }
 
-    60%,
+    40%,
     100% {
-        left: 160%;
+        left: 140%;
     }
 }
 
 .upgrade-badge:hover {
+    border-color: rgba(245, 166, 35, 0.6);
+    background: linear-gradient(135deg, rgba(245, 166, 35, 0.22), rgba(245, 166, 35, 0.1));
     transform: translateY(-1px);
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.2) inset,
-        0 4px 16px rgba(245, 158, 11, 0.5);
-    filter: brightness(1.06);
 }
 
 /* ── Layout helpers ────────────────────────────────────────────────────────── */

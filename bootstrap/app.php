@@ -26,6 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.siswa.data' => \App\Http\Middleware\CheckSiswaData::class,
             'activated' => \App\Http\Middleware\CheckActivated::class,
             'backup.ujian' => \App\Http\Middleware\BackupJawabanUjian::class,
+            'role.selected' => \App\Http\Middleware\EnsureRoleSelected::class,
         ]);
 
         $middleware->redirectUsersTo(function (Illuminate\Http\Request $request) {

@@ -72,6 +72,26 @@ const form = useForm({
     kode_pos: '',
 })
 
+/* ─── Label field untuk pesan error yang jelas ──────────── */
+const fieldLabels = {
+    nama_lengkap: 'Nama Lengkap',
+    nis: 'NIS',
+    nisn: 'NISN',
+    kelas_id: 'Unit Kelas',
+    kejuruan_id: 'Program Kejuruan',
+    tempat_lahir: 'Tempat Lahir',
+    tanggal_lahir: 'Tanggal Lahir',
+    jenis_kelamin: 'Jenis Kelamin',
+    agama: 'Agama',
+    no_hp: 'No. HP Siswa',
+    no_hp_ortu: 'No. HP Orang Tua',
+    alamat: 'Alamat',
+    kelurahan: 'Kelurahan',
+    kecamatan: 'Kecamatan',
+    kota: 'Kota',
+    kode_pos: 'Kode Pos',
+}
+
 /* ─── Capitalize helper ──────────────────────────────────── */
 const toTitleCase = (str) =>
     str.replace(/\w\S*/g, (word) =>
@@ -122,14 +142,37 @@ const computeErrors = () => {
         errs.kelas_id = 'Silakan pilih kelas.'
     if (props.isSmk && !form.kejuruan_id)
         errs.kejuruan_id = 'Silakan pilih program kejuruan.'
-    if (form.tanggal_lahir && new Date(form.tanggal_lahir) >= new Date())
+
+    // Step 2: semua wajib kecuali no_hp_ortu
+    if (!form.tempat_lahir.trim())
+        errs.tempat_lahir = 'Tempat lahir wajib diisi.'
+    if (!form.tanggal_lahir)
+        errs.tanggal_lahir = 'Tanggal lahir wajib diisi.'
+    else if (new Date(form.tanggal_lahir) >= new Date())
         errs.tanggal_lahir = 'Tanggal lahir tidak boleh hari ini atau masa depan.'
-    if (form.kode_pos && !/^\d{5}$/.test(form.kode_pos))
-        errs.kode_pos = 'Kode pos harus 5 digit angka.'
-    if (form.no_hp && !/^[0-9+\-\s]{8,15}$/.test(form.no_hp))
+    if (!form.jenis_kelamin)
+        errs.jenis_kelamin = 'Silakan pilih jenis kelamin.'
+    if (!form.agama)
+        errs.agama = 'Silakan pilih agama.'
+    if (!form.no_hp.trim())
+        errs.no_hp = 'No. HP siswa wajib diisi.'
+    else if (!/^[0-9+\-\s]{8,15}$/.test(form.no_hp))
         errs.no_hp = 'Format nomor HP tidak valid.'
     if (form.no_hp_ortu && !/^[0-9+\-\s]{8,15}$/.test(form.no_hp_ortu))
         errs.no_hp_ortu = 'Format nomor HP orang tua tidak valid.'
+
+    // Step 3: semua wajib kecuali kode_pos
+    if (!form.alamat.trim())
+        errs.alamat = 'Alamat lengkap wajib diisi.'
+    if (!form.kelurahan.trim())
+        errs.kelurahan = 'Kelurahan/Desa wajib diisi.'
+    if (!form.kecamatan.trim())
+        errs.kecamatan = 'Kecamatan wajib diisi.'
+    if (!form.kota.trim())
+        errs.kota = 'Kota/Kabupaten wajib diisi.'
+    if (form.kode_pos && !/^\d{5}$/.test(form.kode_pos))
+        errs.kode_pos = 'Kode pos harus 5 digit angka.'
+
     return errs
 }
 
@@ -170,7 +213,16 @@ const scrollToTop = () => {
 
 const nextStep = () => {
     if (!validateStep(currentStep.value)) {
-        showToast('error', 'Mohon periksa kembali jawbanmu pada tahap ini.')
+        const errs = localErrors.value
+        const fieldsWithError = stepFields.value[currentStep.value].filter((f) => errs[f])
+        const labels = fieldsWithError.map((f) => fieldLabels[f] ?? f)
+
+        showToast(
+            'error',
+            labels.length === 1
+                ? `${labels[0]} belum sesuai: ${errs[fieldsWithError[0]]}`
+                : `Mohon lengkapi/perbaiki: ${labels.join(', ')}.`
+        )
         return
     }
     if (!isLastStep.value) {
@@ -198,18 +250,36 @@ const goToStep = (index) => {
 /* ─── Submit ─────────────────────────────────────────────── */
 const submit = () => {
     if (!validateClient()) {
-        // Cari step pertama yang errornya ada, lalu pindah ke sana
         const errs = localErrors.value
         const brokenStepIndex = stepFields.value.findIndex((fields) =>
             fields.some((f) => errs[f])
         )
         if (brokenStepIndex !== -1) currentStep.value = brokenStepIndex
-        showToast('error', 'Mohon periksa kembali isian form.')
+
+        const labels = Object.keys(errs).map((f) => fieldLabels[f] ?? f)
+        showToast('error', `Mohon lengkapi/perbaiki: ${labels.join(', ')}.`)
         return
     }
     form.post(route('siswa.form.store'), {
         preserveScroll: true,
-        onError: () => showToast('error', 'Gagal menyimpan data. Periksa isian kamu.'),
+        onError: (errors) => {
+            // Tampilkan pesan asli dari server (sudah dalam Bahasa Indonesia dan spesifik,
+            // misalnya "NISN ini sudah terdaftar, hubungi admin jika ada kesalahan.")
+            const messages = Object.values(errors)
+            showToast(
+                'error',
+                messages.length
+                    ? messages.join(' ')
+                    : 'Gagal menyimpan data. Periksa kembali isian kamu.'
+            )
+
+            // Pindah ke step yang mengandung field bermasalah dari server
+            const errorFields = Object.keys(errors)
+            const brokenStepIndex = stepFields.value.findIndex((fields) =>
+                fields.some((f) => errorFields.includes(f))
+            )
+            if (brokenStepIndex !== -1) currentStep.value = brokenStepIndex
+        },
     })
 }
 
@@ -436,7 +506,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Tempat Lahir
+                                        Tempat Lahir <span class="text-red-500">*</span>
                                     </label>
                                     <input :value="form.tempat_lahir" @input="handleTitleCase('tempat_lahir', $event)"
                                         type="text" placeholder="Contoh: Jakarta" class="w-full rounded-xl border px-4 py-2.5 text-sm
@@ -447,7 +517,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Tanggal Lahir
+                                        Tanggal Lahir <span class="text-red-500">*</span>
                                     </label>
                                     <input v-model="form.tanggal_lahir" type="date"
                                         :max="new Date().toISOString().split('T')[0]" class="w-full rounded-xl border px-4 py-2.5 text-sm
@@ -467,7 +537,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Jenis Kelamin
+                                        Jenis Kelamin <span class="text-red-500">*</span>
                                     </label>
                                     <select v-model="form.jenis_kelamin" class="w-full rounded-xl border px-4 py-2.5 text-sm
                                                bg-white text-gray-900 transition focus:outline-none
@@ -481,7 +551,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Agama
+                                        Agama <span class="text-red-500">*</span>
                                     </label>
                                     <select v-model="form.agama" class="w-full rounded-xl border px-4 py-2.5 text-sm
                                                bg-white text-gray-900 transition focus:outline-none
@@ -505,7 +575,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        No. HP / WA Siswa
+                                        No. HP / WA Siswa <span class="text-red-500">*</span>
                                     </label>
                                     <input v-model="form.no_hp" type="tel" placeholder="08xxxxxxxxxx" inputmode="tel"
                                         @input="form.no_hp = form.no_hp.replace(/[^\d+\-\s]/g, '')" class="w-full rounded-xl border px-4 py-2.5 text-sm
@@ -521,7 +591,8 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        No. HP Orang Tua / Wali
+                                        No. HP Orang Tua / Wali <span
+                                            class="text-gray-400 font-normal ml-1 text-xs">(opsional)</span>
                                     </label>
                                     <input v-model="form.no_hp_ortu" type="tel" placeholder="08xxxxxxxxxx"
                                         inputmode="tel"
@@ -551,7 +622,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             <!-- Alamat lengkap -->
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                    Alamat Lengkap
+                                    Alamat Lengkap <span class="text-red-500">*</span>
                                 </label>
                                 <textarea v-model="form.alamat" rows="2"
                                     placeholder="Nama jalan, nomor rumah, RT/RW, dll." class="w-full rounded-xl border px-4 py-2.5 text-sm
@@ -564,8 +635,9 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             <!-- Kelurahan & Kecamatan -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kelurahan /
-                                        Desa</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Kelurahan / Desa <span class="text-red-500">*</span>
+                                    </label>
                                     <input :value="form.kelurahan" @input="handleTitleCase('kelurahan', $event)"
                                         type="text" placeholder="Contoh: Cempaka Putih" class="w-full rounded-xl border px-4 py-2.5 text-sm
                                                bg-white text-gray-900 placeholder-gray-400
@@ -574,7 +646,9 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                                 : 'border-gray-200 focus:ring-blue-300 focus:border-blue-400'" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kecamatan</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Kecamatan <span class="text-red-500">*</span>
+                                    </label>
                                     <input :value="form.kecamatan" @input="handleTitleCase('kecamatan', $event)"
                                         type="text" placeholder="Contoh: Tanah Abang" class="w-full rounded-xl border px-4 py-2.5 text-sm
                                                bg-white text-gray-900 placeholder-gray-400
@@ -587,8 +661,9 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             <!-- Kota & Kode Pos -->
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                                 <div class="col-span-2 sm:col-span-2">
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kota /
-                                        Kabupaten</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Kota / Kabupaten <span class="text-red-500">*</span>
+                                    </label>
                                     <input :value="form.kota" @input="handleTitleCase('kota', $event)" type="text"
                                         placeholder="Contoh: Jakarta Pusat" class="w-full rounded-xl border px-4 py-2.5 text-sm
                                                bg-white text-gray-900 placeholder-gray-400
@@ -597,7 +672,9 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                                 : 'border-gray-200 focus:ring-blue-300 focus:border-blue-400'" />
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">Kode Pos</label>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Kode Pos <span class="text-gray-400 font-normal ml-1 text-xs">(opsional)</span>
+                                    </label>
                                     <input v-model="form.kode_pos" type="text" placeholder="12345" maxlength="5"
                                         inputmode="numeric" @input="form.kode_pos = form.kode_pos.replace(/\D/g, '')"
                                         class="w-full rounded-xl border px-4 py-2.5 text-sm
@@ -613,6 +690,11 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                 </div>
                             </div>
                         </template>
+
+                        <p class="mt-1 text-xs text-gray-400">
+                            Kolom bertanda <span class="text-red-500 font-semibold">*</span> wajib diisi. Selebihnya
+                            opsional, boleh dikosongkan.
+                        </p>
 
                         <!-- ══ NAVIGASI ══ -->
                         <div class="pt-4 flex items-center gap-3">

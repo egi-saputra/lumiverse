@@ -69,36 +69,32 @@ onMounted(() => {
             </div>
 
             <nav class="sidebar-nav">
-                <Link href="/lumiverse/dashboard" class="nav-item"
-                    :class="{ 'nav-item-active': isActive('/lumiverse/dashboard') }" prefetch
+                <Link href="/dashboard" class="nav-item" :class="{ 'nav-item-active': isActive('/dashboard') }" prefetch
                     @click="sidebarOpen = false">
                     <Squares2X2Icon class="nav-icon" />
                     Dashboard Admin
                 </Link>
 
-                <Link href="/lumiverse/profil" class="nav-item"
-                    :class="{ 'nav-item-active': currentPath.startsWith('/lumiverse/profil') }" prefetch
-                    @click="sidebarOpen = false">
+                <Link href="/profil" class="nav-item" :class="{ 'nav-item-active': currentPath.startsWith('/profil') }"
+                    prefetch @click="sidebarOpen = false">
                     <BuildingLibraryIcon class="nav-icon" />
                     Lembaga / Institusi
                 </Link>
 
-                <Link href="/lumiverse/users" class="nav-item"
-                    :class="{ 'nav-item-active': currentPath.startsWith('/lumiverse/users') }" prefetch
-                    @click="sidebarOpen = false">
+                <Link href="/users" class="nav-item" :class="{ 'nav-item-active': currentPath.startsWith('/users') }"
+                    prefetch @click="sidebarOpen = false">
                     <UsersIcon class="nav-icon" />
                     Kelola Pengguna
                 </Link>
 
-                <Link href="/lumiverse/pricing" class="nav-item"
-                    :class="{ 'nav-item-active': isActive('/lumiverse/pricing') }" prefetch
+                <Link href="/pricing" class="nav-item" :class="{ 'nav-item-active': isActive('/pricing') }" prefetch
                     @click="sidebarOpen = false">
                     <DocumentCurrencyDollarIcon class="nav-icon" />
                     Upgrade Premium
                 </Link>
 
-                <Link href="/lumiverse/subscription/history" class="nav-item"
-                    :class="{ 'nav-item-active': isActive('/lumiverse/subscription/history') }" prefetch
+                <Link href="/subscription/history" class="nav-item"
+                    :class="{ 'nav-item-active': isActive('/subscription/history') }" prefetch
                     @click="sidebarOpen = false">
                     <ClockIcon class="nav-icon" />
                     Riwayat Pembayaran

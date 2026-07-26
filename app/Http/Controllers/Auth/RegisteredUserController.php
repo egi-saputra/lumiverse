@@ -25,8 +25,6 @@ class RegisteredUserController extends Controller
     public function create(): Response
     {
         return Inertia::render('Auth/Register', [
-            // 'tenant' => tenant('id'),
-            // 'centralDomain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
         ]);
     }
 
@@ -44,7 +42,6 @@ class RegisteredUserController extends Controller
             'password' => ['required', Rules\Password::defaults()],
         ]);
 
-        // Cek kuota user berdasarkan max_users di tabel tenants
         $tenant = tenant();
         if ($tenant && $tenant->max_users !== null) {
             $currentCount = User::count();
@@ -56,17 +53,17 @@ class RegisteredUserController extends Controller
         }
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role ?? 'siswa',
+            'name'     => $request->name,
+            'email'    => $request->email,
             'password' => Hash::make($request->password),
+            'role'     => null,
         ]);
 
         event(new Registered($user));
         Auth::login($user);
 
         return redirect()
-            ->route('siswa.dashboard')
-            ->with('success', 'Your account has been created successfully.');
+            ->route('role.select')
+            ->with('success', 'Akun kamu berhasil dibuat. Yuk lengkapi peranmu.');
     }
 }

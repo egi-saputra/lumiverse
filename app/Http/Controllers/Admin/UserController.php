@@ -25,52 +25,70 @@ class UserController extends Controller
 
     public function create()
     {
+        $tenant = tenant();
+        $remainingSlots = null;
+
+        if ($tenant && $tenant->max_users) {
+            $usedSlots = User::count();
+            $remainingSlots = max(0, $tenant->max_users - $usedSlots);
+        }
+
         return Inertia::render('Admin/Users/Create', [
-            'roles' => ['proktor', 'guru', 'siswa', 'user'],
+            'roles'          => ['proktor', 'guru', 'siswa', 'user'],
+            'remainingSlots' => $remainingSlots, // null berarti tanpa batas
         ]);
     }
 
+    // Simpan user baru (bulk, satu role untuk semua baris)
     public function store(Request $request)
     {
-        // Cek kuota user berdasarkan max_users di tabel tenants
-        $tenant = tenant();
-        if ($tenant && $tenant->hasReachedUserLimit()) {
-            throw ValidationException::withMessages([
-                'name' => "Kuota pengguna sudah penuh ({$tenant->max_users} akun). Hubungi administrator untuk upgrade paket.",
-            ]);
-        }
-
-        $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => [
-                'required',
-                'email',
-                'unique:users,email',
-            ],
-            'password' => 'required|min:6',
-            'role'     => [
-                'required',
-                'string',
-                Rule::notIn(['admin']),
-            ],
+        $validated = $request->validate([
+            'role'           => ['required', 'string', Rule::notIn(['admin'])],
+            'items'          => ['required', 'array', 'min:1'],
+            'items.*.name'   => ['required', 'string', 'max:255'],
+            'items.*.email'  => ['required', 'email', 'distinct', 'unique:users,email'],
+            'items.*.password' => ['required', 'string', 'min:6'],
+        ], [
+            'items.*.email.distinct' => 'Terdapat email yang sama di dalam input.',
         ]);
 
-        $data['password'] = bcrypt($data['password']);
+        $items = $validated['items'];
+        $role  = $validated['role'];
 
-        $user = User::create($data);
+        // ─── Cek kuota berdasarkan max_users di tabel tenants ───────────────
+        $tenant = tenant();
+        if ($tenant && $tenant->max_users) {
+            $usedSlots      = User::count();
+            $remainingSlots = max(0, $tenant->max_users - $usedSlots);
 
-        if ($user->role === 'guru') {
-            Guru::firstOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'nama_lengkap' => $user->name,
-                ]
-            );
+            if (count($items) > $remainingSlots) {
+                throw ValidationException::withMessages([
+                    'items' => "Kuota pengguna tidak mencukupi. Sisa kuota: {$remainingSlots} akun, sedangkan Anda mencoba menambahkan " . count($items) . ' akun. Hubungi administrator untuk upgrade paket.',
+                ]);
+            }
         }
+
+        DB::transaction(function () use ($items, $role) {
+            foreach ($items as $item) {
+                $user = User::create([
+                    'name'     => $item['name'],
+                    'email'    => $item['email'],
+                    'password' => bcrypt($item['password']),
+                    'role'     => $role,
+                ]);
+
+                if ($user->role === 'guru') {
+                    Guru::firstOrCreate(
+                        ['user_id' => $user->id],
+                        ['nama_lengkap' => $user->name]
+                    );
+                }
+            }
+        });
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', 'User has been created!');
+            ->with('success', count($items) . ' user berhasil dibuat!');
     }
 
     public function edit(User $user)

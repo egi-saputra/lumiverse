@@ -14,16 +14,12 @@ return new class extends Migration
         Schema::create('guru', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
+                  ->nullable()
                   ->constrained('users')
-                  ->onDelete('cascade');
+                  ->nullOnDelete();
+
+            $table->string('kode_guru', 20)->nullable()->unique();
             $table->string('nama_lengkap');
-            $table->string('ttl')->nullable();
-            $table->string('alamat')->nullable();
-            $table->enum('jabatan', ['Tenaga Pendidik', 'Staff', 'Guru'])->default('Guru');
-            $table->string('nuptk')->unique()->nullable();
-            $table->enum('pesan', ['yes', 'no'])->default('no');
-            $table->enum('artikel', ['yes', 'no'])->default('no');
-            $table->enum('topik', ['yes', 'no'])->default('no');
             $table->timestamps();
         });
     }

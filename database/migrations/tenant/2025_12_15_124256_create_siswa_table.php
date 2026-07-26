@@ -53,7 +53,7 @@ return new class extends Migration
             $table->string('kejuruan_id')->nullable();
 
             // ID internal siswa
-            $table->string('id_siswa', 7)->unique();
+            $table->string('id_siswa', 20)->nullable()->unique();
 
             // Status
             $table->enum('status', [

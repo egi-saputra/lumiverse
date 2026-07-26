@@ -23,29 +23,48 @@ class MapelController extends Controller
         ]);
     }
 
-    // Halaman tambah mapel
+    // Halaman tambah mapel (bulk)
     public function create()
     {
         return Inertia::render('Admin/Mapel/Create', [
-            'guru' => Guru::orderBy('nama_lengkap')->get(['id', 'nama_lengkap']),
+            'guru' => Guru::whereDoesntHave('mapel')
+                ->orderBy('nama_lengkap')
+                ->get(['id', 'nama_lengkap']),
         ]);
     }
 
-    // Simpan data mapel baru
+    // Simpan data mapel baru (bulk)
     public function store(Request $request)
     {
-        $request->validate([
-            'mapel'   => ['required', 'string', 'max:100', 'unique:mapel,mapel'],
-            'guru_id' => ['nullable', 'exists:guru,id'],
+        $data = $request->validate([
+            'items'            => ['required', 'array', 'min:1'],
+            'items.*.mapel'    => ['required', 'string', 'max:100', 'distinct'],
+            'items.*.guru_id'  => ['nullable', 'exists:guru,id'],
+        ], [
+            'items.*.mapel.distinct' => 'Terdapat nama mapel yang sama di dalam input.',
         ]);
 
-        Mapel::create([
-            'mapel'   => $request->mapel,
-            'guru_id' => $request->guru_id,
-        ]);
+        $items = $data['items'];
+        $namaList = array_column($items, 'mapel');
+
+        // cek duplikat terhadap data yang sudah ada di DB
+        $existing = Mapel::whereIn('mapel', $namaList)->pluck('mapel');
+
+        if ($existing->isNotEmpty()) {
+            return back()->withErrors([
+                'items' => 'Mapel berikut sudah terdaftar: ' . $existing->implode(', '),
+            ])->withInput();
+        }
+
+        foreach ($items as $item) {
+            Mapel::create([
+                'mapel'   => $item['mapel'],
+                'guru_id' => $item['guru_id'] ?: null,
+            ]);
+        }
 
         return redirect()->route('admin.mapel.index')
-            ->with('success', 'Mapel berhasil ditambahkan');
+            ->with('success', count($items) . ' mapel berhasil ditambahkan');
     }
 
     // Update data mapel

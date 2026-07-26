@@ -61,7 +61,7 @@ const submit = () => {
                 </div>
 
                 <!-- Role -->
-                <div>
+                <!-- <div>
                     <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Role User</label>
                     <select v-model="form.role"
                         class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-4 py-2 text-gray-900 dark:text-white backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition">
@@ -69,7 +69,7 @@ const submit = () => {
                         <option v-for="role in roles" :key="role" :value="role">{{ role }}</option>
                     </select>
                     <div v-if="form.errors.role" class="text-red-600 text-sm mt-1">{{ form.errors.role }}</div>
-                </div>
+                </div> -->
 
                 <!-- Password -->
                 <div>

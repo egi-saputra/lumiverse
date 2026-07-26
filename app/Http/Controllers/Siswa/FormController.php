@@ -81,41 +81,50 @@ class FormController extends Controller
                 Rule::exists('kejuruan', 'id'),
             ],
 
-            // Data pribadi
-            'tempat_lahir'  => ['nullable', 'string', 'max:100'],
-            'tanggal_lahir' => ['nullable', 'date', 'before:today'],
-            'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
-            'agama'         => ['nullable', Rule::in(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'])],
-            'no_hp'         => ['nullable', 'string', 'regex:/^[0-9+\-\s]{8,15}$/'],
+            // Data pribadi — wajib semua kecuali no_hp_ortu
+            'tempat_lahir'  => ['required', 'string', 'max:100'],
+            'tanggal_lahir' => ['required', 'date', 'before:today'],
+            'jenis_kelamin' => ['required', Rule::in(['L', 'P'])],
+            'agama'         => ['required', Rule::in(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'])],
+            'no_hp'         => ['required', 'string', 'regex:/^[0-9+\-\s]{8,15}$/'],
             'no_hp_ortu'    => ['nullable', 'string', 'regex:/^[0-9+\-\s]{8,15}$/'],
 
-            // Alamat
-            'alamat'        => ['nullable', 'string'],
-            'kelurahan'     => ['nullable', 'string', 'max:100'],
-            'kecamatan'     => ['nullable', 'string', 'max:100'],
-            'kota'          => ['nullable', 'string', 'max:100'],
+            // Alamat — wajib semua kecuali kode_pos
+            'alamat'        => ['required', 'string'],
+            'kelurahan'     => ['required', 'string', 'max:100'],
+            'kecamatan'     => ['required', 'string', 'max:100'],
+            'kota'          => ['required', 'string', 'max:100'],
             'kode_pos'      => ['nullable', 'digits:5'],
         ], [
-            // Pesan error ramah user (Bahasa Indonesia)
             'nama_lengkap.required' => 'Nama lengkap wajib diisi.',
             'nama_lengkap.max'      => 'Nama lengkap terlalu panjang (maksimal 255 karakter).',
-            'nis.min'               => 'NIS minimal 7 karakter.',
-            'nis.unique'            => 'NIS ini sudah terdaftar, hubungi admin jika ada kesalahan.',
-            'nisn.required'         => 'NISN wajib diisi.',
-            'nisn.digits'           => 'NISN harus tepat 10 digit angka.',
-            'nisn.unique'           => 'NISN ini sudah terdaftar, hubungi admin jika ada kesalahan.',
-            'kelas_id.required'     => 'Silakan pilih kelas terlebih dahulu.',
-            'kelas_id.exists'       => 'Kelas yang dipilih tidak valid.',
-            'kejuruan_id.required'  => 'Silakan pilih program kejuruan.',
-            'kejuruan_id.exists'    => 'Program kejuruan yang dipilih tidak valid.',
+            'nis.min'                => 'NIS minimal 7 karakter.',
+            'nis.unique'             => 'NIS ini sudah terdaftar, hubungi admin jika ada kesalahan.',
+            'nisn.required'          => 'NISN wajib diisi.',
+            'nisn.digits'            => 'NISN harus tepat 10 digit angka.',
+            'nisn.unique'            => 'NISN ini sudah terdaftar, hubungi admin jika ada kesalahan.',
+            'kelas_id.required'      => 'Silakan pilih kelas terlebih dahulu.',
+            'kelas_id.exists'        => 'Kelas yang dipilih tidak valid.',
+            'kejuruan_id.required'   => 'Silakan pilih program kejuruan.',
+            'kejuruan_id.exists'     => 'Program kejuruan yang dipilih tidak valid.',
 
-            'tanggal_lahir.date'    => 'Format tanggal lahir tidak valid.',
-            'tanggal_lahir.before'  => 'Tanggal lahir tidak boleh hari ini atau masa depan.',
-            'jenis_kelamin.in'      => 'Jenis kelamin tidak valid.',
-            'agama.in'              => 'Agama yang dipilih tidak valid.',
-            'no_hp.regex'           => 'Format nomor HP tidak valid.',
-            'no_hp_ortu.regex'      => 'Format nomor HP orang tua tidak valid.',
-            'kode_pos.digits'       => 'Kode pos harus 5 digit angka.',
+            'tempat_lahir.required'  => 'Tempat lahir wajib diisi.',
+            'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
+            'tanggal_lahir.date'     => 'Format tanggal lahir tidak valid.',
+            'tanggal_lahir.before'   => 'Tanggal lahir tidak boleh hari ini atau masa depan.',
+            'jenis_kelamin.required' => 'Silakan pilih jenis kelamin.',
+            'jenis_kelamin.in'       => 'Jenis kelamin tidak valid.',
+            'agama.required'         => 'Silakan pilih agama.',
+            'agama.in'                => 'Agama yang dipilih tidak valid.',
+            'no_hp.required'          => 'No. HP siswa wajib diisi.',
+            'no_hp.regex'             => 'Format nomor HP tidak valid.',
+            'no_hp_ortu.regex'        => 'Format nomor HP orang tua tidak valid.',
+
+            'alamat.required'         => 'Alamat lengkap wajib diisi.',
+            'kelurahan.required'      => 'Kelurahan/Desa wajib diisi.',
+            'kecamatan.required'      => 'Kecamatan wajib diisi.',
+            'kota.required'           => 'Kota/Kabupaten wajib diisi.',
+            'kode_pos.digits'         => 'Kode pos harus 5 digit angka.',
         ]);
 
         try {
@@ -140,7 +149,7 @@ class FormController extends Controller
                 'kota'          => $validated['kota'] ?? null,
                 'kode_pos'      => $validated['kode_pos'] ?? null,
 
-                'id_siswa'      => strtoupper(substr(uniqid(), 0, 7)),
+                // id_siswa otomatis di-generate di Siswa::boot()
                 'status'        => 'Activated',
             ]);
         } catch (\Exception $e) {

@@ -6,6 +6,7 @@ use Stancl\Tenancy\Middleware\InitializeTenancyBySubdomain;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 use App\Http\Middleware\EnsureTenantIsActive;
+use App\Http\Controllers\Auth\RoleSelectionController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CentralController;
 use App\Http\Controllers\ProfileController;
@@ -59,10 +60,22 @@ $registerTenantRoutes = function () {
 Route::get('/mading', [MadingController::class, 'index'])->name('mading.index');
 Route::get('/mading/{pengumuman}', [MadingController::class, 'show'])->name('mading.show');
 
+Route::middleware(['auth'])->prefix('onboarding')->name('role.')->group(function () {
+    Route::get('/peran', [RoleSelectionController::class, 'create'])->name('select');
+    Route::post('/peran', [RoleSelectionController::class, 'store'])->name('store');
+
+    Route::get('/peran/guru', [RoleSelectionController::class, 'createGuru'])->name('guru.create');
+    Route::get('/peran/guru/cek', [RoleSelectionController::class, 'lookupGuru'])->name('guru.lookup');
+    Route::post('/peran/guru', [RoleSelectionController::class, 'storeGuru'])->name('guru.store');
+
+    Route::get('/peran/orang-tua', [RoleSelectionController::class, 'createOrangTua'])->name('orangtua.create');
+    Route::get('/peran/orang-tua/cek', [RoleSelectionController::class, 'lookupOrangTua'])->name('orangtua.lookup'); // baru
+    Route::post('/peran/orang-tua', [RoleSelectionController::class, 'storeOrangTua'])->name('orangtua.store');
+});
+
 Route::middleware(['auth'])->group(function () {
     Route::patch('/profile/siswa', [ProfileController::class, 'updateSiswa'])
-    ->name('profile.siswa.update');
-    
+        ->name('profile.siswa.update');
 });
 
 // Verifikasi Email
@@ -84,12 +97,13 @@ Route::get('/dashboard', function () {
         'proktor' => redirect()->route('proktor.dashboard'),
         'siswa'   => redirect()->route('siswa.dashboard'),
         'user'    => redirect()->route('user.dashboard'),
-        default   => abort(403),
+        default   => redirect()->route('role.select'),
     };
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // ── Dashboard Role Auth ──────────────────────────────────────
-Route::middleware('auth', 'verified')->group(function () {
+Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
+// Route::middleware('auth', 'verified')->group(function () {
     Route::get('/admin/dashboard', function () {
         $user = Auth::user();
 
@@ -152,21 +166,9 @@ Route::middleware('auth', 'verified')->group(function () {
     Route::get('/siswa/dashboard', function () {
         $user = Auth::user();
 
-        // cek apakah siswa sudah punya data
-        $siswaExists = Siswa::where('user_id', $user->id)->exists();
-
-        if (!$siswaExists) {
-            return redirect()->route('siswa.form.create');
-        }
-
-        // Ambil data siswa (misal semua siswa)
         $siswa = Siswa::with(['kelas', 'kejuruan'])
             ->where('user_id', $user->id)
             ->first();
-
-        if (!$siswa) {
-            return redirect()->route('siswa.form.create');
-        }
 
         return Inertia::render('Siswa/Dashboard', [
             'siswa' => $siswa,
@@ -175,7 +177,7 @@ Route::middleware('auth', 'verified')->group(function () {
                 'role' => $user->role,
             ],
         ]);
-    })->middleware(['auth'])->name('siswa.dashboard');
+    })->middleware(['auth', 'check.siswa.data'])->name('siswa.dashboard');
 
     Route::get('/user/dashboard', fn() =>
         Inertia::render('User/Dashboard')
@@ -183,14 +185,14 @@ Route::middleware('auth', 'verified')->group(function () {
 });
 
 // ── Profile ──────────────────────────────────────
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'role.selected'])->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
 
     // ── Messages ──────────────────────────────────────
-Route::middleware(['auth', 'verified'])->prefix('pesan')->name('pesan.')->group(function () {
+Route::middleware(['auth', 'verified', 'role.selected'])->prefix('pesan')->name('pesan.')->group(function () {
     // Inbox — semua role bisa baca
     Route::get('/pesan/{pesan}', [PesanController::class, 'show'])->name('show');
     Route::get('/', [PesanController::class, 'index'])->name('index');
@@ -205,7 +207,7 @@ Route::middleware(['auth', 'verified'])->prefix('pesan')->name('pesan.')->group(
 });
 
 // ── Announcements ──────────────────────────────────────
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
     Route::get('/pengumuman',                    [PengumumanController::class, 'index'])->name('pengumuman.index');
     Route::get('/pengumuman/create',             [PengumumanController::class, 'create'])->name('pengumuman.create');
     Route::post('/pengumuman',                   [PengumumanController::class, 'store'])->name('pengumuman.store');
@@ -221,7 +223,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //             ->name('analytics');
 // });
 
-Route::middleware(['auth', 'verified','throttle:30,1'])
+Route::middleware(['auth', 'verified', 'role.selected', 'throttle:30,1'])
     ->group(function () {
  
         Route::get('/public/absensi/analytics', [PublicAbsensiAnalyticsController::class, 'index'])

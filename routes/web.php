@@ -116,9 +116,13 @@ Route::domain('article.lumiverse.co.id')->middleware('web')->group(function () {
 | Tidak ada '/' di sini, karena sudah ditangani di atas per-domain.
 |--------------------------------------------------------------------------
 */
-Route::domain('{domain}')
-    ->where(['domain' => implode('|', array_map('preg_quote', $centralDomains))])
-    ->middleware('web')
+Route::domain('{centralHost}')
+    ->where(['centralHost' => implode('|', array_map('preg_quote', $centralDomains))])
+    ->middleware([
+        'web',
+        \App\Http\Middleware\SetRouteDomainDefault::class,
+        \App\Http\Middleware\StripCentralHostParameter::class,
+    ])
     ->group(function () {
         Route::get('/robots.txt', function () {
             $content = "User-agent: *\n"
@@ -141,9 +145,9 @@ Route::domain('{domain}')
         Route::prefix('developer')->name('developer.')->group(function () {
             Route::middleware('guest:developer')->group(function () {
                 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-                Route::post('/login', [AuthController::class, 'login']);
+                Route::post('/login', [AuthController::class, 'login'])->name('login.store');
                 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-                Route::post('/register', [AuthController::class, 'register']);
+                Route::post('/register', [AuthController::class, 'register'])->name('login.store');
             });
 
             Route::middleware('auth:developer')->group(function () {
