@@ -21,6 +21,11 @@ return new class extends Migration
             $table->string('kode_guru', 20)->nullable()->unique();
             $table->string('nama_lengkap');
             $table->timestamps();
+
+            // constrained() hanya membuat FOREIGN KEY constraint, TIDAK otomatis
+            // membuat index di PostgreSQL (beda dengan asumsi umum). Tanpa ini,
+            // JOIN/lookup guru berdasarkan user_id akan full table scan.
+            $table->index('user_id');
         });
     }
 

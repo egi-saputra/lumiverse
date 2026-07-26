@@ -50,16 +50,32 @@ return new class extends Migration
 
             $table->timestamps();
 
+            // Composite unique ini leftmost-nya user_id, jadi otomatis meng-cover
+            // query "WHERE user_id = ?" dan "WHERE user_id = ? AND soal_id = ?"
+            // juga. Index terpisah untuk kombinasi itu jadi tidak diperlukan lagi
+            // (dulu ada riwayat_ujian_user_soal_idx yang duplikat dengan ini).
             $table->unique(
                 ['user_id', 'soal_id', 'quest_id'],
                 'riwayat_ujian_unique'
             );
 
-            $table->index('ujian_siswa_id', 'riwayat_ujian_siswa_idx');
-            $table->index(['user_id', 'soal_id'], 'riwayat_ujian_user_soal_idx');
-            $table->index('status', 'riwayat_ujian_status_idx');
-            $table->index('benar', 'riwayat_ujian_benar_idx');
-            $table->index('quest_id', 'riwayat_ujian_quest_idx');
+            // Dashboard siswa/guru: "soal mana saja yang belum/sedang dikerjakan
+            // DALAM SATU sesi ujian" (WHERE ujian_siswa_id = ? AND status = ?).
+            // Composite ini juga otomatis meng-cover "WHERE ujian_siswa_id = ?"
+            // saja (tanpa filter status), jadi index tunggal ujian_siswa_id
+            // yang lama tidak perlu dipertahankan terpisah.
+            $table->index(['ujian_siswa_id', 'status'], 'riwayat_ujian_siswa_status_idx');
+
+            // Analisis butir soal: "berapa % siswa jawab benar soal ini"
+            // (WHERE quest_id = ? [AND benar = ?]). Composite ini meng-cover
+            // "WHERE quest_id = ?" saja maupun dikombinasikan dengan benar,
+            // jadi menggantikan dua index terpisah (quest_id, benar) sebelumnya.
+            $table->index(['quest_id', 'benar'], 'riwayat_ujian_quest_benar_idx');
+
+            // Dipakai untuk laporan/rentang waktu pengerjaan lintas sesi
+            // (misal audit, ekspor data per periode). Tidak ada kolom
+            // pendamping berkardinalitas rendah yang cocok dijadikan composite,
+            // jadi tetap sebagai index tunggal.
             $table->index('waktu_pengerjaan', 'riwayat_ujian_waktu_idx');
         });
     }

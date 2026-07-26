@@ -22,6 +22,10 @@ class CreateDomainsTable extends Migration
 
             $table->timestamps();
             $table->foreign('tenant_id')->references('id')->on('tenants')->onUpdate('cascade')->onDelete('cascade');
+
+            // Index untuk FK. Dipakai saat mengambil semua domain milik satu
+            // tenant (misal di halaman pengaturan domain custom tenant).
+            $table->index('tenant_id');
         });
     }
 

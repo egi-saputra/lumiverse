@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -35,7 +36,33 @@ return new class extends Migration
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
             $table->foreign('plan_id')->references('id')->on('plans');
+
+            // Index untuk kolom FK
+            $table->index('tenant_id');
+            $table->index('plan_id');
+
+            // Query paling umum: riwayat order milik satu tenant, diurutkan
+            // dari yang terbaru (halaman billing/invoice tenant).
+            $table->index(['tenant_id', 'created_at'], 'subscription_orders_tenant_created_idx');
+
+            // Dipakai saat callback dari payment gateway (Midtrans) meng-query
+            // ulang berdasarkan snap_token.
+            $table->index('snap_token');
         });
+
+        // Partial index: dipakai oleh scheduler/job yang mencari order dengan
+        // status 'pending' untuk di-expire atau dicek ulang statusnya ke Midtrans.
+        // Karena mayoritas order lama akhirnya berstatus 'paid'/'expired'/'failed',
+        // partial index ini jauh lebih kecil & tetap cepat walau tabel order
+        // sudah berisi jutaan baris di production.
+        DB::statement(
+            "CREATE INDEX subscription_orders_pending_idx ON subscription_orders (created_at) WHERE status = 'pending'"
+        );
+
+        // Partial index untuk laporan/rekap pembayaran (hanya order yang sudah dibayar).
+        DB::statement(
+            'CREATE INDEX subscription_orders_paid_at_idx ON subscription_orders (paid_at) WHERE paid_at IS NOT NULL'
+        );
     }
 
     /**

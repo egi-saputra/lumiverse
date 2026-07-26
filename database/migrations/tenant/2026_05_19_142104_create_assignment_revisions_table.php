@@ -26,8 +26,12 @@ return new class extends Migration
 
             $table->timestamps();
 
-            // optional composite index
-            $table->index(['tugas_id', 'revision_number']);
+            // Satu tugas tidak boleh punya revision_number yang sama dua kali.
+            // Composite unique ini tetap berfungsi persis seperti index
+            // biasa untuk query "semua revisi tugas X" (leftmost tugas_id)
+            // maupun "revisi ke-N dari tugas X", sekaligus menjaga integritas
+            // data di level database.
+            $table->unique(['tugas_id', 'revision_number']);
         });
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -50,6 +51,15 @@ return new class extends Migration
             // Laravel
             $table->timestamps();
             $table->json('data')->nullable();
+
+            // Index untuk kolom FK. PostgreSQL, tidak seperti MySQL, TIDAK
+            // otomatis membuat index saat kolom dipakai sebagai foreign key —
+            // jadi ini wajib ditambah manual biar JOIN & lookup plan cepat.
+            $table->index('plan_id');
+            $table->index('pending_plan_id');
+
+            // Query umum lain: filter daftar tenant per jenis produk (school/workspace)
+            $table->index('product_type');
         });
 
         // Foreign keys ditambah setelah tabel plans ada
@@ -65,6 +75,14 @@ return new class extends Migration
                   ->on('plans')
                   ->nullOnDelete();
         });
+
+        // Partial index: dipakai oleh job/cron pengecekan expiry & quota grace
+        // yang hanya peduli pada tenant yang masih aktif (is_active = true).
+        // Jauh lebih ringkas dibanding index composite biasa karena tenant
+        // yang sudah nonaktif (churn, suspended) tidak ikut ter-index.
+        DB::statement(
+            'CREATE INDEX tenants_active_expires_idx ON tenants (expires_at) WHERE is_active = true'
+        );
     }
 
     public function down(): void

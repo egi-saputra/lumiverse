@@ -23,21 +23,26 @@ return new class extends Migration
             $table->rememberToken();
             $table->enum('role', ['admin', 'staff', 'proktor', 'guru', 'siswa', 'user'])->nullable();
             $table->timestamps();
+
+            // Dipakai saat login via Google OAuth (WHERE google_id = ?).
+            // Tanpa index ini, setiap login Google bakal full table scan.
+            $table->index('google_id');
+
+            // Dipakai admin panel untuk listing user per role (semua guru,
+            // semua siswa, dll). Cardinality-nya rendah (cuma 6 nilai), tapi
+            // tetap membantu planner PostgreSQL dibanding scan penuh saat
+            // jumlah user sudah puluhan/ratusan ribu baris.
+            $table->index('role');
         });
+
+        // NOTE: Tabel 'sessions' SUDAH dibuat di migration
+        // 2026_06_23_122456_create_sessions_table.php — sengaja tidak
+        // diulang di sini supaya tidak bentrok "relation already exists".
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
-        });
-
-        Schema::create('sessions', function (Blueprint $table) {
-            $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
-            $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
-            $table->longText('payload');
-            $table->integer('last_activity')->index();
         });
     }
 
@@ -48,6 +53,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('sessions');
     }
 };

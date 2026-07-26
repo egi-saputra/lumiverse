@@ -18,6 +18,10 @@ return new class extends Migration
                   ->onDelete('cascade');
             $table->string('kejuruan');
             $table->timestamps();
+
+            // constrained() cuma bikin FK constraint, bukan index — jadi
+            // lookup "semua kejuruan milik guru X" tanpa ini bakal full table scan.
+            $table->index('guru_id');
         });
     }
 

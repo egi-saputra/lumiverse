@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -31,6 +32,18 @@ return new class extends Migration
             $table->unsignedSmallInteger('sort_order')->default(0); // urutan tampil
             $table->timestamps();
         });
+
+        // Index tambahan untuk performa query di PostgreSQL
+        // -----------------------------------------------------------------
+        // Query paling umum: tampilkan plan yang aktif untuk product_type
+        // tertentu, diurutkan sesuai sort_order (halaman pricing / registrasi tenant).
+        // Pakai PARTIAL INDEX karena is_active itu boolean (low cardinality) —
+        // index hanya menyimpan baris is_active = true, jauh lebih kecil &
+        // efisien dibanding composite index biasa, dan tetap stabil walau
+        // jumlah plan bertambah banyak (termasuk plan yang sudah nonaktif/diarsipkan).
+        DB::statement(
+            'CREATE INDEX plans_active_type_sort_idx ON plans (product_type, sort_order) WHERE is_active = true'
+        );
     }
 
     public function down(): void

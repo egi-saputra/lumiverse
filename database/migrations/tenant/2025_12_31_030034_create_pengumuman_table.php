@@ -22,6 +22,9 @@ return new class extends Migration
 
             $table->string('file_path')->nullable();
             $table->string('video_url', 500)->nullable();
+
+            // Dipakai untuk "riwayat pengumuman yang saya buat" (per admin/guru).
+            $table->index('user_id');
         });
     }
 

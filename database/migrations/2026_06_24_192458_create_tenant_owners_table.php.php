@@ -21,6 +21,10 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
+
+            // Index untuk FK. Dipakai saat login/lookup owner berdasarkan tenant,
+            // atau saat menampilkan daftar owner di admin panel per tenant.
+            $table->index('tenant_id');
         });
     }
 

@@ -57,6 +57,12 @@ return new class extends Migration
             $table->integer('nilai')->default(0);
 
             $table->timestamps();
+
+            // Query paling dominan di tabel ini: ambil semua butir soal milik
+            // satu paket ujian (WHERE soal_id = ?), misal saat siswa mulai
+            // ujian atau guru mengedit paket. FK ini belum ke-index otomatis
+            // di PostgreSQL.
+            $table->index('soal_id');
         });
     }
 

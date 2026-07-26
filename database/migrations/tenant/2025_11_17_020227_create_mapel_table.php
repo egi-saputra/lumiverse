@@ -18,6 +18,13 @@ return new class extends Migration
                   ->onDelete('cascade');
             $table->string('mapel');
             $table->timestamps();
+
+            // Satu guru tidak boleh punya nama mapel yang sama dua kali.
+            // Composite unique ini sekaligus berfungsi sebagai index —
+            // guru_id ada di posisi pertama, jadi query "semua mapel milik
+            // guru X" maupun "cek apakah guru X sudah punya mapel Y" sama-sama
+            // kepakai index ini. Index tunggal guru_id jadi tidak perlu lagi.
+            $table->unique(['guru_id', 'mapel']);
         });
     }
 
