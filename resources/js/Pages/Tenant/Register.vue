@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
-import PasswordFields from '../../../../Backup/resources/js/Pages/Tenant/Partials/PasswordFields.vue'
+import PasswordFields from './Partials/PasswordFields.vue'
 
 const form = reactive({
     institution_type: '',
