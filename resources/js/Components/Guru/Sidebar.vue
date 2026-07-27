@@ -73,7 +73,7 @@ const menuItems = computed(() => {
             name: 'Additional Features',
             icon: AdjustmentsHorizontalIcon,
             children: [
-                { name: 'Inbox Messages', routeName: 'pesan.index' },
+                // { name: 'Inbox Messages', routeName: 'pesan.index' },
                 { name: 'Announcements', routeName: 'pengumuman.index' },
             ],
         },

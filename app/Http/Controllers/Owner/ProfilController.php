@@ -15,17 +15,8 @@ use Inertia\Response;
 
 class ProfilController extends Controller
 {
-    protected array $schoolInstitutionTypes    = ['sekolah', 'kursus', 'privat', 'yayasan', 'lainnya'];
-    protected array $workspaceInstitutionTypes = ['pt', 'cv', 'startup', 'yayasan', 'lainnya'];
-    protected array $schoolLevels              = ['sd', 'smp', 'smk'];
-
-    /**
-     * Daftar jenis lembaga/organisasi yang valid — kondisional sesuai product_type tenant.
-     */
-    protected function institutionTypesFor(Tenant $tenant): array
-    {
-        return $tenant->isWorkspace() ? $this->workspaceInstitutionTypes : $this->schoolInstitutionTypes;
-    }
+    protected array $institutionTypes = ['sekolah', 'kursus', 'privat', 'yayasan', 'lainnya'];
+    protected array $schoolLevels     = ['sd', 'smp', 'smk'];
 
     // ─── Halaman Profil Lembaga & Akun PIC ─────────────────────────────────────
     public function edit(): Response
@@ -41,7 +32,6 @@ class ProfilController extends Controller
             ],
             'tenant' => [
                 'name'                   => $tenant->name,
-                'product_type'           => $tenant->product_type,
                 'institution_type'       => $tenant->institution_type,
                 'institution_type_other' => $tenant->institution_type_other,
                 'school_level'           => $tenant->school_level,
@@ -66,22 +56,19 @@ class ProfilController extends Controller
         $owner  = Auth::guard('owner')->user();
         $tenant = Tenant::find($owner->tenant_id);
 
-        $isWorkspace      = $tenant->isWorkspace();
-        $institutionTypes = $this->institutionTypesFor($tenant);
-
         $validated = $request->validate([
             'school_name'            => ['required', 'string', 'max:255'],
-            'institution_type'       => ['required', Rule::in($institutionTypes)],
+            'institution_type'       => ['required', Rule::in($this->institutionTypes)],
             'institution_type_other' => [
                 Rule::requiredIf(fn() => $request->input('institution_type') === 'lainnya'),
                 'nullable', 'string', 'max:100',
             ],
             'school_level' => [
-                Rule::requiredIf(fn() => !$isWorkspace && $request->input('institution_type') === 'sekolah'),
+                Rule::requiredIf(fn() => $request->input('institution_type') === 'sekolah'),
                 'nullable', Rule::in($this->schoolLevels),
             ],
             'npsn' => [
-                Rule::requiredIf(fn() => !$isWorkspace && $request->input('institution_type') === 'sekolah'),
+                Rule::requiredIf(fn() => $request->input('institution_type') === 'sekolah'),
                 'nullable', 'string', 'digits:8',
                 Rule::unique('tenants', 'npsn')->ignore($tenant->id),
                 function ($attribute, $value, $fail) {
@@ -100,7 +87,7 @@ class ProfilController extends Controller
                 },
             ],
             'registration_number' => [
-                Rule::requiredIf(fn() => $isWorkspace || $request->input('institution_type') !== 'sekolah'),
+                Rule::requiredIf(fn() => $request->input('institution_type') !== 'sekolah'),
                 'nullable', 'string', 'max:50',
             ],
             'registration_number_school' => [
@@ -144,13 +131,14 @@ class ProfilController extends Controller
         }
 
         $tenant->update([
-            'name'                   => Str::upper($validated['school_name']),
+            // 'name'                   => Str::upper($validated['school_name']),
+            'name'                   => $validated['school_name'],
             'institution_type'       => $validated['institution_type'],
             'institution_type_other' => $validated['institution_type_other'] ?? null,
-            'school_level'           => !$isWorkspace ? ($validated['school_level'] ?? null) : null,
-            'npsn'                   => !$isWorkspace ? ($validated['npsn'] ?? null) : null,
-            'nss'                    => !$isWorkspace ? ($validated['nss'] ?? null) : null,
-            'registration_number'    => (!$isWorkspace && $validated['institution_type'] === 'sekolah')
+            'school_level'           => $validated['school_level'] ?? null,
+            'npsn'                   => $validated['npsn'] ?? null,
+            'nss'                    => $validated['nss'] ?? null,
+            'registration_number'    => $validated['institution_type'] === 'sekolah'
                                         ? ($validated['registration_number_school'] ?? null)
                                         : ($validated['registration_number'] ?? null),
             'contact_phone'          => $validated['contact_phone'] ?? null,

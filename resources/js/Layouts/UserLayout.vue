@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { ToastAlert } from '@/Composables/ToastAlert.js'
-import { useTenant } from '@/Composables/useTenant.js'
 import { onClickOutside } from '@vueuse/core'
 
 import Dropdown from '@/Components/Dropdown.vue'
@@ -43,46 +42,46 @@ watch(
     }
 )
 
-/* ─── Notification / Pesan Bell ─────────────────────────── */
+/* ─── Notification / Pengumuman Bell ────────────────────── */
 const showingNotifDropdown = ref(false)
 const notifDropdownRef = ref(null)
 const bellButtonRef = ref(null)
 
 // localStorage key per-user untuk isolasi antar akun
 const userId = page.props.auth?.user?.id ?? 'guest'
-const storageKey = `readPesan_${userId}`
+const storageKey = `readPengumuman_${userId}`
 const readIds = ref(new Set(JSON.parse(localStorage.getItem(storageKey) || '[]')))
 
 const persistRead = () => {
     localStorage.setItem(storageKey, JSON.stringify([...readIds.value]))
 }
 
-// Ambil daftar pesan dari shared prop (diisi HandleInertiaRequests)
-const pesanList = computed(() => page.props.pesan ?? [])
+// Ambil daftar pengumuman dari shared prop (diisi HandleInertiaRequests)
+const pengumumanList = computed(() => page.props.pesan ?? [])
 
-// 10 pesan terbaru untuk dropdown
-const recentPesan = computed(() =>
-    [...pesanList.value]
+// 10 pengumuman terbaru untuk dropdown
+const recentPengumuman = computed(() =>
+    [...pengumumanList.value]
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 10)
 )
 
 const isUnread = id => !readIds.value.has(id)
-const unreadCount = computed(() => recentPesan.value.filter(p => isUnread(p.id)).length)
+const unreadCount = computed(() => recentPengumuman.value.filter(p => isUnread(p.id)).length)
 
 const toggleNotifDropdown = () => {
     showingNotifDropdown.value = !showingNotifDropdown.value
 
     // Tandai semua yang muncul di dropdown sebagai terbaca
     if (showingNotifDropdown.value) {
-        recentPesan.value.forEach(p => readIds.value.add(p.id))
+        recentPengumuman.value.forEach(p => readIds.value.add(p.id))
         persistRead()
     }
 }
 
-const goToInbox = () => {
+const goToAnnouncement = id => {
     showingNotifDropdown.value = false
-    router.visit(route('pesan.index'))
+    router.visit(route('pengumuman.index', id ? { id } : {}))
 }
 
 onClickOutside(notifDropdownRef, () => (showingNotifDropdown.value = false), { ignore: [bellButtonRef] })
@@ -225,9 +224,9 @@ const logout = () => router.post(route('logout'))
                                 :class="isDark ? '-translate-x-6' : 'translate-x-0'" />
                         </button>
 
-                        <!-- ── Bell Notification ───────────────────── -->
+                        <!-- ── Bell Notification (Pengumuman) ──────── -->
                         <div class="relative">
-                            <button ref="bellButtonRef" @click="toggleNotifDropdown" aria-label="Notifikasi pesan"
+                            <button ref="bellButtonRef" @click="toggleNotifDropdown" aria-label="Notifikasi pengumuman"
                                 class="relative p-2 rounded-full transition-colors
                                            hover:bg-gray-100 dark:hover:bg-white/10">
                                 <BellIcon class="w-6 h-6 text-gray-500 dark:text-white" />
@@ -269,7 +268,7 @@ const logout = () => router.post(route('logout'))
                                         <span
                                             class="flex items-center gap-2 font-semibold text-sm text-gray-700 dark:text-white">
                                             <BellIcon class="w-4 h-4 text-indigo-500" />
-                                            Pesan Masuk
+                                            Pengumuman
                                             <span v-if="unreadCount > 0" class="inline-flex items-center justify-center
                                                        min-w-[20px] h-5 px-1.5
                                                        rounded-full text-[10px] font-bold
@@ -277,15 +276,16 @@ const logout = () => router.post(route('logout'))
                                                 {{ unreadCount }}
                                             </span>
                                         </span>
-                                        <button @click="goToInbox" class="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300
+                                        <button @click="goToAnnouncement()" class="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-300
                                                    font-medium transition-colors">
                                             Lihat Semua
                                         </button>
                                     </div>
 
-                                    <!-- List notifikasi -->
+                                    <!-- List pengumuman -->
                                     <ul class="divide-y divide-gray-100 dark:divide-white/10 max-h-72 overflow-y-auto">
-                                        <li v-for="p in recentPesan" :key="p.id" @click="goToInbox" class="flex items-center gap-3 px-4 py-3
+                                        <li v-for="p in recentPengumuman" :key="p.id" @click="goToAnnouncement(p.id)"
+                                            class="flex items-center gap-3 px-4 py-3
                                                    cursor-pointer transition
                                                    hover:bg-white/60 dark:hover:bg-white/5">
                                             <!-- Unread dot -->
@@ -306,17 +306,17 @@ const logout = () => router.post(route('logout'))
                                                 class="shrink-0 w-4 h-4 text-gray-300 dark:text-gray-600" />
                                         </li>
 
-                                        <li v-if="recentPesan.length === 0"
+                                        <li v-if="recentPengumuman.length === 0"
                                             class="px-4 py-8 text-center text-sm italic text-gray-400 dark:text-gray-500">
-                                            Tidak ada pesan masuk.
+                                            Tidak ada pengumuman masuk.
                                         </li>
                                     </ul>
 
                                     <!-- Footer dropdown -->
                                     <div class="px-4 py-2.5 border-t border-gray-100 dark:border-white/10 text-center">
-                                        <button @click="goToInbox" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400
+                                        <button @click="goToAnnouncement()" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400
                                                    hover:underline transition">
-                                            Buka Kotak Pesan →
+                                            Buka Semua Pengumuman →
                                         </button>
                                     </div>
                                 </div>
@@ -405,19 +405,5 @@ const logout = () => router.post(route('logout'))
                 <slot />
             </div>
         </div>
-
-        <!-- Mobile Bottom Bar -->
-        <!-- <div class="fixed bottom-0 left-0 right-0 z-40
-                    bg-white/90 dark:bg-[#020617] backdrop-blur
-                    border-t border-gray-200 dark:border-gray-700
-                    md:hidden safe-bottom">
-            <div class="flex items-center justify-center h-14 px-4">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 text-center">
-                    © {{ new Date().getFullYear() }}
-                    <span class="font-semibold text-gray-700 dark:text-gray-200">LMS NUSANTARA</span>
-                    · All rights reserved
-                </p>
-            </div>
-        </div> -->
     </div>
 </template>

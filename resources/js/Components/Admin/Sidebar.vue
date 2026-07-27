@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { useTenant } from '@/Composables/useTenant'
 import { route } from 'ziggy-js';
 import {
     HomeIcon,
@@ -17,28 +18,16 @@ const props = defineProps({
 
 const page = usePage();
 
-// Cek apakah tenant saat ini berjenjang SMK
-const isSmk = computed(() =>
-    (page.props.tenant?.school_level ?? '').toString().toLowerCase() === 'smk'
-);
+const { tenant, isSmk } = useTenant()
 
-// Cek product_type tenant — kondisional istilah sekolah vs korporat
-const isWorkspace = computed(() => page.props.tenant?.product_type === 'workspace');
-
-// ─── Label kondisional per product_type ────────────────────────────────────
-const labels = computed(() => isWorkspace.value ? {
-    section: 'Organization Setup',
-    teacher: 'Manager List',
-    student: 'Employee',
-    subject: 'Department List',
-    classroom: 'Team / Division',
-} : {
+// Label section — tidak ada lagi kondisional product_type, tenant selalu sekolah
+const labels = {
     section: 'School Administration',
     teacher: 'Teacher Directory',
     student: 'Student Directory',
     subject: 'Subject Directory',
     classroom: 'Classroom Directory',
-});
+};
 
 // MENU UTAMA
 const menuItems = computed(() => [
@@ -46,30 +35,30 @@ const menuItems = computed(() => [
     // { name: 'School Management', routeName: 'admin.profil_sekolah.index', icon: BuildingOffice2Icon },
     { name: 'User Management', routeName: 'admin.users.index', icon: UsersIcon },
 
-    // School / Organization Management
+    // School Management
     {
-        name: labels.value.section,
+        name: labels.section,
         icon: BuildingLibraryIcon,
         children: [
             {
-                name: labels.value.teacher,
+                name: labels.teacher,
                 routeName: 'admin.guru.index',
             },
             {
-                name: labels.value.student,
+                name: labels.student,
                 routeName: 'admin.siswa.index'
             },
             {
-                name: labels.value.subject,
+                name: labels.subject,
                 routeName: 'admin.mapel.index',
             },
-            // Kejuruan hanya muncul kalau tenant berjenjang SMK (tidak relevan untuk workspace)
-            ...(isSmk.value && !isWorkspace.value ? [{
+            // Kejuruan hanya muncul kalau tenant berjenjang SMK
+            ...(isSmk.value ? [{
                 name: 'Vocational Directory',
                 routeName: 'admin.kejuruan.index'
             }] : []),
             {
-                name: labels.value.classroom,
+                name: labels.classroom,
                 routeName: 'admin.kelas.index',
             },
         ]
@@ -80,11 +69,6 @@ const menuItems = computed(() => [
         name: 'Additional Features',
         icon: SquaresPlusIcon,
         children: [
-            // { name: 'Website Settings', routeName: 'admin.hero-slides', },
-            {
-                name: 'Inbox / Messages',
-                routeName: 'pesan.index',
-            },
             {
                 name: 'Announcements',
                 routeName: 'pengumuman.index',

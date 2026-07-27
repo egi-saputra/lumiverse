@@ -6,49 +6,12 @@ import {
     ArrowPathIcon, InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 import { ref, computed, watch } from 'vue'
-import { useTenant } from '@/Composables/useTenant.js'
 
 /* ─── Props ──────────────────────────────────────────────── */
 const props = defineProps({
     siswa: Array,
     kelas: { type: Array, default: null },
     isSmk: Boolean,
-})
-
-/* ─── Tenant (product_type) ─────────────────────────────── */
-const { isWorkspace } = useTenant()
-
-/* ─── Label kondisional per product_type ────────────────── */
-const t = computed(() => isWorkspace.value ? {
-    pageTitle: 'Employee List',
-    heading: 'List of All Employees',
-    subheading: 'Manage employee data',
-    searchPlaceholder: 'Search employee name...',
-    allGroupsOption: 'All Teams',
-    groupColumnLabel: 'Team',
-    idColumnLabel: 'Employee ID',
-    listAutoUpdateNote: 'Employee List Updates Automatically',
-    noDataMessage: 'No employee data available',
-    deleteAllSuffix: 'Employees in This Team',
-    confirmDeleteOne: 'Yakin ingin menghapus karyawan ini?',
-    confirmDeleteAllEntity: 'karyawan',
-    confirmDeleteAllGroup: 'tim',
-    fallbackGroupName: 'tim ini',
-} : {
-    pageTitle: 'Student List',
-    heading: 'List of All Students',
-    subheading: 'Manage student data',
-    searchPlaceholder: 'Search student name...',
-    allGroupsOption: 'All Classes',
-    groupColumnLabel: 'Class',
-    idColumnLabel: 'NIS / NISN',
-    listAutoUpdateNote: 'Student List Updates Automatically',
-    noDataMessage: 'No student data available',
-    deleteAllSuffix: 'Students in This Class',
-    confirmDeleteOne: 'Yakin ingin menghapus siswa ini?',
-    confirmDeleteAllEntity: 'siswa',
-    confirmDeleteAllGroup: 'kelas',
-    fallbackGroupName: 'kelas ini',
 })
 
 /* ─── State Filter & Pagination ─────────────────────────── */
@@ -131,7 +94,7 @@ const resetFilter = () => {
 
 /* ─── Hapus satu siswa ───────────────────────────────────── */
 const hapus = (id) => {
-    if (!confirm(t.value.confirmDeleteOne)) return
+    if (!confirm('Yakin ingin menghapus siswa ini?')) return
     router.delete(route('admin.siswa.destroy', id), {
         preserveScroll: true,
     })
@@ -143,12 +106,12 @@ const hapusSemuaByKelas = () => {
 
     const namaKelas = kelasList.value.find(
         k => String(k.id) === String(filterKelas.value)
-    )?.kelas ?? t.value.fallbackGroupName
+    )?.kelas ?? 'kelas ini'
 
     const jumlah = filteredSiswa.value.length
 
     if (!confirm(
-        `Yakin ingin menghapus SEMUA ${jumlah} ${t.value.confirmDeleteAllEntity} di ${t.value.confirmDeleteAllGroup} "${namaKelas}"?\n` +
+        `Yakin ingin menghapus SEMUA ${jumlah} siswa di kelas "${namaKelas}"?\n` +
         `Tindakan ini tidak dapat dibatalkan.`
     )) return
 
@@ -165,7 +128,7 @@ const hapusSemuaByKelas = () => {
 
 <template>
 
-    <Head :title="t.pageTitle" />
+    <Head title="Student List" />
 
     <MenuLayout>
         <div class="sm:bg-white/60 dark:sm:bg-gray-800/60 sm:backdrop-blur-md sm:rounded sm:shadow sm:p-6">
@@ -173,15 +136,15 @@ const hapusSemuaByKelas = () => {
             <!-- Header -->
             <div class="flex flex-col dark:text-gray-200 sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                 <div>
-                    <h1 class="text-xl font-semibold">{{ t.heading }}</h1>
-                    <p class="text-sm text-gray-500">{{ t.subheading }}</p>
+                    <h1 class="text-xl font-semibold">List of All Students</h1>
+                    <p class="text-sm text-gray-500">Manage student data</p>
                 </div>
             </div>
 
             <!-- Filter Bar -->
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
                 <!-- Search -->
-                <input v-model="search" type="text" :placeholder="t.searchPlaceholder" class="w-full rounded border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-3 py-2
+                <input v-model="search" type="text" placeholder="Search student name..." class="w-full rounded border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-3 py-2
                            text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
                            focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
 
@@ -197,7 +160,7 @@ const hapusSemuaByKelas = () => {
                 <select v-model="filterKelas"
                     class="w-full rounded border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-3 py-2
                            text-gray-900 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                    <option value="">{{ t.allGroupsOption }}</option>
+                    <option value="">All Classes</option>
                     <option v-for="k in kelasList" :key="k.id" :value="k.id">
                         {{ k.kelas }}
                     </option>
@@ -216,7 +179,7 @@ const hapusSemuaByKelas = () => {
                     class="flex items-center gap-2 px-4 py-2 rounded border border-red-500 bg-red-50 dark:bg-red-900/20
                            text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition text-sm font-medium">
                     <TrashIcon class="w-4 h-4" />
-                    Delete All ( {{ filteredSiswa.length }} ) {{ t.deleteAllSuffix }}
+                    Delete All ( {{ filteredSiswa.length }} ) Students in This Class
                 </button>
             </div>
 
@@ -224,7 +187,7 @@ const hapusSemuaByKelas = () => {
             <div class="hidden md:block">
                 <h2 class="text-xl font-semibold dark:text-gray-300 mb-4 flex items-center gap-2">
                     <InformationCircleIcon class="w-6 h-6 text-blue-500" />
-                    {{ t.listAutoUpdateNote }}
+                    Student List Updates Automatically
                 </h2>
 
                 <div
@@ -235,9 +198,9 @@ const hapusSemuaByKelas = () => {
                             <tr>
                                 <th class="px-4 py-2 text-center border-r whitespace-nowrap">No</th>
                                 <th class="px-4 py-2 text-center border-r whitespace-nowrap">Full Name</th>
-                                <th class="px-4 py-2 text-center border-r whitespace-nowrap">{{ t.idColumnLabel }}</th>
-                                <th class="px-4 py-2 text-center border-r whitespace-nowrap">{{ t.groupColumnLabel }}
-                                    <span v-if="isSmk && !isWorkspace"> / Major</span>
+                                <th class="px-4 py-2 text-center border-r whitespace-nowrap">NIS / NISN</th>
+                                <th class="px-4 py-2 text-center border-r whitespace-nowrap">Class
+                                    <span v-if="isSmk"> / Major</span>
                                 </th>
                                 <th class="px-4 py-2 text-center border-r whitespace-nowrap">Status</th>
                                 <th class="px-4 py-2 text-center whitespace-nowrap">Actions</th>
@@ -258,7 +221,7 @@ const hapusSemuaByKelas = () => {
                                 </td>
 
                                 <td class="px-4 py-2 text-center">
-                                    {{ s.kelas?.kelas ?? '-' }}<span v-if="isSmk && !isWorkspace"> / {{
+                                    {{ s.kelas?.kelas ?? '-' }}<span v-if="isSmk"> / {{
                                         s.kejuruan?.kejuruan ?? '-' }}</span>
                                 </td>
 
@@ -285,7 +248,7 @@ const hapusSemuaByKelas = () => {
 
                             <tr v-if="filteredSiswa.length === 0">
                                 <td colspan="6" class="text-center py-6 text-gray-500">
-                                    {{ t.noDataMessage }}
+                                    No student data available
                                 </td>
                             </tr>
                         </tbody>
@@ -297,7 +260,7 @@ const hapusSemuaByKelas = () => {
             <div class="md:hidden grid grid-cols-1 gap-4">
                 <h2 class="text-lg font-semibold dark:text-gray-300 flex items-center gap-2">
                     <InformationCircleIcon class="w-6 h-6 text-blue-500" />
-                    {{ t.listAutoUpdateNote }}
+                    Student List Updates Automatically
                 </h2>
 
                 <div v-for="(s) in paginatedSiswa" :key="s.id"
@@ -317,11 +280,11 @@ const hapusSemuaByKelas = () => {
                             </div>
 
                             <p class="text-sm mb-2 ml-10 dark:text-gray-400 text-gray-500">
-                                {{ t.idColumnLabel }}: {{ s.nis ?? '-' }} / {{ s.nisn ?? '-' }}
+                                NIS / NISN: {{ s.nis ?? '-' }} / {{ s.nisn ?? '-' }}
                             </p>
 
                             <p class="text-sm mb-4 ml-10 dark:text-gray-400 text-gray-500">
-                                {{ t.groupColumnLabel }}: {{ s.kelas?.kelas ?? '-' }}<span v-if="isSmk && !isWorkspace">
+                                Class: {{ s.kelas?.kelas ?? '-' }}<span v-if="isSmk">
                                     ({{ s.kejuruan?.kejuruan ?? '-' }})</span>
                             </p>
 
@@ -350,7 +313,7 @@ const hapusSemuaByKelas = () => {
                 </div>
 
                 <p v-if="filteredSiswa.length === 0" class="text-center py-6 text-gray-500">
-                    {{ t.noDataMessage }}
+                    No student data available
                 </p>
             </div>
 

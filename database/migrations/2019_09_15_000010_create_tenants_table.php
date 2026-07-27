@@ -19,7 +19,6 @@ return new class extends Migration
 
             // Data Tenant
             $table->string('name')->nullable();
-            $table->string('product_type')->nullable();
 
             // Jenis lembaga
             $table->string('institution_type')->default('sekolah');
@@ -57,9 +56,6 @@ return new class extends Migration
             // jadi ini wajib ditambah manual biar JOIN & lookup plan cepat.
             $table->index('plan_id');
             $table->index('pending_plan_id');
-
-            // Query umum lain: filter daftar tenant per jenis produk (school/workspace)
-            $table->index('product_type');
         });
 
         // Foreign keys ditambah setelah tabel plans ada

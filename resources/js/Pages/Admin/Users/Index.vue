@@ -221,7 +221,7 @@ const openDelete = (id) => {
                                 <AcademicCapIcon v-if="user.role === 'guru'" class="w-4 h-4" />
                                 <Cog6ToothIcon v-else-if="user.role === 'proktor'" class="w-4 h-4" />
                                 <UserIcon v-else class="w-4 h-4" />
-                                {{ user.role.charAt(0).toUpperCase() + user.role.slice(1) }}
+                                {{ user.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Unknown' }}
                             </span>
                         </div>
                     </div>

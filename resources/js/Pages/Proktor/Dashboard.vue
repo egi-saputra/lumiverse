@@ -54,14 +54,14 @@ const menuItems = [
         route: route('proktor.nilai.index'),
         color: 'amber',
     },
-    {
-        title: 'Announcement',
-        desc: 'Kirim token & pengumuman',
-        icon: MegaphoneIcon,
-        route: route('pesan.index'),
-        color: 'red',
-        wide: true,
-    },
+    // {
+    //     title: 'Announcement',
+    //     desc: 'Kirim token & pengumuman',
+    //     icon: MegaphoneIcon,
+    //     route: route('pesan.index'),
+    //     color: 'red',
+    //     wide: true,
+    // },
 ]
 
 const statCards = [
@@ -118,7 +118,7 @@ const notices = [
         </Transition>
 
         <!-- ===== TOPBAR ===== -->
-        <div class="flex items-center justify-between mb-7 animate-slide-down">
+        <!-- <div class="flex items-center justify-between mb-7 animate-slide-down">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-[10px] bg-gradient-to-br from-blue-500 to-indigo-600
                             flex items-center justify-center text-white font-bold text-sm
@@ -128,7 +128,7 @@ const notices = [
                 <div>
                     <p class="text-sm font-semibold leading-none tracking-tight
                                text-gray-900 dark:text-slate-100"><span class="sm:inline-flex hidden">Lumiverse
-                            System</span>
+                            School</span>
                         <span class="inline-flex sm:hidden">Kreaticraft Smart Learning
                             System</span>
                     </p>
@@ -150,7 +150,7 @@ const notices = [
                                  border-2 border-white dark:border-[#0b0f1a]"></span>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- ===== WELCOME BANNER ===== -->
         <div class="relative overflow-hidden rounded-2xl mb-6 p-6 sm:p-8 animate-fade-up
@@ -264,7 +264,7 @@ const notices = [
                   text-gray-400 dark:text-slate-500" style="animation-delay:.28s">
             Navigasi Cepat
         </p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
             <Link v-for="(item, i) in menuItems" :key="item.title" :href="item.route" prefetch="hover" preserve-scroll
                 preserve-state class="group relative flex flex-col items-start gap-3 p-4 rounded-2xl border
                        transition-all duration-200 hover:-translate-y-1 hover:scale-[1.02] hover:shadow-xl

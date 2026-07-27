@@ -3,7 +3,7 @@
 use Inertia\Inertia;
 use App\Http\Controllers\Proktor\{
     PesertaUjianController,
-    PesertaController,
+    // PesertaController,
     SoalController,
     BankSoalController,
     RuangUjianController,
@@ -39,8 +39,8 @@ Route::middleware(['auth', 'verified', 'role:proktor'])->prefix('proktor')->name
             
 
         // ===== SISWA =====
-        Route::resource('siswa', PesertaController::class)
-            ->except(['show']);
+        // Route::resource('siswa', PesertaController::class)
+        //     ->except(['show']);
 
 
         /** Soal */

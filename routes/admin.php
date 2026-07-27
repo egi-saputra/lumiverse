@@ -4,14 +4,14 @@
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\{
-    DataSekolahController,
     UserController,
     KelasController,
     KejuruanController,
     MapelController,
     SiswaController,
     GuruController,
-    AdminRegistrationController,
+    // DataSekolahController,
+    // AdminRegistrationController,
 };
 // Hapus HeroSlideController dari use di web.php —
 // controller ini hanya dipanggil dari api.php, bukan web.php
@@ -21,11 +21,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->name('admin.')
     ->group(function () {
 
-        Route::get('profil-sekolah', [DataSekolahController::class, 'index'])
-            ->name('profil_sekolah.index');
+        // Route::get('profil-sekolah', [DataSekolahController::class, 'index'])
+        //     ->name('profil_sekolah.index');
 
-        Route::post('profil-sekolah', [DataSekolahController::class, 'storeOrUpdate'])
-            ->name('profil_sekolah.storeOrUpdate');
+        // Route::post('profil-sekolah', [DataSekolahController::class, 'storeOrUpdate'])
+        //     ->name('profil_sekolah.storeOrUpdate');
 
         // ===== USER Management =====
         Route::resource('users', UserController::class)->except(['show']);
@@ -52,25 +52,26 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::resource('guru', GuruController::class)->except(['show', 'edit']);
 
         // ===== REGISTRATIONS =====
-        Route::redirect('/', '/admin/registrations');
+        // Route::redirect('/', '/admin/registrations');
 
-        Route::get('/registrations', [AdminRegistrationController::class, 'index'])
-            ->name('registrations.index');
+        // Route::get('/registrations', [AdminRegistrationController::class, 'index'])
+        //     ->name('registrations.index');
 
-        Route::delete('/registrations', [AdminRegistrationController::class, 'bulkDestroy'])
-            ->name('registrations.bulk-destroy');
+        // Route::delete('/registrations', [AdminRegistrationController::class, 'bulkDestroy'])
+        //     ->name('registrations.bulk-destroy');
 
-        Route::patch('/registrations/{registration}/status', [AdminRegistrationController::class, 'updateStatus'])
-            ->name('registrations.update-status');
+        // Route::patch('/registrations/{registration}/status', [AdminRegistrationController::class, 'updateStatus'])
+        //     ->name('registrations.update-status');
 
-        Route::delete('/registrations/{registration}', [AdminRegistrationController::class, 'destroy'])
-            ->name('registrations.destroy');
+        // Route::delete('/registrations/{registration}', [AdminRegistrationController::class, 'destroy'])
+        //     ->name('registrations.destroy');
 
         // ===== HERO SLIDES =====
         // Hanya render halaman Inertia — CRUD ditangani oleh api.php
-        Route::get('/hero-slides', function () {
-            return Inertia::render('Admin/HeroSlideAdmin');
-        })->name('hero-slides');
+        // Route::get('/hero-slides', function () {
+        //     return Inertia::render('Admin/HeroSlideAdmin');
+        // })->name('hero-slides');
+
         // Akses: http://localhost:8000/admin/hero-slides
         // Named route: route('admin.hero-slides')
     });

@@ -3,7 +3,7 @@ import MenuLayout from '@/Layouts/MenuLayout.vue';
 import {
     BookOpenIcon, BuildingLibraryIcon, MagnifyingGlassIcon,
     TrashIcon, ArrowPathIcon, XMarkIcon,
-    UserGroupIcon, FunnelIcon
+    UserGroupIcon, FunnelIcon, AcademicCapIcon
 } from "@heroicons/vue/24/outline";
 import { ref, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
@@ -271,17 +271,19 @@ const statusDot = (status) => {
 
 <template>
     <MenuLayout>
-        <div class="mx-auto max-w-6xl w-full px-4 pb-10">
+        <div class="mx-auto w-full pb-10">
 
             <!-- ── HEADER ────────────────────────────────────── -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-50 tracking-tight">
-                        Exam Room Management
-                    </h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                        Kelola dan pantau peserta ujian (Klik tombol reload untuk refresh dan menampilkan data terbaru)
-                    </p>
+            <header class="page-header">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <AcademicCapIcon class="icon" />
+                    </div>
+                    <div>
+                        <h1 class="page-title">Exam Room Management</h1>
+                        <p class="page-subtitle">Kelola dan pantau peserta ujian (Klik tombol reload untuk refresh dan
+                            menampilkan data terbaru)</p>
+                    </div>
                 </div>
 
                 <div class="flex gap-2">
@@ -300,7 +302,7 @@ const statusDot = (status) => {
                         Hapus {{ filterKelas ? `Kelas ${filterKelas}` : 'Semua' }}
                     </button>
                 </div>
-            </div>
+            </header>
 
             <!-- ── STAT CARDS ─────────────────────────────────── -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -559,3 +561,42 @@ const statusDot = (status) => {
         </div>
     </MenuLayout>
 </template>
+
+<style scoped>
+/* ══ Header ══════════════════════════════════════════════════════════════ */
+.page-header {
+    @apply flex items-center justify-between gap-4;
+}
+
+.header-left {
+    @apply flex items-center gap-4 mb-10;
+}
+
+.header-icon {
+    @apply w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/40 flex-shrink-0;
+}
+
+.header-icon .icon {
+    @apply w-6 h-6 text-white;
+}
+
+.page-title {
+    @apply text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight;
+}
+
+.page-subtitle {
+    @apply text-sm text-gray-500 dark:text-gray-400 mt-0.5;
+}
+
+.header-stat {
+    @apply flex flex-col items-center bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-2 text-center;
+}
+
+.stat-num {
+    @apply text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none;
+}
+
+.stat-label {
+    @apply text-xs text-blue-500 dark:text-blue-400 mt-0.5;
+}
+</style>

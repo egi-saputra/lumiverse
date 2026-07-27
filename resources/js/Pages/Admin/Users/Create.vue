@@ -71,6 +71,9 @@ const removeRow = (index) => {
     return
   }
   rows.value.splice(index, 1)
+  nameRefs.value.splice(index, 1)
+  emailRefs.value.splice(index, 1)
+  passwordRefs.value.splice(index, 1)
 }
 
 // ─── Submit ──────────────────────────────────────────────────────────────
@@ -177,22 +180,29 @@ const submit = () => {
               :disabled="form.processing" @keydown.enter.prevent="focusNext('name', index)"
               class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
               focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent backdrop-blur-md transition disabled:opacity-60" />
+            <p v-if="form.errors[`items.${index}.name`]" class="text-xs text-red-600 mt-1">
+              {{ form.errors[`items.${index}.name`] }}
+            </p>
           </div>
 
           <!-- Email -->
           <div class="flex-1">
             <input :ref="el => setRef(emailRefs, el, index)" v-model="row.email" type="email"
               placeholder="Email Address" :disabled="form.processing" @keydown.enter.prevent="focusNext('email', index)"
-              class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent backdrop-blur-md transition disabled:opacity-60" />
+              class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent backdrop-blur-md transition disabled:opacity-60" />
+            <p v-if="form.errors[`items.${index}.email`]" class="text-xs text-red-600 mt-1">
+              {{ form.errors[`items.${index}.email`] }}
+            </p>
           </div>
 
           <!-- Password -->
           <div class="flex-1">
             <input :ref="el => setRef(passwordRefs, el, index)" v-model="row.password" type="password"
               placeholder="Password" :disabled="form.processing" @keydown.enter.prevent="focusNext('password', index)"
-              class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent backdrop-blur-md transition disabled:opacity-60" />
+              class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-4 py-2 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent backdrop-blur-md transition disabled:opacity-60" />
+            <p v-if="form.errors[`items.${index}.password`]" class="text-xs text-red-600 mt-1">
+              {{ form.errors[`items.${index}.password`] }}
+            </p>
           </div>
 
           <!-- Tombol Hapus -->

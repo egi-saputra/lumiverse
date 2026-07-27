@@ -2,7 +2,7 @@
 import { Head, Link, router } from '@inertiajs/vue3'
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
-import PasswordFields from './Partials/PasswordFields.vue'
+import PasswordFields from '../../../../Backup/resources/js/Pages/Tenant/Partials/PasswordFields.vue'
 
 const form = reactive({
     institution_type: '',
@@ -96,13 +96,6 @@ watch(() => form.school_name, (newName) => {
 
 function onSubdomainInput() {
     subdomainTouchedManually.value = false
-}
-
-function onSchoolNameInput(e) {
-    const value = e.target.value
-    form.school_name = value.replace(/\w\S*/g, (word) =>
-        word.charAt(0).toUpperCase() + word.slice(1).toUpperCase()
-    )
 }
 
 function onNpsnInput(e) {
@@ -341,7 +334,7 @@ onMounted(() => {
                                     class="block text-[13px] font-semibold mb-2 mt-0.5 text-slate-400">
                                     * Nama Lengkap Lembaga
                                 </label>
-                                <input id="school_name" type="text" :value="form.school_name" @input="onSchoolNameInput"
+                                <input id="school_name" type="text" v-model="form.school_name"
                                     placeholder="Lumi Boarding School"
                                     class="w-full px-3.5 py-2.5 rounded-lg border border-slate-800 bg-white/[0.03] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-cyan-400" />
                                 <div v-if="fieldError('school_name')" class="mt-1.5 text-xs text-rose-400">

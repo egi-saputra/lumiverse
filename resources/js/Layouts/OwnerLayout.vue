@@ -65,7 +65,7 @@ onMounted(() => {
         <aside class="sidebar no-scrollbar" :class="{ 'sidebar-open': sidebarOpen }">
             <div class="sidebar-logo font-poppins">
                 <img src="/images/logo-dark.webp" alt="Lumiverse" class="h-7 object-cover scale-150 sm:flex hidden" />
-                <span>LUMIVERSE</span>
+                <span>Lumiverse <span class="text-cyan">School</span></span>
             </div>
 
             <nav class="sidebar-nav">

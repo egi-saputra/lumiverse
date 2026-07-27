@@ -14,6 +14,26 @@ use Illuminate\Validation\ValidationException;
 
 class PesertaUjianController extends Controller
 {
+    // Password default untuk pendaftaran bulk manual — siswa isi form sendiri nanti untuk ganti.
+    protected const DEFAULT_PASSWORD = 'password';
+
+    private function tenantIsSmk(): bool
+    {
+        $tenant = tenant();
+        return strtolower((string) ($tenant->school_level ?? '')) === 'smk';
+    }
+
+    private function remainingSlots(): ?int
+    {
+        $tenant = tenant();
+        if (!$tenant) return null;
+
+        $max = $tenant->effectiveMaxUsers();
+        if ($max === null) return null;
+
+        return max(0, $max - User::count());
+    }
+
     public function index()
     {
         // 🔹 Ambil semua peserta (untuk frontend pagination)
@@ -45,55 +65,82 @@ class PesertaUjianController extends Controller
     public function showForm()
     {
         return inertia('Proktor/Peserta/Register', [
-            'kelasList' => DB::table('kelas')->orderBy('kelas')->get(['id', 'kelas']),
-            'kejuruanList' => DB::table('kejuruan')->orderBy('kejuruan')->get(['id', 'kejuruan']),
-            'title' => 'Register User',
-            'flash' => session()->get('success'),
+            'kelasList'      => DB::table('kelas')->orderBy('kelas')->get(['id', 'kelas']),
+            'kejuruanList'   => DB::table('kejuruan')->orderBy('kejuruan')->get(['id', 'kejuruan']),
+            'isSmk'          => $this->tenantIsSmk(),
+            'remainingSlots' => $this->remainingSlots(),
+            'title'          => 'Register User',
+            'flash'          => session()->get('success'),
         ]);
     }
 
+    // Pendaftaran bulk manual — satu kelas (dan kejuruan jika SMK) untuk semua baris.
     public function store(Request $request)
     {
-        $request->validate([
-            'nama_lengkap' => 'required|string|max:255',
-            'email'        => 'required|email|max:255',
-            'password'     => 'nullable|string|min:6',
-            'kelas_id'     => 'required|exists:kelas,id',
-            'kejuruan_id'  => 'nullable|exists:kejuruan,id',
-        ]);
+        $isSmk = $this->tenantIsSmk();
 
-        // Cek kuota user sebelum bikin siswa baru
-        $tenant = tenant();
-        if ($tenant && $tenant->hasReachedUserLimitInContext()) {
-            $max = $tenant->effectiveMaxUsers();
-            return response()->json([
-                'error' => "Batas jumlah pengguna ({$max}) untuk paket Anda sudah tercapai. Silakan upgrade paket untuk menambah peserta baru.",
-            ], 422);
+        $rules = [
+            'kelas_id'             => 'required|exists:kelas,id',
+            'items'                => 'required|array|min:1',
+            'items.*.nama_lengkap' => 'required|string|max:255',
+            'items.*.email'        => 'required|email|max:255|distinct|unique:users,email',
+        ];
+
+        if ($isSmk) {
+            $rules['kejuruan_id'] = 'required|exists:kejuruan,id';
+        } else {
+            $rules['kejuruan_id'] = 'nullable|exists:kejuruan,id';
         }
 
-        // Generate id_siswa unik
-        do {
-            $id_siswa = str_pad(rand(0, 9999999), 7, '0', STR_PAD_LEFT);
-        } while (Siswa::where('id_siswa', $id_siswa)->exists());
-
-        $user = User::create([
-            'name'     => $request->nama_lengkap,
-            'email'    => $request->email,
-            'password' => bcrypt($request->password ?? 'password'),
+        $validated = $request->validate($rules, [
+            'items.*.email.distinct' => 'Terdapat email yang sama di dalam input.',
         ]);
 
-        Siswa::create([
-            'id_siswa'     => $id_siswa,
-            'nama_lengkap' => $request->nama_lengkap,
-            'kelas_id'     => $request->kelas_id,
-            'kejuruan_id'  => $request->kejuruan_id,
-            'status'       => 'Activated',
-            'user_id'      => $user->id,
-        ]);
+        $items      = $validated['items'];
+        $kelasId    = $validated['kelas_id'];
+        $kejuruanId = $validated['kejuruan_id'] ?? null;
 
-        return response()->json([
-            'success' => 'Peserta berhasil didaftarkan. ID Siswa: ' . $id_siswa,
-        ]);
+        // Cek kuota sebelum insert massal
+        $tenant = tenant();
+        if ($tenant) {
+            $max = $tenant->effectiveMaxUsers();
+            if ($max !== null) {
+                $remaining = max(0, $max - User::count());
+                if (count($items) > $remaining) {
+                    throw ValidationException::withMessages([
+                        'items' => "Kuota pengguna tidak mencukupi. Sisa kuota: {$remaining} akun, sedangkan Anda mencoba menambahkan " . count($items) . ' akun. Hubungi administrator untuk upgrade paket.',
+                    ]);
+                }
+            }
+        }
+
+        DB::transaction(function () use ($items, $kelasId, $kejuruanId) {
+            foreach ($items as $item) {
+                do {
+                    $id_siswa = str_pad(rand(0, 9999999), 7, '0', STR_PAD_LEFT);
+                } while (Siswa::where('id_siswa', $id_siswa)->exists());
+
+                $user = User::create([
+                    'name'     => $item['nama_lengkap'],
+                    'email'    => $item['email'],
+                    'password' => bcrypt(self::DEFAULT_PASSWORD),
+                    'role'     => 'siswa',
+                ]);
+
+                Siswa::create([
+                    'id_siswa'     => $id_siswa,
+                    'nama_lengkap' => $item['nama_lengkap'],
+                    'kelas_id'     => $kelasId,
+                    'kejuruan_id'  => $kejuruanId,
+                    'status'       => 'Activated',
+                    'user_id'      => $user->id,
+                ]);
+            }
+        });
+
+        return redirect()
+            ->route('proktor.peserta.index')
+            ->with('success', count($items) . ' peserta berhasil didaftarkan. Password default: "' . self::DEFAULT_PASSWORD . '".');
     }
 
     public function update(Request $request, $id)
@@ -130,7 +177,8 @@ class PesertaUjianController extends Controller
 
     public function destroy($id)
     {
-        Siswa::where('id_siswa', $id)->delete();
+        $peserta = Siswa::where('id_siswa', $id)->firstOrFail();
+        $peserta->delete();   // ← ini baru memicu event deleting()
 
         return response()->json([
             'success' => 'Peserta berhasil dihapus.',
@@ -141,12 +189,13 @@ class PesertaUjianController extends Controller
     {
         $query = Siswa::query();
 
-        // hapus berdasarkan kelas jika ada filter
         if ($request->kelas_id) {
             $query->where('kelas_id', $request->kelas_id);
         }
 
-        $query->delete();
+        $query->get()->each(function (Siswa $siswa) {
+            $siswa->delete();   // ← trigger event satu-satu
+        });
 
         return response()->json([
             'success' => $request->kelas_id
@@ -157,7 +206,7 @@ class PesertaUjianController extends Controller
 
     public function downloadTemplate()
     {
-        return Excel::download(new PesertaExport, 'template_peserta.xlsx');
+        return Excel::download(new PesertaExport($this->tenantIsSmk()), 'template_peserta.xlsx');
     }
 
     public function importExcel(Request $request)
@@ -167,30 +216,61 @@ class PesertaUjianController extends Controller
         ]);
 
         $tenant = tenant();
+        $isSmk = $this->tenantIsSmk();
 
         if ($tenant) {
             $max = $tenant->effectiveMaxUsers();
 
             if ($max !== null) {
-                // Hitung jumlah baris data di file (tanpa header)
                 $rows = Excel::toArray([], $request->file('excel'));
-                $rowCount = isset($rows[0]) ? max(0, count($rows[0]) - 1) : 0;
+                $dataRows = $rows[0] ?? [];
+
+                $rowCount = collect($dataRows)
+                    ->slice(1)
+                    ->filter(function ($row) {
+                        return collect($row)->filter(function ($cell) {
+                            return $cell !== null && trim((string) $cell) !== '';
+                        })->isNotEmpty();
+                    })
+                    ->count();
 
                 $currentCount = User::count();
 
                 if (($currentCount + $rowCount) > $max) {
                     $sisaSlot = max(0, $max - $currentCount);
                     return redirect()
-                        ->route('proktor.peserta.index')
+                        ->route('proktor.peserta.register')
                         ->with('error', "Import dibatalkan. Kuota pengguna tersisa {$sisaSlot} slot, tapi file berisi {$rowCount} data. Batas paket Anda: {$max} akun.");
                 }
             }
         }
 
-        Excel::import(new PesertaImport(), $request->file('excel'));
+        $import = new PesertaImport($isSmk);
+        Excel::import($import, $request->file('excel'));
+
+        // Tidak ada satu pun baris tersimpan — jangan bilang "berhasil"
+        if ($import->importedCount === 0) {
+            $reasons = collect($import->skippedRows)
+                ->merge($import->failedRows)
+                ->map(fn ($r) => "Baris {$r['baris']} ({$r['email']}): {$r['reason']}")
+                ->implode(' | ');
+
+            return redirect()
+                ->route('proktor.peserta.register')
+                ->with('error', $reasons !== ''
+                    ? "Import gagal, tidak ada data tersimpan. Detail: {$reasons}"
+                    : 'Import gagal, tidak ada data valid ditemukan di file.');
+        }
+
+        // Berhasil sebagian atau semua — tetap kasih tahu kalau ada yang di-skip
+        $message = "Berhasil mengimport {$import->importedCount} peserta.";
+        if (!empty($import->skippedRows) || !empty($import->failedRows)) {
+            $skippedCount = count($import->skippedRows) + count($import->failedRows);
+            $message .= " {$skippedCount} baris dilewati karena data tidak valid/lengkap atau kuota penuh.";
+        }
 
         return redirect()
             ->route('proktor.peserta.index')
-            ->with('success', 'Data peserta berhasil diimport!');
+            ->with('success', $message);
     }
 }

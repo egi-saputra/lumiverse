@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { ToastAlert } from '@/Composables/ToastAlert.js'
-import { useTenant } from '@/Composables/useTenant.js'
 import { onClickOutside } from '@vueuse/core'
 
 import Dropdown from '@/Components/Dropdown.vue'
@@ -462,20 +461,6 @@ const logout = () => router.post(route('logout'))
                 <slot />
             </div>
         </div>
-
-        <!-- Mobile Bottom Bar -->
-        <!-- <div class="fixed bottom-0 left-0 right-0 z-40
-                    bg-white/90 dark:bg-[#020617] backdrop-blur
-                    border-t border-gray-200 dark:border-gray-700
-                    md:hidden safe-bottom">
-            <div class="flex items-center justify-center h-14 px-4">
-                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 text-center">
-                    © {{ new Date().getFullYear() }}
-                    <span class="font-semibold text-gray-700 dark:text-gray-200">LMS NUSANTARA</span>
-                    · All rights reserved
-                </p>
-            </div>
-        </div> -->
     </div>
 </template>
 

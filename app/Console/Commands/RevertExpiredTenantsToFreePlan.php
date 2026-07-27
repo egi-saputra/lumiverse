@@ -14,7 +14,13 @@ class RevertExpiredTenantsToFreePlan extends Command
     protected $description = 'Kembalikan tenant ke plan Free jika plan berbayarnya sudah expired dan tidak ada renewal/downgrade terjadwal';
 
     // Berapa hari tenggang sebelum user berlebih (melebihi max_users plan baru) dihapus otomatis.
-    protected int $gracePeriodDays = 7;
+    protected int $gracePeriodDays;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->gracePeriodDays = config('subscriptions.grace_period_days', 7);
+    }
 
     public function handle(): void
     {

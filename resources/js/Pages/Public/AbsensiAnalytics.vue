@@ -345,7 +345,7 @@ onBeforeUnmount(() => {
             <!-- ══ NAVBAR PUBLIK ══════════════════════════════════════════════ -->
             <nav
                 class="bg-white sm:block hidden dark:bg-slate-900 rounded-xl border-b border-slate-200 dark:border-slate-800 z-30">
-                <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                <div class="max-w-5xl mx-auto px-4 sm:py-3 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-2.5">
                         <div
                             class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-500 flex items-center justify-center text-base flex-shrink-0">

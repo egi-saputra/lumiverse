@@ -4,7 +4,7 @@ import { ToastAlert } from '@/Composables/ToastAlert.js';
 import { ref, computed, onMounted, watch } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/solid';
-import { ArrowPathIcon } from '@heroicons/vue/24/outline';
+import { ArrowPathIcon, UsersIcon } from '@heroicons/vue/24/outline';
 import axios from 'axios';
 import { route } from 'ziggy-js'
 import Swal from 'sweetalert2'
@@ -233,15 +233,22 @@ onMounted(() => {
     <MenuLayout>
         <div>
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center sm:mb-10 mb-4 gap-3">
-                <h1 class="text-xl md:text-2xl font-bold dark:text-white text-gray-800 w-full sm:w-auto">
-                    Daftar Peserta Didik
-                </h1>
+            <header class="page-header">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <UsersIcon class="icon" />
+                    </div>
+                    <div>
+                        <h1 class="page-title">Student List</h1>
+                        <p class="page-subtitle">Kelola daftar siswa / peserta ujian</p>
+                    </div>
+                </div>
+
                 <Link href="/proktor/peserta/register"
                     class="px-5 py-2 bg-blue-600 text-white font-medium rounded-lg shadow hover:bg-blue-700 w-full sm:w-auto text-center">
                     + Tambah Peserta
                 </Link>
-            </div>
+            </header>
 
             <div class="sm:bg-white dark:bg-white/5 sm:rounded sm:p-6 sm:shadow">
                 <!-- Filter -->
@@ -415,3 +422,42 @@ onMounted(() => {
         </div>
     </MenuLayout>
 </template>
+
+<style scoped>
+/* ══ Header ══════════════════════════════════════════════════════════════ */
+.page-header {
+    @apply flex items-center justify-between gap-4;
+}
+
+.header-left {
+    @apply flex items-center gap-4 mb-10;
+}
+
+.header-icon {
+    @apply w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/40 flex-shrink-0;
+}
+
+.header-icon .icon {
+    @apply w-6 h-6 text-white;
+}
+
+.page-title {
+    @apply text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight;
+}
+
+.page-subtitle {
+    @apply text-sm text-gray-500 dark:text-gray-400 mt-0.5;
+}
+
+.header-stat {
+    @apply flex flex-col items-center bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-2 text-center;
+}
+
+.stat-num {
+    @apply text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none;
+}
+
+.stat-label {
+    @apply text-xs text-blue-500 dark:text-blue-400 mt-0.5;
+}
+</style>

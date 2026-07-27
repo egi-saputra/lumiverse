@@ -11,7 +11,6 @@ import OwnerLayout from '@/Layouts/OwnerLayout.vue'
 const props = defineProps({
     owner: Object,
     tenant: Object,
-    productType: String,
     currentPlan: String,
     currentSortOrder: Number,
     expiresAt: String,
@@ -523,14 +522,14 @@ function formatDate(dateStr) {
 
         </template>
 
-        <!-- ── Empty state — belum ada paket untuk tipe produk ini ─────────── -->
+        <!-- ── Empty state — belum ada paket ──────────────────────────────── -->
         <div v-else class="pricing-empty-state">
             <div class="pricing-empty-icon">
                 <SparklesIcon style="width:28px;height:28px;" />
             </div>
             <div class="pricing-empty-title">Belum ada paket tersedia</div>
             <p class="pricing-empty-desc">
-                Saat ini belum ada paket harga yang bisa ditampilkan untuk jenis layanan Anda.
+                Saat ini belum ada paket harga yang bisa ditampilkan.
                 Silakan hubungi tim kami untuk informasi lebih lanjut.
             </p>
         </div>

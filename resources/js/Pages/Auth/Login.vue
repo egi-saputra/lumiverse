@@ -34,19 +34,19 @@ const lumiverseDirectoryLabel = computed(() => isWorkspace.value
 const directoryItems = computed(() => {
     const items = [
         {
-            href: 'https://smknusantara.id',
+            href: page.props.tenant?.institution_website || '#',
             external: true,
             label: `Website Resmi ${page.props.tenant?.name ?? ''}`,
         },
     ]
 
-    if (!isWorkspace.value) {
-        items.push({
-            routeName: 'mading.index',
-            external: false,
-            label: `Mading Digital ${page.props.tenant?.name ?? ''}`,
-        })
-    }
+    // if (!isWorkspace.value) {
+    //     items.push({
+    //         routeName: 'mading.index',
+    //         external: false,
+    //         label: `Mading Digital ${page.props.tenant?.name ?? ''}`,
+    //     })
+    // }
 
     items.push({
         href: 'https://www.lumiverse.co.id',
@@ -145,16 +145,16 @@ onMounted(() => {
                                 <path d="M6 11L11 6M11 6H7M11 6V10" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </a>
-                        <Link v-else :href="route(item.routeName)" prefetch preserve-scroll preserve-state
+
+                        <!-- <Link v-else :href="route(item.routeName)" prefetch preserve-scroll preserve-state
                             class="directory-row">
                             <span class="directory-index">{{ String(i + 1).padStart(2, '0') }}</span>
                             <span class="flex-1 capitalize">{{ item.label }}</span>
-                            <!-- <i class="bi bi-arrow-up-right text-[#C9A227]/70" aria-hidden="true"></i> -->
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
                                 stroke-width="1.5" class="text-[#C9A227]/70" aria-hidden="true">
                                 <path d="M6 11L11 6M11 6H7M11 6V10" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
-                        </Link>
+                        </Link> -->
                     </li>
                 </ul>
             </nav>
@@ -180,22 +180,35 @@ onMounted(() => {
 
                     <!-- Email -->
                     <div class="field">
-                        <!-- <label for="email" class="field-label">Email Address</label> -->
                         <input id="email" type="email" name="email" v-model="form.email" autocomplete="email"
-                            :disabled="form.processing" placeholder="Enter email address" required
-                            class="field-input" />
+                            :disabled="form.processing" placeholder=" " required class="field-input" />
+                        <label for="email" class="field-label pointer-events-none">Email Address</label>
                     </div>
 
                     <!-- Password -->
                     <div class="field">
-                        <!-- <label for="password" class="field-label">Password</label> -->
                         <div class="relative">
                             <input id="password" :type="showPassword ? 'text' : 'password'" v-model="form.password"
-                                autocomplete="current-password" :disabled="form.processing" placeholder="Enter password"
-                                required class="field-input pr-10" />
+                                autocomplete="current-password" :disabled="form.processing" placeholder=" " required
+                                class="field-input pr-10" />
+                            <label for="password" class="field-label pointer-events-none">Password</label>
+
                             <button type="button" :aria-label="showPassword ? 'Hide password' : 'Show password'"
                                 class="password-toggle" @click="showPassword = !showPassword">
-                                <i :class="showPassword ? 'bi bi-eye' : 'bi bi-eye-slash'" aria-hidden="true"></i>
+                                <!-- Eye open (visible) -->
+                                <svg v-if="showPassword" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <!-- Eye slash (hidden) -->
+                                <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path
+                                        d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 4.22-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
                             </button>
                         </div>
                     </div>
@@ -333,6 +346,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
+    position: relative;
 }
 
 .field-label {
@@ -341,6 +355,12 @@ onMounted(() => {
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #6B7086;
+    position: absolute;
+    left: 0.5rem;
+    top: 0.65rem;
+    background: #FAF9F5;
+    padding: 0 0.25rem;
+    transition: all 0.2s ease;
 }
 
 .field-input {
@@ -354,14 +374,13 @@ onMounted(() => {
     color: #1A1B3A;
     transition: border-color 0.2s ease;
 
-    /* Reset semua browser default focus styles */
     outline: none;
     box-shadow: none;
     -webkit-appearance: none;
 }
 
 .field-input::placeholder {
-    color: #B7B6C4;
+    color: transparent;
 }
 
 .field-input:disabled {
@@ -374,6 +393,14 @@ onMounted(() => {
     border-bottom-color: #C9A227;
 }
 
+/* Label naik ke atas saat input diisi ATAU sedang fokus — bekerja juga untuk autofill */
+.field-input:not(:placeholder-shown)~.field-label,
+.field-input:focus~.field-label {
+    top: -0.6rem;
+    font-size: 0.6rem;
+    color: #C9A227;
+}
+
 .password-toggle {
     position: absolute;
     right: 0.75rem;
@@ -384,6 +411,8 @@ onMounted(() => {
     background: none;
     border: none;
     padding: 0;
+    display: flex;
+    align-items: center;
     cursor: pointer;
 }
 
@@ -393,6 +422,19 @@ onMounted(() => {
 
 .password-toggle:hover {
     color: #1A1B3A;
+}
+
+/* Matikan icon reveal-password bawaan browser agar tidak bertabrakan dgn icon custom */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute;
+    right: 0;
 }
 
 .remember-checkbox {

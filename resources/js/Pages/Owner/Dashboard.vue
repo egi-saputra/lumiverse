@@ -1,7 +1,6 @@
 <script setup>
 import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
-import { useTenant } from '@/Composables/useTenant.js'
 import SubscriptionInvoiceModal from '@/Components/SubscriptionInvoiceModal.vue'
 import OwnerLayout from '@/Layouts/OwnerLayout.vue'
 import QRCode from 'qrcode'
@@ -15,9 +14,6 @@ const props = defineProps({
 const page = usePage()
 
 const tenantName = computed(() => page.props.tenant?.name ?? 'Lumi Platforms, Inc')
-
-// ─── Product type ───────────────────────────────────────────────────────────
-const { isWorkspace } = useTenant(computed(() => props.tenant))
 
 // ─── Plan Badge Visibility ────────────────────────────────────────────────────
 // Badge upgrade cuma tampil kalau plan tergolong free: plan_key kosong/null,
@@ -63,24 +59,13 @@ const expiresAtFormatted = computed(() => {
     return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
 })
 
-// ─── Label & teks kondisional per product_type ─────────────────────────────────
-const welcomeSub = computed(() => isWorkspace.value
-    ? 'Kelola data perusahaan / organisasi-mu dengan mudah dan cepat di sini!'
-    : 'Kelola data informasi sekolah / lembaga pendidikan-mu dengan mudah dan cepat di sini!')
-
-const idRowLabel = computed(() => isWorkspace.value ? 'ID Perusahaan / Organisasi' : 'ID Lembaga / Institusi')
-
-const appCardLabel = computed(() => isWorkspace.value
-    ? 'Aplikasi Workspace / Produktivitas Tim'
-    : 'Aplikasi LMS / Digitalisasi Sekolah')
-
-const appCardDesc = computed(() => isWorkspace.value
-    ? 'Masuk ke aplikasi Workspace untuk mengelola data karyawan, tim, proyek, tugas, laporan dan administrasi lainnya pada perusahaan / organisasi yang Anda kelola.'
-    : 'Masuk ke aplikasi LMS untuk mengelola data guru, kelas, siswa, materi, tugas, ujian dan administrasi lainnya pada satuan pendidikan yang Anda kelola.')
-
-const appLinkLabel = computed(() => isWorkspace.value ? 'Masuk ke Workspace →' : 'Masuk ke LMS →')
-
-const appUrlRowLabel = computed(() => isWorkspace.value ? 'URL Workspace' : 'URL LMS')
+// ─── Label & teks statis (tanpa kondisional workspace) ─────────────────────────
+const welcomeSub = 'Kelola data informasi sekolah / lembaga pendidikan-mu dengan mudah dan cepat di sini!'
+const idRowLabel = 'ID Lembaga / Institusi'
+const appCardLabel = 'Aplikasi LMS / Digitalisasi Sekolah'
+const appCardDesc = 'Masuk ke aplikasi LMS untuk mengelola data guru, kelas, siswa, materi, tugas, ujian dan administrasi lainnya pada satuan pendidikan yang Anda kelola.'
+const appLinkLabel = 'Masuk ke LMS →'
+const appUrlRowLabel = 'URL LMS'
 
 // ─── Modal bayar tagihan pending ────────────────────────────────────────────
 const showPayModal = ref(false)
@@ -311,7 +296,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     <OwnerLayout>
 
         <template #header>
-            <h1 class="topbar-title uppercase">{{ tenantName }}</h1>
+            <h1 class="topbar-title">{{ tenantName }}</h1>
         </template>
 
         <div class="flex sm:flex-row flex-col sm:mb-3 mb-6 w-full justify-between items-start">

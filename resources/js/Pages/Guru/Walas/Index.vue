@@ -108,11 +108,11 @@ const statCards = computed(() => {
     if (!props.stats) return [];
     return [
         { label: 'Total Siswa', value: props.stats.total, icon: '👥', color: 'bg-indigo-50  dark:bg-indigo-900/30  text-indigo-700  dark:text-indigo-300', ring: 'ring-indigo-200  dark:ring-indigo-700' },
+        { label: 'Sekretaris', value: props.stats.sekretaris, icon: '📋', color: 'bg-sky-50     dark:bg-sky-900/30     text-sky-700     dark:text-sky-300', ring: 'ring-sky-200     dark:ring-sky-700' },
         { label: 'Aktif', value: props.stats.aktif, icon: '✅', color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300', ring: 'ring-emerald-200 dark:ring-emerald-700' },
         { label: 'Nonaktif', value: props.stats.nonaktif, icon: '⛔', color: 'bg-rose-50    dark:bg-rose-900/30    text-rose-700    dark:text-rose-300', ring: 'ring-rose-200    dark:ring-rose-700' },
-        { label: 'Sekretaris', value: props.stats.sekretaris, icon: '📋', color: 'bg-sky-50     dark:bg-sky-900/30     text-sky-700     dark:text-sky-300', ring: 'ring-sky-200     dark:ring-sky-700' },
-        { label: 'Bendahara', value: props.stats.bendahara, icon: '💰', color: 'bg-amber-50   dark:bg-amber-900/30   text-amber-700   dark:text-amber-300', ring: 'ring-amber-200   dark:ring-amber-700' },
-        { label: 'OSIS', value: props.stats.osis, icon: '🏅', color: 'bg-violet-50  dark:bg-violet-900/30  text-violet-700  dark:text-violet-300', ring: 'ring-violet-200  dark:ring-violet-700' },
+        // { label: 'Bendahara', value: props.stats.bendahara, icon: '💰', color: 'bg-amber-50   dark:bg-amber-900/30   text-amber-700   dark:text-amber-300', ring: 'ring-amber-200   dark:ring-amber-700' },
+        // { label: 'OSIS', value: props.stats.osis, icon: '🏅', color: 'bg-violet-50  dark:bg-violet-900/30  text-violet-700  dark:text-violet-300', ring: 'ring-violet-200  dark:ring-violet-700' },
     ];
 });
 
@@ -227,8 +227,8 @@ function onKeydown(e) {
     <Head title="Wali Kelas" />
 
     <MenuLayout @keydown.esc.window="onKeydown">
-        <div class="min-h-screen py-4 px-2 sm:px-0">
-            <div class="mx-auto max-w-7xl space-y-6">
+        <div class="min-h-screen sm:py-4">
+            <div class="mx-auto space-y-6">
 
                 <!-- ─── HEADER CARD ─── -->
                 <div
@@ -250,12 +250,12 @@ function onKeydown(e) {
                                 Teacher</p> -->
                             <h1 class="text-2xl sm:text-3xl font-bold text-white leading-tight">
                                 Wali Kelas
-                                <span v-if="hasKelas" class="ml-2 text-indigo-300">— {{ kelas.kelas }}</span>
+                                <span v-if="hasKelas" class="ml-2 text-indigo-300">( {{ kelas.kelas }} )</span>
                             </h1>
                             <p v-if="guru" class="mt-1 text-slate-400 text-sm">
                                 {{ guru.nama_lengkap }}
-                                <span class="ml-2 px-2 py-0.5 rounded-full bg-white/10 text-xs text-slate-300">{{
-                                    guru.jabatan }}</span>
+                                <!-- <span class="ml-2 px-2 py-0.5 rounded-full bg-white/10 text-xs text-slate-300">{{
+                                    guru.jabatan }}</span> -->
                             </p>
                         </div>
                         <div v-if="hasKelas" class="flex-shrink-0">
@@ -279,7 +279,7 @@ function onKeydown(e) {
                 </div>
 
                 <!-- ─── STATS GRID ─── -->
-                <div v-if="hasKelas && stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                <div v-if="hasKelas && stats" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     <div v-for="card in statCards" :key="card.label"
                         :class="['rounded-xl p-4 ring-1 transition-all duration-200 hover:scale-[1.02] hover:shadow-md cursor-default', card.color, card.ring]">
                         <div class="flex items-center justify-between mb-2">
@@ -292,11 +292,11 @@ function onKeydown(e) {
 
                 <!-- ─── TABLE SECTION ─── -->
                 <div v-if="hasKelas"
-                    class="rounded-2xl bg-white dark:bg-slate-800/60 shadow-sm border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+                    class="sm:rounded-2xl sm:bg-white sm:dark:bg-slate-800/60 sm:shadow-sm sm:border border-slate-100 dark:border-slate-700/50 overflow-hidden">
 
                     <!-- Toolbar -->
                     <div
-                        class="px-5 py-4 border-b border-slate-100 dark:border-slate-700/50 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+                        class="sm:px-5 py-4 sm:border-b border-slate-100 dark:border-slate-700/50 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
                         <div class="flex items-center gap-2">
                             <h2 class="font-semibold text-slate-800 dark:text-white text-sm">Data Siswa</h2>
                             <span
@@ -305,7 +305,7 @@ function onKeydown(e) {
                             </span>
                         </div>
 
-                        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <div class="flex sm:flex-row flex-col flex-wrap gap-2 w-full sm:w-auto">
                             <!-- Search -->
                             <div class="relative flex-1 sm:flex-none">
                                 <span
@@ -327,8 +327,8 @@ function onKeydown(e) {
                                 class="px-10 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 transition">
                                 <option value="">Semua Peran</option>
                                 <option value="sekretaris">Sekretaris</option>
-                                <option value="bendahara">Bendahara</option>
-                                <option value="osis">OSIS</option>
+                                <!-- <option value="bendahara">Bendahara</option> -->
+                                <!-- <option value="osis">OSIS</option> -->
                             </select>
 
                             <!-- Reset -->

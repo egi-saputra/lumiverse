@@ -12,36 +12,51 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class PesertaExport implements FromCollection, WithHeadings, WithEvents
 {
+    protected bool $isSmk;
+
+    public function __construct(bool $isSmk = false)
+    {
+        $this->isSmk = $isSmk;
+    }
+
     public function collection()
     {
-        // 50 baris kosong untuk diisi user, sekarang 4 kolom (tanpa nisn)
+        $colCount = count($this->headings());
+
+        // 50 baris kosong untuk diisi user, jumlah kolom mengikuti isSmk
         $rows = [];
         for ($i = 0; $i < 50; $i++) {
-            $rows[] = ['', '', '', '']; // 4 kolom
+            $rows[] = array_fill(0, $colCount, '');
         }
         return collect($rows);
     }
 
     public function headings(): array
     {
-        return [
+        $headings = [
             'email',
             'nama_lengkap',
             'kelas',
-            'kejuruan'
         ];
+
+        if ($this->isSmk) {
+            $headings[] = 'kejuruan';
+        }
+
+        return $headings;
     }
 
     public function registerEvents(): array
     {
         return [
-            AfterSheet::class => function(AfterSheet $event) {
+            AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
                 $headings = $this->headings();
-                $lastCol = Coordinate::stringFromColumnIndex(count($headings));
+                $colCount = count($headings);
+                $lastCol = Coordinate::stringFromColumnIndex($colCount);
 
                 // Proteksi sheet tapi biarkan heading & baris data bisa diisi
-                $sheet->getProtection()->setPassword('password'); 
+                $sheet->getProtection()->setPassword('password');
                 $sheet->getProtection()->setSheet(true);
                 $sheet->getProtection()->setSort(true);
                 $sheet->getProtection()->setInsertRows(true);
@@ -49,7 +64,7 @@ class PesertaExport implements FromCollection, WithHeadings, WithEvents
 
                 // Unlock semua sel agar bisa diisi
                 foreach (range(1, 51) as $row) {
-                    foreach (range(1, count($headings)) as $col) {
+                    foreach (range(1, $colCount) as $col) {
                         $sheet->getStyleByColumnAndRow($col, $row)->getProtection()->setLocked(false);
                     }
                 }
@@ -58,11 +73,14 @@ class PesertaExport implements FromCollection, WithHeadings, WithEvents
                 $sheet->getColumnDimension('A')->setWidth(40); // Email
                 $sheet->getColumnDimension('B')->setWidth(40); // Nama Lengkap
                 $sheet->getColumnDimension('C')->setWidth(20); // Kelas
-                $sheet->getColumnDimension('D')->setWidth(20); // Kejuruan
+
+                if ($this->isSmk) {
+                    $sheet->getColumnDimension('D')->setWidth(20); // Kejuruan
+                }
 
                 // Heading style
                 $sheet->getStyle("A1:{$lastCol}1")->getFont()->setBold(true);
-                foreach (range(1, count($headings)) as $col) {
+                foreach (range(1, $colCount) as $col) {
                     $sheet->getStyleByColumnAndRow($col, 1)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
 
@@ -70,9 +88,11 @@ class PesertaExport implements FromCollection, WithHeadings, WithEvents
                 $sheet->getStyle("A2:A51")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 $sheet->getStyle("B2:B51")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
                 $sheet->getStyle("C2:C51")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyle("D2:D51")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                if ($this->isSmk) {
+                    $sheet->getStyle("D2:D51")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                }
             },
         ];
     }
-
 }

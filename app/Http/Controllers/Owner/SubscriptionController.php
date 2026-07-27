@@ -30,7 +30,6 @@ class SubscriptionController extends Controller
 
         $newPlan = Plan::where('key', $request->plan_key)
             ->where('is_active', true)
-            ->where('product_type', $tenant->product_type ?? 'school')
             ->firstOrFail();
 
         $currentPlan = $tenant->plan_id ? Plan::find($tenant->plan_id) : null;
@@ -332,7 +331,6 @@ class SubscriptionController extends Controller
 
         $newPlan = Plan::where('key', $request->plan_key)
             ->where('is_active', true)
-            ->where('product_type', $tenant->product_type ?? 'school')
             ->firstOrFail();
 
         $currentPlan = $tenant->plan_id ? Plan::find($tenant->plan_id) : null;

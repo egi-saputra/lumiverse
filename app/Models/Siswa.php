@@ -48,6 +48,12 @@ class Siswa extends Model
                 $siswa->id_siswa = self::generateIdSiswa();
             }
         });
+
+        static::deleting(function (Siswa $siswa) {
+            if ($siswa->user_id) {
+                User::where('id', $siswa->user_id)->delete();
+            }
+        });
     }
 
     /**

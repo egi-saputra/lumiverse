@@ -2,45 +2,12 @@
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { PencilSquareIcon, TrashIcon, XMarkIcon } from '@heroicons/vue/24/outline'
-import { useTenant } from '@/Composables/useTenant.js'
 
 const props = defineProps({
     mapel: Array,
     guru: Array, // ← ditambahkan
-})
-
-/* ─── Tenant (product_type) ─────────────────────────────── */
-const { isWorkspace } = useTenant()
-
-/* ─── Label kondisional per product_type ────────────────── */
-const t = computed(() => isWorkspace.value ? {
-    pageTitle: 'Departments Data',
-    heading: 'List of All Departments',
-    subheading: 'Manage organization departments data',
-    addButtonLabel: 'Add Department',
-    itemNameColumn: 'Department Name',
-    personColumn: 'Manager',
-    noDataMessage: 'No departments available',
-    editModalTitle: 'Edit Department',
-    itemNameLabel: 'Department Name',
-    personLabel: 'Department Manager',
-    personPlaceholder: '-- select manager --',
-    confirmDelete: 'Yakin ingin menghapus departemen ini?',
-} : {
-    pageTitle: 'Subjects Data',
-    heading: 'List of All Subjects',
-    subheading: 'Manage school subjects data',
-    addButtonLabel: 'Add Subject',
-    itemNameColumn: 'Subject Name',
-    personColumn: 'Teacher',
-    noDataMessage: 'No subjects available',
-    editModalTitle: 'Edit Subject',
-    itemNameLabel: 'Subject Name',
-    personLabel: 'Subject Teacher',
-    personPlaceholder: '-- select teacher --',
-    confirmDelete: 'Yakin ingin menghapus mapel ini?',
 })
 
 const showModal = ref(false)
@@ -81,7 +48,7 @@ const update = () => {
 
 // ------ DELETE ------
 const hapus = (id) => {
-    if (confirm(t.value.confirmDelete)) {
+    if (confirm('Yakin ingin menghapus mapel ini?')) {
         router.delete(route('admin.mapel.destroy', id))
     }
 }
@@ -89,7 +56,7 @@ const hapus = (id) => {
 
 <template>
 
-    <Head :title="t.pageTitle" />
+    <Head title="Subjects Data" />
 
     <MenuLayout>
         <div class="max-w-6xl mx-auto sm:p-6">
@@ -97,12 +64,12 @@ const hapus = (id) => {
             <!-- Header -->
             <div class="flex flex-col mb-6 sm:mb-10 sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t.heading }}</h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ t.subheading }}</p>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">List of All Subjects</h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Manage school subjects data</p>
                 </div>
                 <Link :href="route('admin.mapel.create')"
                     class="px-4 py-2 hidden rounded-lg bg-blue-700 hover:bg-blue-800 text-white shadow-md transition sm:flex items-center justify-center">
-                    + <span class="sm:inline-block hidden ml-1">{{ t.addButtonLabel }}</span>
+                    + <span class="sm:inline-block hidden ml-1">Add Subject</span>
                 </Link>
             </div>
 
@@ -113,8 +80,8 @@ const hapus = (id) => {
                     <thead class="bg-blue-700 text-white">
                         <tr>
                             <th class="px-4 py-3 text-center border-r whitespace-nowrap">No</th>
-                            <th class="px-4 py-3 text-center border-r whitespace-nowrap">{{ t.itemNameColumn }}</th>
-                            <th class="px-4 py-3 text-center border-r whitespace-nowrap">{{ t.personColumn }}</th>
+                            <th class="px-4 py-3 text-center border-r whitespace-nowrap">Subject Name</th>
+                            <th class="px-4 py-3 text-center border-r whitespace-nowrap">Teacher</th>
                             <th class="px-4 py-3 text-center whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
@@ -137,8 +104,8 @@ const hapus = (id) => {
                             </td>
                         </tr>
                         <tr v-if="mapel.length === 0">
-                            <td colspan="4" class="text-center py-6 text-gray-500 dark:text-gray-400">{{
-                                t.noDataMessage }}</td>
+                            <td colspan="4" class="text-center py-6 text-gray-500 dark:text-gray-400">No subjects
+                                available</td>
                         </tr>
                     </tbody>
                 </table>
@@ -164,7 +131,7 @@ const hapus = (id) => {
                     </div>
                 </div>
                 <div v-if="mapel.length === 0" class="text-center py-6 text-gray-500 dark:text-gray-400">
-                    {{ t.noDataMessage }}
+                    No subjects available
                 </div>
 
                 <!-- FLOATING CREATE BUTTON -->
@@ -180,27 +147,27 @@ const hapus = (id) => {
                 <div
                     class="relative w-full max-w-md rounded-2xl bg-white/70 dark:bg-gray-800/70 backdrop-blur-md shadow-xl p-6 m-3 transition">
                     <div class="flex items-center justify-between mb-4">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">{{ t.editModalTitle }}</h2>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Subject</h2>
                         <button @click="closeModal" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                             <XMarkIcon class="w-5 h-5" />
                         </button>
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{{
-                            t.itemNameLabel }}</label>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Subject
+                            Name</label>
                         <input v-model="form.mapel" type="text"
                             class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-3 py-2
                           text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
                     </div>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">{{
-                            t.personLabel }}</label>
+                        <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Subject
+                            Teacher</label>
                         <select v-model="form.guru_id"
                             class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-700/60 px-3 py-2 text-gray-900 dark:text-white
                            placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
-                            <option value="">{{ t.personPlaceholder }}</option>
+                            <option value="">-- select teacher --</option>
                             <option v-for="g in guru" :key="g.id" :value="g.id">{{ g.nama_lengkap }}</option>
                         </select>
                     </div>

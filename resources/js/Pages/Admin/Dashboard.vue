@@ -3,6 +3,7 @@ import UserLayout from '@/Layouts/UserLayout.vue';
 import { ref, computed } from 'vue'
 import { Head, usePage, router, Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
+import { useTenant } from '@/Composables/useTenant'
 import {
     UserGroupIcon,
     ClipboardDocumentListIcon,
@@ -16,6 +17,8 @@ import { BookUserIcon, BookCheckIcon, Building2Icon, FileCog2Icon } from 'lucide
 
 const page = usePage();
 const userName = page.props.auth.user.name || 'User';
+
+const { isSmk } = useTenant()
 
 const toast = ref({
     show: false,
@@ -33,15 +36,16 @@ const showToast = (message, type = 'info') => {
     }, 2000);
 };
 
-const menuItems = [
+const menuItems = computed(() => [
     { title: 'Users Directory', icon: UserGroupIcon, route: route('admin.users.index') },
     { title: 'Teacher List', icon: AcademicCapIcon, route: route('admin.guru.index') },
     { title: 'Student List', icon: BookUserIcon, route: route('admin.siswa.index') },
     { title: 'Class Room', icon: Building2Icon, route: route('admin.kelas.index') },
     { title: 'Subjects', icon: BookCheckIcon, route: route('admin.mapel.index') },
-    { title: 'Vocational', icon: FileCog2Icon, route: route('admin.kejuruan.index') },
-    // { title: 'Announcement', icon: MegaphoneIcon, route: route('pengumuman.create') },
-]
+    // Vocational hanya muncul kalau tenant berjenjang SMK, sama seperti di sidebar
+    ...(isSmk.value ? [{ title: 'Vocational', icon: FileCog2Icon, route: route('admin.kejuruan.index') }] : []),
+    { title: 'Announcement', icon: MegaphoneIcon, route: route('pengumuman.create') },
+])
 
 const goTo = (url) => {
     router.visit(url, {

@@ -1,7 +1,7 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import {
-    ClipboardDocumentCheckIcon, ArrowPathIcon, BookOpenIcon,
+    ArrowPathIcon, BookOpenIcon,
     AcademicCapIcon, ArrowDownTrayIcon, DocumentTextIcon,
     InboxIcon, CheckCircleIcon, ClockIcon,
     ChevronLeftIcon, ChevronRightIcon,
@@ -311,7 +311,7 @@ const destroyRekap = async () => {
             <header class="page-header">
                 <div class="header-left">
                     <div class="header-icon">
-                        <ClipboardDocumentCheckIcon class="icon" />
+                        <DocumentTextIcon class="icon" />
                     </div>
                     <div>
                         <h1 class="page-title">Rekap Penilaian</h1>

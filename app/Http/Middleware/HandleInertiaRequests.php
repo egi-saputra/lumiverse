@@ -2,8 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\ProfilSekolah;
-use App\Models\Pesan;
+// use App\Models\ProfilSekolah;
+// use App\Models\Pesan;
 use App\Models\Pengumuman;
 use App\Models\Assignment;
 use App\Models\Guru;
@@ -36,7 +36,7 @@ class HandleInertiaRequests extends Middleware
         $isUjianRoute = $request->routeIs('siswa.ujian.*');
 
         // ── Profil sekolah (tenant-only) ──────────────────────────
-        $profil = $isTenant ? cache()->remember('profil_sekolah', now()->addWeek(), fn() => ProfilSekolah::first()) : null;
+        // $profil = $isTenant ? cache()->remember('profil_sekolah', now()->addWeek(), fn() => ProfilSekolah::first()) : null;
 
         // ── Guru flags (tenant-only, skip saat ujian) ─────────────
         $guru           = null;
@@ -119,6 +119,7 @@ class HandleInertiaRequests extends Middleware
                 'plan_id' => tenant('plan_id'),
                 'product_type' => tenant('product_type'),
                 'max_users' => tenant('max_users'),
+                'institution_website' => tenant('institution_website'),
             ] : null,
 
             // 'centralDomain' => env('CENTRAL_DOMAIN', 'localhost:8000'),
@@ -146,17 +147,17 @@ class HandleInertiaRequests extends Middleware
                 'error'   => fn () => $request->session()->get('error'),
             ],
 
-            'namaSekolah' => $profil?->nama_sekolah ?? 'Lumiverse School',
+            // 'namaSekolah' => $profil?->nama_sekolah ?? 'Lumiverse School',
 
-            'profilSekolah' => [
-                'namaSekolah' => $profil?->nama_sekolah ?? 'Lumiverse School',
-                'alamat'      => $profil?->alamat ?? 'Jl. Raya Citayam - Parung RT. 002 / RW. 011 Desa Ragajaya, Kecamatan Bojonggede, Kabupaten Bogor, Jawa Barat 16920.',
-                'telepon'     => $profil?->telepon ?? '+62 XXX-XXXX-XXX',
-                'email'       => $profil?->email ?? 'info@lumiverse.co.id',
-                'website'     => $profil?->website ?? 'www.lumiverse.co.id',
-                'visi'        => $profil?->visi ?? 'Menjadi sekolah kejuruan berstandar nasional yang mencetak lulusan kompeten, berintegritas, dan berdaya saing global.',
-                'misi'        => $profil?->misi ?? 'Menyelenggarakan pendidikan vokasi berkualitas dengan kurikulum berbasis industri, didukung tenaga pengajar profesional dan fasilitas modern.',
-            ],
+            // 'profilSekolah' => [
+            //     'namaSekolah' => $profil?->nama_sekolah ?? 'Lumiverse School',
+            //     'alamat'      => $profil?->alamat ?? 'Jl. Raya Citayam - Parung RT. 002 / RW. 011 Desa Ragajaya, Kecamatan Bojonggede, Kabupaten Bogor, Jawa Barat 16920.',
+            //     'telepon'     => $profil?->telepon ?? '+62 XXX-XXXX-XXX',
+            //     'email'       => $profil?->email ?? 'info@lumiverse.co.id',
+            //     'website'     => $profil?->website ?? 'www.lumiverse.co.id',
+            //     'visi'        => $profil?->visi ?? 'Menjadi sekolah kejuruan berstandar nasional yang mencetak lulusan kompeten, berintegritas, dan berdaya saing global.',
+            //     'misi'        => $profil?->misi ?? 'Menyelenggarakan pendidikan vokasi berkualitas dengan kurikulum berbasis industri, didukung tenaga pengajar profesional dan fasilitas modern.',
+            // ],
 
             'unreadAssignmentCount' => function () use ($isTenant) {
                 if (!$isTenant || !Auth::guard('web')->check()) return 0;
@@ -177,7 +178,7 @@ class HandleInertiaRequests extends Middleware
             'isKejuruanGuru' => $isKejuruanGuru,
             'isWalas'        => $isWalas,
 
-            'pesan' => fn () => $this->loadPesanForUser($isTenant, $user, $kelasId),
+            // 'pesan' => fn () => $this->loadPesanForUser($isTenant, $user, $kelasId),
         ];
     }
 
@@ -185,29 +186,29 @@ class HandleInertiaRequests extends Middleware
     //  PRIVATE HELPER
     // ─────────────────────────────────────────────────────────
 
-    private function loadPesanForUser(bool $isTenant, $user, ?int $kelasId): array
-    {
-        if (! $isTenant || ! $user) return [];
+    // private function loadPesanForUser(bool $isTenant, $user, ?int $kelasId): array
+    // {
+    //     if (! $isTenant || ! $user) return [];
 
-        return Pesan::with('kelas:id,kelas')
-            ->select(['id', 'judul', 'isi', 'penerima', 'kelas_id', 'pengirim_id', 'created_at'])
-            ->where(function ($q) use ($user, $kelasId) {
-                $q->where('penerima', 'semua')
-                  ->orWhere(function ($q2) use ($user) {
-                      $q2->where('penerima', $user->role)
-                         ->whereNull('kelas_id');
-                  });
+    //     return Pesan::with('kelas:id,kelas')
+    //         ->select(['id', 'judul', 'isi', 'penerima', 'kelas_id', 'pengirim_id', 'created_at'])
+    //         ->where(function ($q) use ($user, $kelasId) {
+    //             $q->where('penerima', 'semua')
+    //               ->orWhere(function ($q2) use ($user) {
+    //                   $q2->where('penerima', $user->role)
+    //                      ->whereNull('kelas_id');
+    //               });
 
-                if ($user->role === 'siswa' && $kelasId) {
-                    $q->orWhere(function ($q2) use ($kelasId) {
-                        $q2->where('penerima', 'siswa')
-                           ->where('kelas_id', $kelasId);
-                    });
-                }
-            })
-            ->latest()
-            ->limit(50)
-            ->get()
-            ->toArray();
-    }
+    //             if ($user->role === 'siswa' && $kelasId) {
+    //                 $q->orWhere(function ($q2) use ($kelasId) {
+    //                     $q2->where('penerima', 'siswa')
+    //                        ->where('kelas_id', $kelasId);
+    //                 });
+    //             }
+    //         })
+    //         ->latest()
+    //         ->limit(50)
+    //         ->get()
+    //         ->toArray();
+    // }
 }

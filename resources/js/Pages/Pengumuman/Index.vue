@@ -54,7 +54,8 @@ const excerpt = (html, len = 130) => {
                            bg-gradient-to-r from-indigo-600 to-purple-600
                            hover:from-indigo-700 hover:to-purple-700 shadow-md hover:shadow-lg transition">
                     <PlusIcon class="w-4 h-4" />
-                    Buat Pengumuman
+                    <span class="inline-flex sm:hidden">Create</span>
+                    <span class="sm:inline-flex hidden">Buat Pengumuman</span>
                 </Link>
             </div>
 

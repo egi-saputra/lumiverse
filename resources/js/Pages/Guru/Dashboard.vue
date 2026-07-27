@@ -15,12 +15,20 @@ import {
     SparklesIcon,
     ArrowTrendingUpIcon,
     MegaphoneIcon,
-    EnvelopeIcon
+    EnvelopeIcon, UsersIcon
 } from '@heroicons/vue/24/solid'
-import { ChartBarIcon } from '@heroicons/vue/24/outline';
+import {
+    BookOpenIcon,
+    ClipboardDocumentCheckIcon,
+    ChartBarIcon,
+    PencilSquareIcon,
+} from '@heroicons/vue/24/outline'
 
 const page = usePage();
 const userName = page.props.auth.user.name || 'User';
+const props = defineProps({
+    isWalas: { type: Boolean, default: false },
+})
 
 const toast = ref({
     show: false,
@@ -38,71 +46,69 @@ const showToast = (message, type = 'info') => {
     }, 2000);
 };
 
-const menuItems = [
-    {
-        title: 'Attendance',
-        icon: AcademicCapIcon,
-        route: route('guru.absensi.index'),
-        color: 'from-sky-500 to-blue-600',
-        bg: 'bg-sky-50 dark:bg-sky-900/20'
-    },
-
-    {
-        title: 'Analytics',
-        icon: ChartBarIcon,
-        route: route('public.absensi.analytics'),
-        color: 'from-indigo-500 to-purple-600',
-        bg: 'bg-indigo-50 dark:bg-indigo-900/20'
-    },
-
-    {
-        title: 'Learning',
-        icon: NewspaperIcon,
-        route: route('guru.material.index'),
-        color: 'from-cyan-500 to-teal-500',
-        bg: 'bg-cyan-50 dark:bg-cyan-900/20'
-    },
-
-    {
-        title: 'Assignment',
-        icon: DocumentTextIcon,
-        route: route('guru.assignment.index'),
-        color: 'from-violet-500 to-fuchsia-600',
-        bg: 'bg-violet-50 dark:bg-violet-900/20'
-    },
-
-    {
-        title: 'Quiz List',
-        icon: ClipboardDocumentListIcon,
-        route: route('guru.soal.index'),
-        color: 'from-amber-500 to-orange-500',
-        bg: 'bg-amber-50 dark:bg-amber-900/20'
-    },
-
-    {
-        title: 'Assessment',
-        icon: UserGroupIcon,
-        route: route('guru.NilaiUjian.index'),
-        color: 'from-emerald-500 to-green-600',
-        bg: 'bg-emerald-50 dark:bg-emerald-900/20'
-    },
-
-    {
-        title: 'Announcements',
-        icon: MegaphoneIcon,
-        route: route('pengumuman.index'),
-        color: 'from-rose-500 to-pink-600',
-        bg: 'bg-rose-50 dark:bg-rose-900/20'
-    },
-
-    {
-        title: 'Messages',
-        icon: EnvelopeIcon,
-        route: route('pesan.index'),
-        color: 'from-slate-500 to-gray-700',
-        bg: 'bg-slate-50 dark:bg-slate-800/40'
-    },
-]
+const menuItems = computed(() => {
+    const items = [
+        {
+            title: 'Classroom',
+            icon: UsersIcon,
+            route: route('guru.walas.index'),
+            color: 'from-indigo-500 to-blue-600',
+            bg: 'bg-indigo-50 dark:bg-indigo-900/20',
+            walasOnly: true,
+        },
+        {
+            title: 'Attendance',
+            icon: ClipboardDocumentCheckIcon,
+            route: route('guru.absensi.index'),
+            color: 'from-sky-500 to-cyan-600',
+            bg: 'bg-sky-50 dark:bg-sky-900/20'
+        },
+        {
+            title: 'Analytics',
+            icon: ChartBarIcon,
+            route: route('public.absensi.analytics'),
+            color: 'from-purple-500 to-violet-600',
+            bg: 'bg-purple-50 dark:bg-purple-900/20'
+        },
+        {
+            title: 'Learning',
+            icon: BookOpenIcon,
+            route: route('guru.material.index'),
+            color: 'from-teal-500 to-emerald-600',
+            bg: 'bg-teal-50 dark:bg-teal-900/20'
+        },
+        {
+            title: 'Assignment',
+            icon: DocumentTextIcon,
+            route: route('guru.assignment.index'),
+            color: 'from-fuchsia-500 to-pink-600',
+            bg: 'bg-fuchsia-50 dark:bg-fuchsia-900/20'
+        },
+        {
+            title: 'Quiz List',
+            icon: PencilSquareIcon,
+            route: route('guru.soal.index'),
+            color: 'from-amber-500 to-orange-500',
+            bg: 'bg-amber-50 dark:bg-amber-900/20'
+        },
+        {
+            title: 'Assessment',
+            icon: CheckBadgeIcon,
+            route: route('guru.NilaiUjian.index'),
+            color: 'from-emerald-500 to-green-600',
+            bg: 'bg-emerald-50 dark:bg-emerald-900/20'
+        },
+        {
+            title: 'Announcements',
+            icon: MegaphoneIcon,
+            route: route('pengumuman.index'),
+            color: 'from-rose-500 to-red-600',
+            bg: 'bg-rose-50 dark:bg-rose-900/20'
+        },
+    ]
+    // Sembunyikan menu Classroom kalau guru bukan wali kelas
+    return items.filter(item => !item.walasOnly || props.isWalas)
+})
 
 const goTo = (url) => {
     router.visit(url, {
@@ -257,7 +263,7 @@ const getInitials = (name) => {
                             Guru</p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page.props.usersCount.guru
-                            }}</h3>
+                                }}</h3>
                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">pengguna</span>
                         </div>
                     </div>
@@ -284,7 +290,7 @@ const getInitials = (name) => {
                             Siswa</p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page.props.usersCount.siswa
-                            }}</h3>
+                                }}</h3>
                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">pengguna</span>
                         </div>
                     </div>

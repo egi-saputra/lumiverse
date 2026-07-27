@@ -103,7 +103,7 @@ const limitReached = computed(() => props.maxUsers && props.userCount >= props.m
             <div v-if="limitReached"
                 class="mb-6 rounded-xl border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/40 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
                 Batas jumlah pengguna ({{ maxUsers }}) untuk paket Anda sudah tercapai.
-                <Link href="/lumiverse/pricing" class="font-semibold underline">Upgrade paket</Link> untuk menambah
+                <Link href="/pricing" class="font-semibold underline">Upgrade paket</Link> untuk menambah
                 pengguna
                 baru.
             </div>

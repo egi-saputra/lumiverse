@@ -9,9 +9,6 @@ const props = defineProps({
     tenant: Object,
 })
 
-// ─── Product type ──────────────────────────────────────────────────────────
-const isWorkspace = computed(() => props.tenant.product_type === 'workspace')
-
 // ─── Edit modes ───────────────────────────────────────────────────────────────
 const editingProfile = ref(false)
 const editingAccount = ref(false)
@@ -94,25 +91,14 @@ const showPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfPassword = ref(false)
 
-// ─── Opsi jenis lembaga/organisasi — kondisional per product_type ──────────────
-const institutionTypes = computed(() => {
-    if (isWorkspace.value) {
-        return [
-            { value: 'pt', label: 'PT (Perseroan Terbatas)' },
-            { value: 'cv', label: 'CV (Commanditaire Venootschap)' },
-            { value: 'startup', label: 'Startup / Rintisan' },
-            { value: 'yayasan', label: 'Yayasan / Organisasi Non-Profit' },
-            { value: 'lainnya', label: 'Lainnya' },
-        ]
-    }
-    return [
-        { value: 'sekolah', label: 'Sekolah' },
-        { value: 'kursus', label: 'Kursus & Bimbel' },
-        { value: 'privat', label: 'Privat / Tutor' },
-        { value: 'yayasan', label: 'Yayasan' },
-        { value: 'lainnya', label: 'Lainnya' },
-    ]
-})
+// ─── Opsi jenis lembaga pendidikan ─────────────────────────────────────────────
+const institutionTypes = [
+    { value: 'sekolah', label: 'Sekolah' },
+    { value: 'kursus', label: 'Kursus & Bimbel' },
+    { value: 'privat', label: 'Privat / Tutor' },
+    { value: 'yayasan', label: 'Yayasan' },
+    { value: 'lainnya', label: 'Lainnya' },
+]
 
 const schoolLevels = [
     { value: 'sd', label: 'SD / MI / Sederajat' },
@@ -121,7 +107,7 @@ const schoolLevels = [
 ]
 
 const institutionTypeLabel = computed(() => {
-    const map = Object.fromEntries(institutionTypes.value.map(t => [t.value, t.label]))
+    const map = Object.fromEntries(institutionTypes.map(t => [t.value, t.label]))
     const base = map[props.tenant.institution_type] || props.tenant.institution_type
     if (props.tenant.institution_type === 'lainnya' && props.tenant.institution_type_other) {
         return `${base} (${props.tenant.institution_type_other})`
@@ -136,48 +122,25 @@ const schoolLevelLabel = computed(() => {
 
 const logoUrl = computed(() => props.tenant.logo_url ?? null)
 
-// ─── Label & teks kondisional per product_type ─────────────────────────────────
-const pageLead = computed(() => isWorkspace.value
-    ? 'Kelola data perusahaan / organisasi dan akun admin (PIC) yang digunakan untuk mengakses Lumiverse.'
-    : 'Kelola data lembaga / institusi pendidikan dan akun admin (PIC) yang digunakan untuk mengakses Lumiverse.')
-
-const profileSectionTitle = computed(() => isWorkspace.value
-    ? 'Profil Perusahaan / Organisasi'
-    : 'Profil Lembaga / Institusi Pendidikan')
-
-const profileSubLabel = computed(() => isWorkspace.value ? 'Jenis Organisasi' : 'Jenis Lembaga Pendidikan')
-
-const nameFieldLabel = computed(() => isWorkspace.value ? 'Nama Perusahaan / Organisasi' : 'Nama Lembaga Pendidikan')
-
-const typeFieldLabel = computed(() => isWorkspace.value ? 'Jenis Organisasi' : 'Jenis Lembaga Pendidikan')
-
-const typeOtherFieldLabel = computed(() => isWorkspace.value ? 'Nama Jenis Organisasi' : 'Nama Jenis Lembaga')
-
-const typeOtherPlaceholder = computed(() => isWorkspace.value ? 'contoh: Koperasi' : 'contoh: Pesantren')
-
-const legalityFieldLabel = computed(() => isWorkspace.value ? 'NPWP / No. Legalitas Perusahaan' : 'No. Legalitas')
-
-const legalityPlaceholder = computed(() => isWorkspace.value ? 'Nomor NPWP / akta pendirian' : 'Nomor akta / ijin')
-
-const phoneFieldLabel = computed(() => isWorkspace.value ? 'Telepon Kantor' : 'Telepon Sekolah / Lembaga')
-
-const addressFieldLabel = computed(() => isWorkspace.value ? 'Alamat Kantor / Perusahaan' : 'Alamat Sekolah')
-
-const addressPlaceholder = computed(() => isWorkspace.value ? 'Alamat lengkap kantor / perusahaan' : 'Alamat lengkap lembaga')
-
-const websiteFieldLabel = computed(() => isWorkspace.value ? 'Website Perusahaan' : 'Website')
-
-const emailFieldLabel = computed(() => isWorkspace.value ? 'Alamat Email Perusahaan' : 'Alamat Email')
-
-const namePlaceholder = computed(() => isWorkspace.value ? 'Nama perusahaan / organisasi' : 'Nama lembaga')
-
-const emailRowLabel = computed(() => isWorkspace.value ? 'Email Perusahaan' : 'Email Address')
-
-const legalityRowLabel = computed(() => isWorkspace.value ? 'NPWP / No. Legalitas' : 'No. Legalitas')
-
-const accountNote = computed(() => isWorkspace.value
-    ? 'Informasi / data akun ini dapat digunakan untuk mengakses halaman dashboard lumiverse dan juga aplikasi workspace pada url perusahaan yang sudah Anda daftarkan!'
-    : 'Informasi / data akun ini dapat digunakan untuk mengakses halaman dashboard lumiverse dan juga aplikasi lms pada url sekolah yang sudah Anda daftarkan!')
+// ─── Label & teks statis (tanpa kondisional workspace) ─────────────────────────
+const pageLead = 'Kelola data lembaga / institusi pendidikan dan akun admin (PIC) yang digunakan untuk mengakses Lumiverse.'
+const profileSectionTitle = 'Profil Lembaga / Institusi Pendidikan'
+const profileSubLabel = 'Jenis Lembaga Pendidikan'
+const nameFieldLabel = 'Nama Lembaga Pendidikan'
+const typeFieldLabel = 'Jenis Lembaga Pendidikan'
+const typeOtherFieldLabel = 'Nama Jenis Lembaga'
+const typeOtherPlaceholder = 'contoh: Pesantren'
+const legalityFieldLabel = 'No. Legalitas'
+const legalityPlaceholder = 'Nomor akta / ijin'
+const phoneFieldLabel = 'Telepon Sekolah / Lembaga'
+const addressFieldLabel = 'Alamat Sekolah'
+const addressPlaceholder = 'Alamat lengkap lembaga'
+const websiteFieldLabel = 'Website'
+const emailFieldLabel = 'Alamat Email'
+const namePlaceholder = 'Nama lembaga'
+const emailRowLabel = 'Email Address'
+const legalityRowLabel = 'No. Legalitas'
+const accountNote = 'Informasi / data akun ini dapat digunakan untuk mengakses halaman dashboard lumiverse dan juga aplikasi lms pada url sekolah yang sudah Anda daftarkan!'
 </script>
 
 <template>
@@ -193,7 +156,7 @@ const accountNote = computed(() => isWorkspace.value
         <p class="page-lead">{{ pageLead }}</p>
 
         <!-- ═══════════════════════════════════════════════════════════════
-                 Profil Lembaga / Perusahaan
+                 Profil Lembaga
             ════════════════════════════════════════════════════════════════ -->
         <div class="section-title">{{ profileSectionTitle }}</div>
         <div class="info-card mb-gap">
@@ -216,20 +179,20 @@ const accountNote = computed(() => isWorkspace.value
                         <span>{{ typeFieldLabel }}</span>
                         <strong>{{ institutionTypeLabel }}</strong>
                     </div>
-                    <div class="info-card-row" v-if="!isWorkspace && schoolLevelLabel">
+                    <div class="info-card-row" v-if="schoolLevelLabel">
                         <span>Tingkat / Jenjang</span>
                         <strong>{{ schoolLevelLabel }}</strong>
                     </div>
-                    <div class="info-card-row" v-if="!isWorkspace && tenant.npsn">
+                    <div class="info-card-row" v-if="tenant.npsn">
                         <span>NPSN</span>
                         <strong class="mono">{{ tenant.npsn }}</strong>
                     </div>
-                    <div class="info-card-row" v-if="!isWorkspace && tenant.nss">
+                    <div class="info-card-row" v-if="tenant.nss">
                         <span>NSS</span>
                         <strong class="mono">{{ tenant.nss }}</strong>
                     </div>
                     <div class="info-card-row"
-                        v-if="!isWorkspace && tenant.institution_type === 'sekolah' && tenant.registration_number">
+                        v-if="tenant.institution_type === 'sekolah' && tenant.registration_number">
                         <span>No. Izin Pendirian</span>
                         <strong class="mono">{{ tenant.registration_number }}</strong>
                     </div>
@@ -269,7 +232,7 @@ const accountNote = computed(() => isWorkspace.value
                             profileForm.errors.school_name }}</p>
                     </div>
 
-                    <!-- Jenis Lembaga / Organisasi -->
+                    <!-- Jenis Lembaga -->
                     <div class="field-group">
                         <label class="field-label">{{ typeFieldLabel }}</label>
                         <select v-model="profileForm.institution_type" class="field-input">
@@ -290,7 +253,7 @@ const accountNote = computed(() => isWorkspace.value
                     </div>
 
                     <!-- Jenjang (sekolah saja) -->
-                    <div class="field-group" v-if="!isWorkspace && profileForm.institution_type === 'sekolah'">
+                    <div class="field-group" v-if="profileForm.institution_type === 'sekolah'">
                         <label class="field-label">Tingkat / Jenjang</label>
                         <select v-model="profileForm.school_level" class="field-input">
                             <option value="">— Pilih jenjang —</option>
@@ -301,7 +264,7 @@ const accountNote = computed(() => isWorkspace.value
                     </div>
 
                     <!-- NPSN (sekolah saja) -->
-                    <div class="field-group" v-if="!isWorkspace && profileForm.institution_type === 'sekolah'">
+                    <div class="field-group" v-if="profileForm.institution_type === 'sekolah'">
                         <label class="field-label">No. Pokok Sekolah Nasional (NPSN)</label>
                         <input v-model="profileForm.npsn" class="field-input mono" placeholder="8 digit"
                             maxlength="8" />
@@ -309,7 +272,7 @@ const accountNote = computed(() => isWorkspace.value
                     </div>
 
                     <!-- NSS (sekolah saja) -->
-                    <div class="field-group" v-if="!isWorkspace && profileForm.institution_type === 'sekolah'">
+                    <div class="field-group" v-if="profileForm.institution_type === 'sekolah'">
                         <label class="field-label">No. Statistik Sekolah (NSS)</label>
                         <input v-model="profileForm.nss" class="field-input mono" placeholder="12 digit"
                             maxlength="12" />
@@ -317,8 +280,7 @@ const accountNote = computed(() => isWorkspace.value
                     </div>
 
                     <!-- No. Izin Pendirian (sekolah saja) -->
-                    <div class="field-group col-span-2"
-                        v-if="!isWorkspace && profileForm.institution_type === 'sekolah'">
+                    <div class="field-group col-span-2" v-if="profileForm.institution_type === 'sekolah'">
                         <label class="field-label">No. Izin Pendirian / Operasional <span
                                 class="field-optional">(opsional)</span></label>
                         <input v-model="profileForm.registration_number_school" class="field-input mono"
@@ -327,7 +289,7 @@ const accountNote = computed(() => isWorkspace.value
                             profileForm.errors.registration_number_school }}</p>
                     </div>
 
-                    <!-- No. legalitas / NPWP (non-sekolah, termasuk semua tipe workspace) -->
+                    <!-- No. legalitas (non-sekolah) -->
                     <div class="field-group" v-if="profileForm.institution_type !== 'sekolah'">
                         <label class="field-label">{{ legalityFieldLabel }}</label>
                         <input v-model="profileForm.registration_number" class="field-input mono"
@@ -345,7 +307,7 @@ const accountNote = computed(() => isWorkspace.value
                             profileForm.errors.contact_phone }}</p>
                     </div>
 
-                    <!-- Email lembaga/perusahaan -->
+                    <!-- Email lembaga -->
                     <div class="field-group">
                         <label class="field-label">{{ emailFieldLabel }} <span
                                 class="field-optional">(opsional)</span></label>

@@ -23,7 +23,7 @@ class MaterialController extends Controller
 
         return Inertia::render('Guru/Material/Index', [
             'materials' => $material,
-            'title' => 'Learning Material List',
+            'title' => 'Materials',
         ]);
     }
     

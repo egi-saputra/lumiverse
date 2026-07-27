@@ -4,7 +4,7 @@
 
             <!-- Header Desktop -->
             <div class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Learning Material List</h1>
+                <h1 class="sm:text-3xl text-2xl font-bold text-gray-900 dark:text-white">Learning Material List</h1>
                 <Link :href="route('guru.material.create')" prefetch preserve-scroll
                     class="hidden sm:inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white font-semibold rounded-lg shadow transition">
                     + New Create
@@ -88,14 +88,24 @@
 
                 </div>
 
-                <div v-if="materials.length === 0" class="col-span-full text-center text-gray-500 dark:text-gray-400">
-                    No learning materials submitted yet.
+                <div v-if="materials.length === 0"
+                    class="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-gray-900 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl">
+                    <div
+                        class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <p class="text-base font-semibold text-gray-700 dark:text-gray-300">No learning materials submitted
+                        yet</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Learning material submitted will appear here.</p>
                 </div>
             </div>
 
             <!-- Floating button Mobile -->
             <Link :href="route('guru.material.create')" prefetch preserve-scroll
-                class="sm:hidden fixed bottom-16 right-3 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 text-sm sm:text-base hover:to-blue-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
+                class="sm:hidden fixed bottom-6 sm:right-3 right-6 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 text-sm sm:text-base hover:to-blue-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
                 + Add New
             </Link>
 

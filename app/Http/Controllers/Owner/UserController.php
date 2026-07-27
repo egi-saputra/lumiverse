@@ -23,22 +23,11 @@ class UserController extends Controller
     }
 
     /**
-     * Label role bergantung pada product_type tenant.
-     * Key (value yang disimpan di DB) selalu sama; hanya label tampilannya
-     * yang berbeda untuk tenant "workspace" (korporat) vs "school".
+     * Label role yang ditampilkan untuk tiap peran pengguna.
+     * Key (value yang disimpan di DB) tetap sama di seluruh sistem.
      */
     private function roleLabels(Tenant $tenant): array
     {
-        if ($tenant->isWorkspace()) {
-            return [
-                'admin'   => 'Admin',
-                'guru'    => 'Manajer',
-                'proktor' => 'Supervisor',
-                'siswa'   => 'Karyawan',
-                'user'    => 'Pengguna Umum',
-            ];
-        }
-
         return [
             'admin'   => 'Admin',
             'guru'    => 'Guru',

@@ -45,7 +45,7 @@ const submit = () => {
 
 <template>
     <MenuLayout>
-        <div class="mx-auto px-4 py-6 space-y-6">
+        <div class="mx-auto sm:px-4 sm:py-6 space-y-6">
 
             <!-- Back -->
             <!-- <Link :href="route('pengumuman.index')" class="inline-flex items-center gap-2 text-sm font-semibold
@@ -55,10 +55,11 @@ const submit = () => {
                 Kembali
             </Link> -->
 
-            <section class="rounded-2xl border border-white/20 dark:border-white/10
-                            bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-xl p-6 sm:p-8">
+            <section
+                class="rounded-2xl border border-white/20 dark:border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur-xl shadow-xl p-6 sm:p-8">
 
-                <h1 class="text-xl font-bold text-gray-800 dark:text-white">Buat Pengumuman / Informasi Sekolah
+                <h1 class="text-xl font-bold text-gray-800 dark:text-white">Buat Pengumuman <span
+                        class="sm:inline-flex hidden">/ Informasi Sekolah</span>
                 </h1>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-6">
                     Pengumuman / informasi dapat dilihat pada fitur announcements dan juga mading digital sekolah
@@ -167,7 +168,7 @@ const submit = () => {
                                 <path class="opacity-75" fill="currentColor"
                                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
-                            {{ form.processing ? 'Menyimpan...' : 'Simpan Pengumuman' }}
+                            {{ form.processing ? 'Mengirim...' : 'Kirim Pengumuman' }}
                         </button>
                     </div>
 

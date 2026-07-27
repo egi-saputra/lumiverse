@@ -192,7 +192,7 @@ const summaryCards = computed(() => {
         <!-- Global Tooltip -->
         <Teleport to="body">
             <div v-if="tooltip.visible"
-                class="fixed z-[9999] pointer-events-none max-w-[240px] px-3 py-2 rounded-lg bg-slate-900 dark:bg-slate-950 text-white text-xs leading-snug shadow-xl"
+                class="fixed z-[9999] pointer-events-none max-w-[240px] px-3 sm:py-2 rounded-lg bg-slate-900 dark:bg-slate-950 text-white text-xs leading-snug shadow-xl"
                 :style="{ top: tooltip.y + 'px', left: tooltip.x + 'px' }">
                 {{ tooltip.text }}
             </div>

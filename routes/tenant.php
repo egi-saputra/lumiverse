@@ -15,6 +15,7 @@ use App\Http\Controllers\MadingController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\PublicAbsensiAnalyticsController;
 use App\Http\Controllers\TenantAssetController;
+use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
 use App\Models\Pengumuman;
@@ -57,8 +58,8 @@ $registerTenantRoutes = function () {
 
 // ====================================================================================
 
-Route::get('/mading', [MadingController::class, 'index'])->name('mading.index');
-Route::get('/mading/{pengumuman}', [MadingController::class, 'show'])->name('mading.show');
+// Route::get('/mading', [MadingController::class, 'index'])->name('mading.index');
+// Route::get('/mading/{pengumuman}', [MadingController::class, 'show'])->name('mading.show');
 
 Route::middleware(['auth'])->prefix('onboarding')->name('role.')->group(function () {
     Route::get('/peran', [RoleSelectionController::class, 'create'])->name('select');
@@ -103,7 +104,6 @@ Route::get('/dashboard', function () {
 
 // ── Dashboard Role Auth ──────────────────────────────────────
 Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
-// Route::middleware('auth', 'verified')->group(function () {
     Route::get('/admin/dashboard', function () {
         $user = Auth::user();
 
@@ -127,6 +127,11 @@ Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
     Route::get('/guru/dashboard', function () {
         $user = Auth::user();
 
+        // Cek apakah guru ini adalah wali kelas
+        $isWalas = Kelas::whereHas('guru', function ($q) use ($user) {
+            $q->where('user_id', $user->id);
+        })->exists();
+
         $usersCount = [
             'proktor' => User::where('role', 'proktor')->count(),
             'guru'    => User::where('role', 'guru')->count(),
@@ -140,6 +145,7 @@ Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
                 'role' => $user->role,
             ],
             'usersCount' => $usersCount,
+            'isWalas'    => $isWalas,
         ]);
     })->name('guru.dashboard')->middleware(['auth']);
 
@@ -191,20 +197,20 @@ Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
 
-    // ── Messages ──────────────────────────────────────
-Route::middleware(['auth', 'verified', 'role.selected'])->prefix('pesan')->name('pesan.')->group(function () {
-    // Inbox — semua role bisa baca
-    Route::get('/pesan/{pesan}', [PesanController::class, 'show'])->name('show');
-    Route::get('/', [PesanController::class, 'index'])->name('index');
+// ── Messages ──────────────────────────────────────
+// Route::middleware(['auth', 'verified', 'role.selected'])->prefix('pesan')->name('pesan.')->group(function () {
+//     // Inbox — semua role bisa baca
+//     Route::get('/pesan/{pesan}', [PesanController::class, 'show'])->name('show');
+//     Route::get('/', [PesanController::class, 'index'])->name('index');
  
-    // Compose — hanya admin & guru (dijaga di controller)
-    Route::get('/compose',   [PesanController::class, 'create'])->name('create');
-    Route::post('/',         [PesanController::class, 'store'])->name('store');
+//     // Compose — hanya admin & guru (dijaga di controller)
+//     Route::get('/compose',   [PesanController::class, 'create'])->name('create');
+//     Route::post('/',         [PesanController::class, 'store'])->name('store');
  
-    // Delete — hanya pengirim sendiri (dijaga di controller)
-    Route::delete('/delete-all', [PesanController::class, 'deleteAll'])->name('deleteAll');
-    Route::delete('/{pesan}',    [PesanController::class, 'destroy'])->name('destroy');
-});
+//     // Delete — hanya pengirim sendiri (dijaga di controller)
+//     Route::delete('/delete-all', [PesanController::class, 'deleteAll'])->name('deleteAll');
+//     Route::delete('/{pesan}',    [PesanController::class, 'destroy'])->name('destroy');
+// });
 
 // ── Announcements ──────────────────────────────────────
 Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
@@ -242,10 +248,6 @@ Route::middleware(['auth', 'verified', 'role.selected', 'throttle:30,1'])
 
 // Auth Default
 require __DIR__.'/auth.php';
-
-// Route::get('/login', function () {
-//     return redirect('/');
-// })->name('login');
 
 // import route terpisah
 require __DIR__.'/admin.php';

@@ -8,7 +8,7 @@ import { XMarkIcon } from '@heroicons/vue/24/solid'
 const pageTitle = 'Add Teacher Data'
 const heading = 'Add Teacher (Bulk)'
 const subheading = 'Tekan Enter untuk menambah baris baru'
-const nameLabel = 'Full Name + Title (Optional)'
+const nameLabel = 'Full Name + Title'
 const namePlaceholder = 'e.g., Budi Santoso, S. Pd'
 const cancelRoute = 'admin.guru.index'
 const saveBtn = 'Save All'
@@ -69,7 +69,8 @@ const submit = () => {
     <Head :title="pageTitle" />
 
     <MenuLayout>
-        <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-md rounded-2xl shadow-xl p-6 transition">
+        <div
+            class="sm:bg-white/70 sm:dark:bg-gray-800/70 backdrop-blur-md sm:rounded-2xl sm:shadow-xl sm:p-6 transition">
             <h1 class="text-xl dark:text-gray-200 font-semibold">{{ heading }}</h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ subheading }}</p>
 
@@ -89,7 +90,7 @@ const submit = () => {
                     </div>
 
                     <!-- Kode Guru (preview, auto-generate) -->
-                    <div class="w-36">
+                    <div class="sm:w-36 w-24">
                         <label v-if="index === 0" class="block text-sm font-medium dark:text-gray-400 mb-1">
                             ID Guru
                         </label>
@@ -113,7 +114,8 @@ const submit = () => {
                 </div>
 
                 <p class="text-xs text-gray-400 dark:text-gray-500 pt-1">
-                    Kode guru di atas hanya pratinjau — kode final akan dibuat otomatis oleh sistem saat data disimpan.
+                    Kode guru di atas hanya pratinjau - kode final akan dibuat secara otomatis oleh sistem saat data
+                    disimpan.
                 </p>
 
                 <div class="flex justify-end gap-2 pt-4">

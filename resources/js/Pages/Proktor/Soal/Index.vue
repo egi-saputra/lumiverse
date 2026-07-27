@@ -2,7 +2,7 @@
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { Link, usePage, Head, router } from '@inertiajs/vue3';
 import { ref, computed, onMounted, watch } from 'vue';
-import { PencilIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
+import { PencilIcon, TrashIcon, ArrowDownTrayIcon, ClipboardDocumentCheckIcon } from '@heroicons/vue/24/outline';
 import { useAlert } from '@/Composables/useAlert.js';
 import axios from 'axios';
 
@@ -170,16 +170,20 @@ async function exportSoal(item, event) {
 <template>
 
     <Head title="Daftar Quiz" />
+
     <MenuLayout>
-        <div class="mx-auto w-full sm:px-4 pb-16">
+        <div class="mx-auto w-full pb-16">
 
             <!-- HEADER -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:mb-8 mb-4 pt-2">
-                <div>
-                    <h1
-                        class="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight leading-tight">
-                        Daftar Quiz &amp; Soal
-                    </h1>
+            <header class="page-header">
+                <div class="header-left">
+                    <div class="header-icon">
+                        <ClipboardDocumentCheckIcon class="icon" />
+                    </div>
+                    <div>
+                        <h1 class="page-title">Question Bank / Quiz</h1>
+                        <p class="page-subtitle">Kelola daftar quiz / bank soal ujian</p>
+                    </div>
                 </div>
                 <Link v-if="hasData" href="/proktor/soal/create"
                     class="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/25 transition-all duration-150 whitespace-nowrap">
@@ -188,7 +192,7 @@ async function exportSoal(item, event) {
                     </svg>
                     Buat Quiz Baru
                 </Link>
-            </div>
+            </header>
 
             <!-- SEARCH & FILTER BAR -->
             <div v-if="hasData" class="mb-6 flex flex-col sm:flex-row gap-3">
@@ -460,4 +464,44 @@ async function exportSoal(item, event) {
 
         </div>
     </MenuLayout>
+
 </template>
+
+<style scoped>
+/* ══ Header ══════════════════════════════════════════════════════════════ */
+.page-header {
+    @apply flex items-center justify-between gap-4;
+}
+
+.header-left {
+    @apply flex items-center gap-4 mb-6;
+}
+
+.header-icon {
+    @apply w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/40 flex-shrink-0;
+}
+
+.header-icon .icon {
+    @apply w-6 h-6 text-white;
+}
+
+.page-title {
+    @apply text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight;
+}
+
+.page-subtitle {
+    @apply text-sm text-gray-500 dark:text-gray-400 mt-0.5;
+}
+
+.header-stat {
+    @apply flex flex-col items-center bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-2 text-center;
+}
+
+.stat-num {
+    @apply text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none;
+}
+
+.stat-label {
+    @apply text-xs text-blue-500 dark:text-blue-400 mt-0.5;
+}
+</style>

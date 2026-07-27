@@ -10,14 +10,16 @@ export function useTenant(explicitTenant = null) {
         () => unref(explicitTenant) ?? page.props.tenant ?? {},
     );
 
-    const isWorkspace = computed(
-        () => tenant.value.product_type === "workspace",
-    );
+    // const isWorkspace = computed(
+    //     () => tenant.value.product_type === "workspace",
+    // );
+
     const isSmk = computed(
         () =>
             (tenant.value.school_level ?? "").toString().toLowerCase() ===
             "smk",
     );
 
-    return { tenant, isWorkspace, isSmk };
+    return { tenant, isSmk };
+    // return { tenant, isWorkspace, isSmk };
 }

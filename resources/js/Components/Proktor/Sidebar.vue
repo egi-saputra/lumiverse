@@ -43,10 +43,10 @@ const RAW_MENU = [
         name: 'Other Features',
         icon: AdjustmentsHorizontalIcon,
         children: [
-            {
-                name: 'Inbox / Messages',
-                routeName: 'pesan.index'
-            },
+            // {
+            //     name: 'Inbox / Messages',
+            //     routeName: 'pesan.index'
+            // },
             {
                 name: 'Announcements',
                 routeName: 'pengumuman.index'

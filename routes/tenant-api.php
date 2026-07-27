@@ -8,8 +8,8 @@ use App\Http\Middleware\EnsureTenantIsActive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Proktor\NilaiController;
-use App\Http\Controllers\Api\RegistrationController;
-use App\Http\Controllers\Admin\HeroSlideController;
+// use App\Http\Controllers\Api\RegistrationController;
+// use App\Http\Controllers\Admin\HeroSlideController;
 
 Route::middleware([
     'web',
@@ -34,17 +34,17 @@ Route::middleware([
     });
 
     // ── Public routes (tanpa auth) ─────────────────────────────────────────────
-    Route::prefix('v1')->group(function () {
+    // Route::prefix('v1')->group(function () {
 
-        // Hero slides — dikonsumsi Vue HeroSection
-        Route::get('/hero-slides', [HeroSlideController::class, 'publicIndex']);
+    //     // Hero slides — dikonsumsi Vue HeroSection
+    //     Route::get('/hero-slides', [HeroSlideController::class, 'publicIndex']);
 
-        // Pendaftaran siswa baru
-        Route::middleware('throttle:registration')->group(function () {
-            Route::post('/registrations', [RegistrationController::class, 'store'])
-                ->name('api.registrations.store');
-        });
-    });
+    //     // Pendaftaran siswa baru
+    //     Route::middleware('throttle:registration')->group(function () {
+    //         Route::post('/registrations', [RegistrationController::class, 'store'])
+    //             ->name('api.registrations.store');
+    //     });
+    // });
 
     // ── Admin routes ───────────────────────────────────────────────────────────
     //

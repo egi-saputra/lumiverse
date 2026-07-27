@@ -17,7 +17,6 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     protected $fillable = [
         'id', 'code', 'name', 'is_active',
-        'product_type',
         'plan_id', 'trial_used_at', 'quota_grace_until', 'max_users', 'expires_at',
         'pending_plan_id', 'pending_billing_cycle',
         'institution_type', 'institution_type_other', 'school_level', 'npsn', 'nss',
@@ -37,7 +36,6 @@ class Tenant extends BaseTenant implements TenantWithDatabase
     {
         return [
             'id', 'code', 'name', 'is_active',
-            'product_type',
             'plan_id', 'trial_used_at', 'quota_grace_until', 'max_users', 'expires_at',
             'pending_plan_id', 'pending_billing_cycle',
             'institution_type', 'institution_type_other', 'school_level', 'npsn', 'nss',
@@ -56,31 +54,15 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             : null;
     }
 
-    /**
-     * Cek apakah tenant ini adalah produk Lumiverse Workspace (bukan sekolah/lembaga pendidikan).
-     */
-    public function isWorkspace(): bool
-    {
-        return $this->product_type === 'workspace';
-    }
+    // public function setNameAttribute($value): void
+    // {
+    //     $this->attributes['name'] = $value ? Str::lower($value) : $value;
+    // }
 
-    /**
-     * Cek apakah tenant ini adalah produk Lumiverse School.
-     */
-    public function isSchoolProduct(): bool
-    {
-        return $this->product_type === 'school' || $this->product_type === null;
-    }
-
-    public function setNameAttribute($value): void
-    {
-        $this->attributes['name'] = $value ? Str::lower($value) : $value;
-    }
-
-    public function getNameAttribute($value): ?string
-    {
-        return $value ? Str::title($value) : $value;
-    }
+    // public function getNameAttribute($value): ?string
+    // {
+    //     return $value ? Str::upper($value) : $value;
+    // }
 
     /**
      * Relasi ke plan aktif.

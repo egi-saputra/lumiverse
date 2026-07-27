@@ -17,7 +17,10 @@ class UserController extends Controller
     public function index()
     {
         return inertia('Admin/Users/Index', [
-            'users' => User::where('role', '!=', 'admin')
+            'users' => User::where(function ($q) {
+                    $q->where('role', '!=', 'admin')
+                    ->orWhereNull('role');
+                })
                 ->orderBy('name', 'asc')
                 ->get(),
         ]);
@@ -28,9 +31,12 @@ class UserController extends Controller
         $tenant = tenant();
         $remainingSlots = null;
 
-        if ($tenant && $tenant->max_users) {
-            $usedSlots = User::count();
-            $remainingSlots = max(0, $tenant->max_users - $usedSlots);
+        if ($tenant) {
+            $max = $tenant->effectiveMaxUsers();
+            if ($max !== null) {
+                $usedSlots = User::count();
+                $remainingSlots = max(0, $max - $usedSlots);
+            }
         }
 
         return Inertia::render('Admin/Users/Create', [

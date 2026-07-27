@@ -18,13 +18,8 @@ class PricingController extends Controller
         $owner  = auth('owner')->user();
         $tenant = $owner->tenant;
 
-        // Tentukan tipe produk tenant. Null dianggap 'school' (default lama),
-        // konsisten dengan Tenant::isSchoolProduct().
-        $productType = $tenant->isWorkspace() ? 'workspace' : 'school';
-
         $plans = Plan::where('is_active', true)
             ->where('key', '!=', 'trial')
-            ->where('product_type', $productType)
             ->orderBy('sort_order')
             ->get()
             ->map(fn(Plan $p) => [
@@ -65,7 +60,6 @@ class PricingController extends Controller
         return Inertia::render('Owner/Pricing', [
             'owner'            => $owner,
             'tenant'           => $tenant,
-            'productType'      => $productType,
             'currentPlan'      => $currentPlanKey,
             'currentSortOrder' => $currentSortOrder,
             'expiresAt'        => $tenant->expires_at?->toDateString(),
