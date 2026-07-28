@@ -10,11 +10,12 @@ class SubscriptionOrder extends Model
         'tenant_id', 'plan_id', 'billing_cycle',
         'order_id', 'snap_token', 'amount', 'discount_percent', 'discount_amount',
         'subtotal', 'yearly_discount', 'credit_amount', 'bonus_days', 'tax_amount', 'action',
-        'status', 'paid_at', 'midtrans_payload', 'expires_at',
+        'status', 'paid_at', 'expires_at',
+        'xendit_invoice_id', 'xendit_payload',
     ];
 
     protected $casts = [
-        'midtrans_payload' => 'array',
+        'xendit_payload'   => 'array',
         'paid_at'          => 'datetime',
         'expires_at'       => 'date',
         'discount_percent' => 'integer',

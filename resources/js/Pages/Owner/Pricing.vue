@@ -7,6 +7,7 @@ import {
     ChevronLeftIcon, ChevronRightIcon, XMarkIcon, ArrowUpIcon, ArrowDownIcon,
 } from '@heroicons/vue/24/outline'
 import OwnerLayout from '@/Layouts/OwnerLayout.vue'
+import { handleSubscriptionResponse, postSubscriptionJson } from '@/Utils/subscriptionPayment'
 
 const props = defineProps({
     owner: Object,
@@ -114,52 +115,18 @@ async function confirmSubscribe() {
     submitting.value = true
 
     try {
-        const res = await fetch(route('owner.subscription.charge'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                plan_key: modalPlan.value.key,
-                billing_cycle: billingCycle.value,
-            }),
+        const data = await postSubscriptionJson(
+            route('owner.subscription.charge'),
+            csrfToken(),
+            { plan_key: modalPlan.value.key, billing_cycle: billingCycle.value }
+        )
+
+        closeModal()
+        handleSubscriptionResponse(data, {
+            onError: (msg) => alert(msg),
         })
-
-        const data = await res.json()
-
-        if (data.action === 'activated' || data.action === 'downgrade') {
-            // Gratis atau downgrade → reload halaman untuk refresh state
-            closeModal()
-            router.reload({ only: ['currentPlan', 'expiresAt', 'pendingPlan'] })
-            return
-        }
-
-        if (data.action === 'pay' && data.snap_token) {
-            closeModal()
-            const orderId = data.order_id  // ← simpan dari response charge
-
-            window.snap.pay(data.snap_token, {
-                onSuccess: (result) => {
-                    window.location.href = route('owner.subscription.finish')
-                        + '?order_id=' + (result.order_id || orderId)
-                },
-                onPending: () => {
-                    window.location.href = route('owner.subscription.history')
-                },
-                onError: () => {
-                    alert('Pembayaran gagal. Silakan coba lagi.')
-                },
-                onClose: () => {
-                    // Triggered saat user klik close setelah bayar sukses
-                    window.location.href = route('owner.subscription.finish')
-                        + '?order_id=' + orderId
-                },
-            })
-        }
     } catch (e) {
-        alert('Terjadi kesalahan. Silakan coba lagi.')
+        alert(e.message ?? 'Terjadi kesalahan. Silakan coba lagi.')
     } finally {
         submitting.value = false
     }

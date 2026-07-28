@@ -2,6 +2,7 @@
 import { Head, usePage, router } from '@inertiajs/vue3'
 import OwnerLayout from '@/Layouts/OwnerLayout.vue'
 import SubscriptionInvoiceModal from '@/Components/SubscriptionInvoiceModal.vue'
+import { handleSubscriptionResponse, postSubscriptionJson } from '@/Utils/subscriptionPayment'
 import { ref } from 'vue'
 
 const props = defineProps({
@@ -68,31 +69,20 @@ function closeModal() {
 async function confirmPay() {
     if (submitting.value) return
     submitting.value = true
+
     try {
-        const res = await fetch(route('owner.subscription.retry', props.order.order_id), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
-                'Accept': 'application/json',
-            },
+        const data = await postSubscriptionJson(
+            route('owner.subscription.retry', props.order.order_id),
+            csrfToken()
+        )
+        closeModal()
+
+        handleSubscriptionResponse(data, {
+            onError: (msg) => alert(msg),
+            onAlreadyPaid: () => router.reload(),
         })
-        const data = await res.json()
-
-        if (data.action === 'already_paid') { closeModal(); router.reload(); return }
-        if (data.action === 'failed') { closeModal(); alert('Transaksi ini sudah kedaluwarsa/dibatalkan.'); router.reload(); return }
-
-        if (data.action === 'pay' && data.snap_token) {
-            closeModal()
-            window.snap.pay(data.snap_token, {
-                onSuccess: () => { window.location.href = route('owner.subscription.finish') + '?order_id=' + props.order.order_id },
-                onPending: () => router.reload(),
-                onError: () => alert('Pembayaran gagal. Silakan coba lagi.'),
-                onClose: () => { window.location.href = route('owner.subscription.finish') + '?order_id=' + props.order.order_id },
-            })
-        }
     } catch (e) {
-        alert('Terjadi kesalahan. Silakan coba lagi.')
+        alert(e.message ?? 'Terjadi kesalahan. Silakan coba lagi.')
     } finally {
         submitting.value = false
     }

@@ -2,6 +2,7 @@
 import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import { computed, ref } from 'vue'
 import SubscriptionInvoiceModal from '@/Components/SubscriptionInvoiceModal.vue'
+import { handleSubscriptionResponse, postSubscriptionJson } from '@/Utils/subscriptionPayment'
 import OwnerLayout from '@/Layouts/OwnerLayout.vue'
 
 
@@ -71,40 +72,21 @@ function closeModal() {
 async function confirmPay() {
     if (!activeOrderId.value || submitting.value) return
     submitting.value = true
-    try {
-        const res = await fetch(route('owner.subscription.retry', activeOrderId.value), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
-                'Accept': 'application/json',
-            },
-        })
-        const data = await res.json()
 
-        if (data.action === 'already_paid') {
-            closeModal()
-            router.visit(route('owner.subscription.invoice', activeOrderId.value))
-            return
-        }
-        if (data.action === 'failed') {
-            closeModal()
-            alert('Transaksi ini sudah kedaluwarsa/dibatalkan.')
-            router.reload()
-            return
-        }
-        if (data.action === 'pay' && data.snap_token) {
-            const orderId = activeOrderId.value
-            closeModal()
-            window.snap.pay(data.snap_token, {
-                onSuccess: () => { window.location.href = route('owner.subscription.finish') + '?order_id=' + orderId },
-                onPending: () => router.reload(),
-                onError: () => alert('Pembayaran gagal. Silakan coba lagi.'),
-                onClose: () => { window.location.href = route('owner.subscription.finish') + '?order_id=' + orderId },
-            })
-        }
+    try {
+        const data = await postSubscriptionJson(
+            route('owner.subscription.retry', activeOrderId.value),
+            csrfToken()
+        )
+        const orderId = activeOrderId.value
+        closeModal()
+
+        handleSubscriptionResponse(data, {
+            onError: (msg) => alert(msg),
+            onAlreadyPaid: () => router.visit(route('owner.subscription.invoice', orderId)),
+        })
     } catch (e) {
-        alert('Terjadi kesalahan. Silakan coba lagi.')
+        alert(e.message ?? 'Terjadi kesalahan. Silakan coba lagi.')
     } finally {
         submitting.value = false
     }

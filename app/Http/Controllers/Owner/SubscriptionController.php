@@ -12,11 +12,16 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
+use Xendit\Configuration;
+use Xendit\Invoice\InvoiceApi;
+use Xendit\Invoice\CreateInvoiceRequest;
+use Xendit\XenditSdkException;
 
 class SubscriptionController extends Controller
 {
     // ─────────────────────────────────────────────────────────────────────────
-    // Buat Snap token → return ke frontend untuk popup Midtrans
+    // Buat Xendit Invoice → return invoice_url ke frontend untuk REDIRECT
+    // (bukan popup token seperti Snap — frontend harus window.location = invoice_url)
     // ─────────────────────────────────────────────────────────────────────────
     public function charge(Request $request)
     {
@@ -35,12 +40,8 @@ class SubscriptionController extends Controller
         $currentPlan = $tenant->plan_id ? Plan::find($tenant->plan_id) : null;
         $calc        = $this->calculate($tenant, $currentPlan, $newPlan, $request->billing_cycle);
 
-        // Downgrade — TERMASUK downgrade ke plan gratis — tidak ada pembayaran,
-        // dijadwalkan lewat pending_plan_id. Ini penting: tenant yang masih
-        // punya sisa masa aktif plan berbayar tidak langsung kehilangan sisa
-        // harinya begitu pindah ke Free; plan lama tetap jalan sampai expired,
-        // baru setelah itu pindah ke Free (lihat job/command yang menerapkan
-        // pending_plan_id saat tenant expired).
+        // Downgrade — sama seperti sebelumnya, tidak ada pembayaran, dijadwalkan
+        // lewat pending_plan_id. Tidak ada yang berubah di jalur ini.
         if ($calc['action'] === 'downgrade') {
             $tenant->pending_plan_id       = $newPlan->id;
             $tenant->pending_billing_cycle = $request->billing_cycle;
@@ -48,25 +49,19 @@ class SubscriptionController extends Controller
             return response()->json(['action' => 'downgrade']);
         }
 
-        // Supersede pending order lama sebelum bikin yang baru — cegah invoice
-        // ganda menumpuk kalau owner klik tombol bayar berkali-kali.
+        // Supersede pending order lama sebelum bikin yang baru
         $this->supersedePendingOrders($tenant);
 
-        // Kalau tenant sebelumnya sudah menjadwalkan downgrade tapi sekarang
-        // pilih upgrade/subscribe baru, batalkan jadwal downgrade lama —
-        // mencegah downgrade basi menimpa plan yang baru saja dibayar.
         if ($tenant->pending_plan_id) {
             $tenant->pending_plan_id       = null;
             $tenant->pending_billing_cycle = null;
             $tenant->save();
         }
 
-        // Gunakan amount_to_pay_after_tax (sudah include PPN)
         $amount  = $calc['amount_to_pay_after_tax'];
         $orderId = 'INV-' . $tenant->id . '-' . time();
 
-        // Total 0 → bisa karena (a) subscribe baru ke plan gratis, atau
-        // (b) kredit prorata menutupi seluruh harga → langsung aktivasi tanpa Midtrans
+        // Total 0 → langsung aktivasi tanpa Xendit, sama seperti alur lama
         if ($amount === 0) {
             $order = SubscriptionOrder::create([
                 'tenant_id'         => $tenant->id,
@@ -89,7 +84,7 @@ class SubscriptionController extends Controller
             return response()->json(['action' => 'activated']);
         }
 
-        // Buat order record — amount diisi langsung, order_id konsisten dengan yang dikirim ke Midtrans
+        // Buat order record dulu — order_id konsisten dengan external_id yang dikirim ke Xendit
         $order = SubscriptionOrder::create([
             'tenant_id'         => $tenant->id,
             'plan_id'           => $newPlan->id,
@@ -108,44 +103,49 @@ class SubscriptionController extends Controller
             'expires_at'        => $calc['new_expires_at'],
         ]);
 
-        // Setup Midtrans
+        // Setup Xendit & buat Invoice
+        // ─── charge() ───────────────────────────────────────────────
         try {
-            \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-            \Midtrans\Config::$isProduction = config('midtrans.is_production');
-            \Midtrans\Config::$isSanitized  = config('midtrans.is_sanitized');
-            \Midtrans\Config::$is3ds        = config('midtrans.is_3ds');
+            Configuration::setXenditKey(config('xendit.secret_key'));
+            $invoiceApi = new InvoiceApi();
 
-            $params = [
-                'transaction_details' => [
-                    'order_id'     => $orderId,
-                    'gross_amount' => $amount,
-                ],
-                'customer_details' => [
-                    'first_name' => $owner->name,
-                    'email'      => $owner->email,
-                    'phone'      => $owner->phone ?? '',
-                ],
-                'item_details' => [[
-                    'id'       => $newPlan->key,
-                    'price'    => $amount,
-                    'quantity' => 1,
+            $createInvoiceRequest = new CreateInvoiceRequest([
+                'external_id'          => $orderId,
+                'amount'                => $amount,
+                'payer_email'           => $owner->email,
+                'description'           => "Paket {$newPlan->name} ({$request->billing_cycle})",
+                'invoice_duration'      => config('xendit.invoice_duration'),
+                'currency'              => 'IDR',
+                'success_redirect_url'  => route('owner.subscription.finish', ['order_id' => $orderId]),
+                'failure_redirect_url'  => route('owner.subscription.finish', ['order_id' => $orderId]),
+                'customer' => array_filter([
+                    'given_names'   => $owner->name,
+                    'email'         => $owner->email,
+                    'mobile_number' => $owner->phone ?: null, // jangan kirim string kosong
+                ]),
+                'items' => [[
                     'name'     => "Paket {$newPlan->name} ({$request->billing_cycle})",
+                    'quantity' => 1,
+                    'price'    => $amount,
+                    'category' => 'Subscription',
                 ]],
-            ];
+            ]);
 
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
-            $order->update(['snap_token' => $snapToken]);
+            $invoice = $invoiceApi->createInvoice($createInvoiceRequest);
+
+            $order->update(['xendit_invoice_id' => $invoice->getId()]);
 
             return response()->json([
-                'action'     => 'pay',
-                'snap_token' => $snapToken,
-                'order_id'   => $orderId,
-                'amount'     => $amount,
+                'action'      => 'pay',
+                'invoice_url' => $invoice->getInvoiceUrl(),
+                'order_id'    => $orderId,
+                'amount'      => $amount,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Gagal membuat Snap token', [
+        } catch (XenditSdkException $e) {
+            Log::error('Gagal membuat Xendit Invoice', [
                 'order_id' => $orderId,
                 'message'  => $e->getMessage(),
+                'error'    => $e->getFullError(),
             ]);
 
             $order->update(['status' => 'failed']);
@@ -157,45 +157,37 @@ class SubscriptionController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Helper: batalkan pending order lama tenant sebelum bikin order baru.
-    // Mencegah invoice ganda kalau owner klik tombol bayar berkali-kali,
-    // atau ganti pilihan plan sebelum menyelesaikan pembayaran sebelumnya.
+    // Helper: batalkan (expire) pending order lama tenant sebelum bikin order baru.
     // ─────────────────────────────────────────────────────────────────────────
+    // ─── supersedePendingOrders() ───────────────────────────────
     protected function supersedePendingOrders(Tenant $tenant): void
     {
         $pendingOrders = SubscriptionOrder::where('tenant_id', $tenant->id)
             ->where('status', 'pending')
             ->get();
 
-        if ($pendingOrders->isEmpty()) {
-            return;
-        }
+        if ($pendingOrders->isEmpty()) return;
 
-        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        Configuration::setXenditKey(config('xendit.secret_key'));
+        $invoiceApi = new InvoiceApi();
 
         foreach ($pendingOrders as $old) {
-            try {
-                \Midtrans\Transaction::cancel($old->order_id);
-            } catch (\Exception $e) {
-                // Order lama mungkin belum pernah dibuatkan transaksi di Midtrans
-                // (snap_token belum sempat dipakai) — tidak masalah, lanjut update status lokal.
-                Log::info('Midtrans cancel (supersede) skipped/failed', [
-                    'order_id' => $old->order_id,
-                    'message'  => $e->getMessage(),
-                ]);
+            if ($old->xendit_invoice_id) {
+                try {
+                    $invoiceApi->expireInvoice($old->xendit_invoice_id);
+                } catch (XenditSdkException $e) {
+                    Log::info('Xendit expire (supersede) skipped/failed', [
+                        'order_id' => $old->order_id,
+                        'message'  => $e->getMessage(),
+                    ]);
+                }
             }
             $old->update(['status' => 'failed']);
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Helper: aktifkan plan gratis langsung tanpa pembayaran.
-    // CATATAN: tidak lagi dipanggil dari charge() — subscribe ke Free sekarang
-    // lewat alur normal calculate()/handlePaymentSuccess() (amount = 0).
-    // Method ini disimpan untuk kemungkinan dipakai di alur lain, misal
-    // bootstrap tenant baru saat registrasi. Hapus kalau memang tidak dipakai
-    // di tempat lain.
+    // Helper: aktifkan plan gratis langsung tanpa pembayaran. (tidak berubah)
     // ─────────────────────────────────────────────────────────────────────────
     protected function activatePlan(Tenant $tenant, Plan $plan, string $cycle)
     {
@@ -210,7 +202,10 @@ class SubscriptionController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Finish redirect dari Snap popup setelah bayar
+    // Redirect balik dari halaman hosted invoice Xendit (success/failure_redirect_url)
+    // Xendit TIDAK mengirim status transaksi via query string seperti Snap redirect —
+    // yang dikirim cuma balik ke URL ini, order_id tetap kita append manual saat create.
+    // Status final tetap ditentukan oleh webhook; ini cuma fallback kalau webhook telat.
     // ─────────────────────────────────────────────────────────────────────────
     public function finish(Request $request)
     {
@@ -221,7 +216,6 @@ class SubscriptionController extends Controller
             return redirect()->route('owner.subscription.history');
         }
 
-        // Wajib scoping ke tenant login — cegah orang lain intip/trigger order tenant lain
         $order = SubscriptionOrder::where('order_id', $orderId)
             ->where('tenant_id', $tenant->id)
             ->first();
@@ -231,22 +225,21 @@ class SubscriptionController extends Controller
                 ->with('info', 'Transaksi tidak ditemukan atau sudah diproses sebelumnya.');
         }
 
-        if ($order->status === 'pending') {
-            \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-            \Midtrans\Config::$isProduction = config('midtrans.is_production');
-            \Midtrans\Config::$isSanitized  = config('midtrans.is_sanitized');
-            \Midtrans\Config::$is3ds        = config('midtrans.is_3ds');
+        // ─── finish() — bagian cek status invoice ───────────────────
+        if ($order->status === 'pending' && $order->xendit_invoice_id) {
+            Configuration::setXenditKey(config('xendit.secret_key'));
 
             try {
-                $status = \Midtrans\Transaction::status($orderId);
+                $invoice = (new InvoiceApi())->getInvoiceById($order->xendit_invoice_id);
+                $status  = $invoice->getStatus(); // enum, biasanya bisa langsung compare string
 
-                if (in_array($status->transaction_status, ['capture', 'settlement'])) {
+                if (in_array($status, ['PAID', 'SETTLED'])) {
                     $this->handlePaymentSuccess($order);
-                } elseif (in_array($status->transaction_status, ['cancel', 'deny', 'expire'])) {
+                } elseif ($status === 'EXPIRED') {
                     $order->update(['status' => 'failed']);
                 }
-            } catch (\Exception $e) {
-                Log::error('Midtrans finish error', [
+            } catch (XenditSdkException $e) {
+                Log::error('Xendit finish error', [
                     'order_id' => $orderId,
                     'message'  => $e->getMessage(),
                 ]);
@@ -265,51 +258,35 @@ class SubscriptionController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Webhook dari Midtrans (server-to-server, tanpa auth)
+    // Webhook (callback) dari Xendit — server-to-server, verifikasi via header
+    // X-CALLBACK-TOKEN (statis dari dashboard), BUKAN hash seperti Midtrans.
     // ─────────────────────────────────────────────────────────────────────────
     public function webhook(Request $request)
     {
-        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        $receivedToken = $request->header('x-callback-token', '');
+        $expectedToken = config('xendit.callback_token', '');
 
-        $payload      = $request->all();
-        $orderId      = $payload['order_id'] ?? null;
-        $statusCode   = $payload['status_code'] ?? null;
-        $grossAmount  = $payload['gross_amount'] ?? null;
-        $signatureKey = hash('sha512', $orderId . $statusCode . $grossAmount . config('midtrans.server_key'));
-
-        // Log::debug('Midtrans webhook debug', [
-        //     'computed_signature' => $signatureKey,
-        //     'received_signature' => $payload['signature_key'] ?? null,
-        //     'server_key_length'  => strlen(config('midtrans.server_key')),
-        //     'server_key_prefix'  => substr(config('midtrans.server_key'), 0, 15), // cukup prefix, jangan log full key
-        //     'is_production'      => config('midtrans.is_production'),
-        // ]);
-
-        if ($signatureKey !== ($payload['signature_key'] ?? '')) {
-            Log::warning('Midtrans webhook: invalid signature', ['order_id' => $orderId]);
-            return response()->json(['message' => 'Invalid signature'], 403);
+        if (!$expectedToken || !hash_equals($expectedToken, $receivedToken)) {
+            Log::warning('Xendit webhook: invalid callback token');
+            return response()->json(['message' => 'Invalid callback token'], 403);
         }
 
-        // $order = SubscriptionOrder::where('order_id', $orderId)->first();
-        // if (!$order) {
-        //     return response()->json(['message' => 'Order not found'], 404);
-        // }
+        $payload = $request->all();
+        $orderId = $payload['external_id'] ?? null;
 
         $order = SubscriptionOrder::where('order_id', $orderId)->first();
         if (!$order) {
-            Log::info('Midtrans webhook: order tidak ditemukan (kemungkinan notifikasi test)', ['order_id' => $orderId]);
+            Log::info('Xendit webhook: order tidak ditemukan (kemungkinan notifikasi test)', ['order_id' => $orderId]);
             return response()->json(['message' => 'OK']);
         }
 
-        $order->update(['midtrans_payload' => $payload]);
+        $order->update(['xendit_payload' => $payload]);
 
-        $transactionStatus = $payload['transaction_status'] ?? '';
-        $fraudStatus       = $payload['fraud_status'] ?? '';
+        $status = $payload['status'] ?? '';
 
-        if (($transactionStatus === 'capture' && $fraudStatus === 'accept') || $transactionStatus === 'settlement') {
+        if (in_array($status, ['PAID', 'SETTLED'])) {
             $this->handlePaymentSuccess($order);
-        } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
+        } elseif ($status === 'EXPIRED') {
             $order->update(['status' => 'failed']);
         }
 
@@ -317,7 +294,7 @@ class SubscriptionController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Preview kalkulasi harga sebelum konfirmasi
+    // Preview kalkulasi harga sebelum konfirmasi (tidak berubah — tidak menyentuh gateway)
     // ─────────────────────────────────────────────────────────────────────────
     public function preview(Request $request)
     {
@@ -376,7 +353,7 @@ class SubscriptionController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Batalkan downgrade yang sudah dijadwalkan
+    // Batalkan downgrade yang sudah dijadwalkan (tidak berubah)
     // ─────────────────────────────────────────────────────────────────────────
     public function cancelDowngrade(Request $request)
     {
@@ -390,7 +367,8 @@ class SubscriptionController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Helper: aktifkan plan setelah pembayaran sukses (idempotent)
+    // Helper: aktifkan plan setelah pembayaran sukses (idempotent) — tidak berubah,
+    // sudah gateway-agnostic dari awal.
     // ─────────────────────────────────────────────────────────────────────────
     protected function handlePaymentSuccess(SubscriptionOrder $order): void
     {
@@ -405,28 +383,21 @@ class SubscriptionController extends Controller
             $tenant  = $order->tenant;
             $newPlan = $order->plan;
 
-            // Pakai expires_at yang sudah dihitung saat order dibuat
-            // Tidak perlu calculate() ulang — hindari race condition
             $newExpiresAt = $order->expires_at
                 ? Carbon::parse($order->expires_at)
-                : $this->addCyclePeriod(Carbon::now(), $order->billing_cycle); // fallback
+                : $this->addCyclePeriod(Carbon::now(), $order->billing_cycle);
 
             $tenant->plan_id               = $newPlan->id;
             $tenant->expires_at            = $newExpiresAt;
-            $tenant->max_users             = $newPlan->max_users; // ← sinkronkan kuota, jangan biarkan nilai plan lama nyangkut
+            $tenant->max_users             = $newPlan->max_users;
             $tenant->pending_plan_id       = null;
             $tenant->pending_billing_cycle = null;
             $tenant->trial_used_at         = $tenant->trial_used_at ?? now();
-            // Tenant bayar/upgrade lagi sebelum masa tenggang habis → batalkan
-            // jadwal cleanup user berlebih (kalau ada), karena kuotanya sudah naik lagi.
             $tenant->quota_grace_until     = null;
             $tenant->save();
         });
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helper: tentukan action subscribe | upgrade | downgrade
-    // ─────────────────────────────────────────────────────────────────────────
     protected function resolveAction(Tenant $tenant, ?Plan $currentPlan, Plan $newPlan): string
     {
         if (!$currentPlan || !$tenant->plan_id) {
@@ -438,39 +409,27 @@ class SubscriptionController extends Controller
             : 'downgrade';
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helper: tanggal akhir periode berdasarkan kalender asli — bukan estimasi.
-    // monthly → +1 bulan kalender (otomatis 28/29/30/31 hari sesuai bulan berjalan)
-    // yearly  → +1 tahun kalender (otomatis 365/366 hari sesuai tahun kabisat)
-    // ─────────────────────────────────────────────────────────────────────────
     public function addCyclePeriod(Carbon $from, string $cycle): Carbon
     {
         return match ($cycle) {
             'yearly'    => $from->copy()->addYearNoOverflow(),
             'quarterly' => $from->copy()->addMonthsNoOverflow(3),
             'semester'  => $from->copy()->addMonthsNoOverflow(6),
-            default     => $from->copy()->addMonthNoOverflow(), // monthly
+            default     => $from->copy()->addMonthNoOverflow(),
         };
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helper: jumlah hari riil dalam satu periode billing saat ini (untuk prorata)
-    // ─────────────────────────────────────────────────────────────────────────
     protected function cyclePeriodDays(string $cycle): int
     {
         $now = Carbon::now();
         return $now->diffInDays($this->addCyclePeriod($now, $cycle));
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helper: kalkulasi prorata untuk preview & eksekusi upgrade
-    // ─────────────────────────────────────────────────────────────────────────
     protected function calculate(Tenant $tenant, ?Plan $currentPlan, Plan $newPlan, string $cycle): array
     {
         $action   = $this->resolveAction($tenant, $currentPlan, $newPlan);
         $isYearly = $cycle === 'yearly';
 
-        // ── Harga dasar ──────────────────────────────────────────────────────
         $pricePerMonth = $isYearly ? $newPlan->price_yearly : $newPlan->price_monthly;
         $subtotal      = $isYearly ? $pricePerMonth * 12 : $pricePerMonth;
 
@@ -479,18 +438,15 @@ class SubscriptionController extends Controller
             $yearlyDiscount = ($newPlan->price_monthly * 12) - $subtotal;
         }
 
-        // ── Diskon plan (kolom plans.discount, persentase 0-100) ────────────
         $discountPercent = $newPlan->discount ?? 0;
         $discountAmount  = $discountPercent > 0
             ? (int) round($subtotal * $discountPercent / 100)
             : 0;
         $subtotalAfterDiscount = max(0, $subtotal - $discountAmount);
 
-        // ── Pajak plan (kolom plans.tax, persentase 0-100) ──────────────────
         $taxPercent = $newPlan->tax ?? 0;
         $taxRate    = $taxPercent / 100;
 
-        // ── Subscribe / tidak ada plan sebelumnya ────────────────────────────
         if ($action === 'subscribe' || !$currentPlan || !$tenant->expires_at) {
             $taxAmount  = (int) round($subtotalAfterDiscount * $taxRate);
             $grandTotal = $subtotalAfterDiscount + $taxAmount;
@@ -517,7 +473,6 @@ class SubscriptionController extends Controller
             ];
         }
 
-        // ── Downgrade ────────────────────────────────────────────────────────
         if ($action === 'downgrade') {
             $currentUserCount = $tenant->run(fn() => \App\Models\User::count());
             $newMaxUsers      = $newPlan->max_users;
@@ -555,7 +510,6 @@ class SubscriptionController extends Controller
             ];
         }
 
-        // ── Upgrade: hitung prorata ──────────────────────────────────────────
         $today     = Carbon::now();
         $expiresAt = Carbon::parse($tenant->expires_at);
         $daysLeft  = max(0, (int) $today->diffInDays($expiresAt, false));
@@ -581,8 +535,6 @@ class SubscriptionController extends Controller
         $oldPricePerDay = $oldDuration > 0 ? $oldPriceTotal / $oldDuration : 0;
         $creditAmount   = (int) round($daysLeft * $oldPricePerDay);
 
-        // Diskon dulu, baru kredit — supaya kredit yang "terpakai" dihitung
-        // dari harga yang sudah didiskon, bukan harga penuh.
         $amountAfterCredit = max(0, $subtotalAfterDiscount - $creditAmount);
         $taxAmount          = (int) round($amountAfterCredit * $taxRate);
         $grandTotal          = $amountAfterCredit + $taxAmount;
@@ -683,6 +635,11 @@ class SubscriptionController extends Controller
         ]);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Retry: cek status invoice lama; kalau masih ACTIVE, kembalikan invoice_url
+    // yang sama. Kalau sudah EXPIRED, buat invoice baru (invoice Xendit tidak
+    // bisa "diperpanjang" seperti Snap token — beda dari retryPayment lama).
+    // ─────────────────────────────────────────────────────────────────────────
     public function retryPayment(string $order_id)
     {
         $owner  = Auth::guard('owner')->user();
@@ -694,65 +651,84 @@ class SubscriptionController extends Controller
             ->where('status', 'pending')
             ->firstOrFail();
 
-        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-        \Midtrans\Config::$isProduction = config('midtrans.is_production');
-        \Midtrans\Config::$isSanitized  = config('midtrans.is_sanitized');
-        \Midtrans\Config::$is3ds        = config('midtrans.is_3ds');
+        Configuration::setXenditKey(config('xendit.secret_key'));
+        $invoiceApi = new InvoiceApi();
 
-        // Cek dulu status terbaru ke Midtrans — bisa jadi sudah settlement/expire di sisi mereka
-        // tapi webhook belum sempat masuk ke kita
-        try {
-            $status = \Midtrans\Transaction::status($order_id);
+        if ($order->xendit_invoice_id) {
+            try {
+                $invoice = $invoiceApi->getInvoiceById($order->xendit_invoice_id);
+                $status  = $invoice->getStatus();
 
-            if (in_array($status->transaction_status, ['capture', 'settlement'])) {
-                $this->handlePaymentSuccess($order);
-                return response()->json(['action' => 'already_paid']);
+                if (in_array($status, ['PAID', 'SETTLED'])) {
+                    $this->handlePaymentSuccess($order);
+                    return response()->json(['action' => 'already_paid']);
+                }
+
+                if ($status === 'PENDING') {
+                    return response()->json([
+                        'action'      => 'pay',
+                        'invoice_url' => $invoice->getInvoiceUrl(),
+                        'order_id'    => $order->order_id,
+                        'amount'      => $order->amount,
+                    ]);
+                }
+
+                if ($status === 'EXPIRED') {
+                    $order->update(['status' => 'failed']);
+                }
+            } catch (XenditSdkException $e) {
+                Log::warning('Xendit status check on retry gagal', [
+                    'order_id' => $order_id,
+                    'message'  => $e->getMessage(),
+                ]);
             }
-
-            if (in_array($status->transaction_status, ['cancel', 'deny', 'expire'])) {
-                $order->update(['status' => 'failed']);
-                return response()->json(['action' => 'failed'], 422);
-            }
-        } catch (\Exception $e) {
-            Log::warning('Midtrans status check on retry gagal', [
-                'order_id' => $order_id,
-                'message'  => $e->getMessage(),
-            ]);
-            // lanjut generate token baru — anggap transaksi lama belum pernah settle
         }
 
-        // Masih pending beneran → generate Snap token baru
-        // (token lama defaultnya expired setelah 24 jam)
-        $params = [
-            'transaction_details' => [
-                'order_id'     => $order->order_id,
-                'gross_amount' => $order->amount,
-            ],
-            'customer_details' => [
-                'first_name' => $owner->name,
-                'email'      => $owner->email,
-                'phone'      => $owner->phone ?? '',
-            ],
-            'item_details' => [[
-                'id'       => $order->plan->key,
-                'price'    => $order->amount,
-                'quantity' => 1,
-                'name'     => "Paket {$order->plan->name} ({$order->billing_cycle})",
-            ]],
-        ];
+        // Invoice lama sudah expired/gagal dicek → buat invoice baru dengan order_id BARU
+        // (external_id di Xendit harus unik, tidak bisa reuse yang sama)
+        $newOrderId = 'INV-' . $tenant->id . '-' . time();
 
         try {
-            $snapToken = \Midtrans\Snap::getSnapToken($params);
-            $order->update(['snap_token' => $snapToken]);
+            $createInvoiceRequest = new CreateInvoiceRequest([
+                'external_id'          => $newOrderId,
+                'amount'                => $order->amount,
+                'payer_email'           => $owner->email,
+                'description'           => "Paket {$order->plan->name} ({$order->billing_cycle})",
+                'invoice_duration'      => config('xendit.invoice_duration'),
+                'currency'              => 'IDR',
+                'success_redirect_url'  => route('owner.subscription.finish', ['order_id' => $newOrderId]),
+                'failure_redirect_url'  => route('owner.subscription.finish', ['order_id' => $newOrderId]),
+                'customer' => array_filter([
+                    'given_names'   => $owner->name,
+                    'email'         => $owner->email,
+                    'mobile_number' => $owner->phone ?: null,
+                ]),
+                'items' => [[
+                    'name'     => "Paket {$order->plan->name} ({$order->billing_cycle})",
+                    'quantity' => 1,
+                    'price'    => $order->amount,
+                    'category' => 'Subscription',
+                ]],
+            ]);
+
+            $invoice = $invoiceApi->createInvoice($createInvoiceRequest);
+
+            $order->update(['status' => 'failed']); // tutup order lama
+
+            $newOrder = $order->replicate();
+            $newOrder->order_id          = $newOrderId;
+            $newOrder->status            = 'pending';
+            $newOrder->xendit_invoice_id = $invoice->getId();
+            $newOrder->save();
 
             return response()->json([
-                'action'     => 'pay',
-                'snap_token' => $snapToken,
-                'order_id'   => $order->order_id,
-                'amount'     => $order->amount,
+                'action'      => 'pay',
+                'invoice_url' => $invoice->getInvoiceUrl(),
+                'order_id'    => $newOrderId,
+                'amount'      => $order->amount,
             ]);
-        } catch (\Exception $e) {
-            Log::error('Gagal membuat Snap token saat retry', [
+        } catch (XenditSdkException $e) {
+            Log::error('Gagal membuat Invoice Xendit saat retry', [
                 'order_id' => $order_id,
                 'message'  => $e->getMessage(),
             ]);
@@ -772,19 +748,18 @@ class SubscriptionController extends Controller
             ->where('status', 'pending')
             ->firstOrFail();
 
-        // Best-effort cancel ke Midtrans juga, supaya link pembayaran lama tidak bisa dipakai lagi
-        \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-        \Midtrans\Config::$isProduction = config('midtrans.is_production');
+        // ─── cancelOrder() ───────────────────────────────────────────
+        Configuration::setXenditKey(config('xendit.secret_key'));
 
-        try {
-            \Midtrans\Transaction::cancel($order_id);
-        } catch (\Exception $e) {
-            // Order mungkin belum pernah ada transaksi di Midtrans (baru dibuat, belum bayar sama sekali)
-            // — tidak masalah, tetap lanjut update status lokal
-            Log::info('Midtrans cancel skipped/failed', [
-                'order_id' => $order_id,
-                'message'  => $e->getMessage(),
-            ]);
+        if ($order->xendit_invoice_id) {
+            try {
+                (new InvoiceApi())->expireInvoice($order->xendit_invoice_id);
+            } catch (XenditSdkException $e) {
+                Log::info('Xendit expire skipped/failed', [
+                    'order_id' => $order_id,
+                    'message'  => $e->getMessage(),
+                ]);
+            }
         }
 
         $order->update(['status' => 'failed']);
@@ -792,11 +767,6 @@ class SubscriptionController extends Controller
         return back()->with('success', 'Pesanan berhasil dibatalkan.');
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Helper: kalkulasi harga penuh untuk invoice renewal (bukan upgrade/downgrade)
-    // Anchor tanggal baru dari expires_at LAMA, bukan dari hari ini — supaya
-    // tidak ada hari yang "hilang" walau invoice dibuat beberapa hari sebelum expired.
-    // ─────────────────────────────────────────────────────────────────────────
     public function calculateRenewal(Plan $plan, string $cycle, Carbon $anchorExpiresAt): array
     {
         $isYearly      = $cycle === 'yearly';

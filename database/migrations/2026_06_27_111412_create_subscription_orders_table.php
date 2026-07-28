@@ -26,12 +26,13 @@ return new class extends Migration
             $table->string('order_id')->unique();
             $table->date('expires_at')->nullable();
             $table->string('snap_token')->nullable();
+            $table->string('xendit_invoice_id')->nullable();
             $table->unsignedBigInteger('amount');
             $table->unsignedBigInteger('tax_amount')->default(0);
             $table->string('action')->nullable();
             $table->string('status')->default('pending');
             $table->timestamp('paid_at')->nullable();
-            $table->json('midtrans_payload')->nullable();
+            $table->json('xendit_payload')->nullable();
             $table->timestamps();
 
             $table->foreign('tenant_id')->references('id')->on('tenants')->cascadeOnDelete();
