@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Facades\Cache;
 
 class ProfilController extends Controller
 {
@@ -122,9 +123,9 @@ class ProfilController extends Controller
 
         if ($request->hasFile('logo')) {
             if ($logoPath) {
-                Storage::disk('central_public')->delete($logoPath);
+                Storage::disk('r2')->delete($logoPath);
             }
-            $logoPath = $request->file('logo')->store('tenant-logos', 'central_public');
+            $logoPath = $request->file('logo')->store('tenant-logos', 'r2');
             if (!$logoPath) {
                 return back()->withErrors(['logo' => 'Gagal menyimpan file logo.']);
             }
@@ -147,6 +148,8 @@ class ProfilController extends Controller
             'address'                => $validated['address'],
             'logo_path'              => $logoPath,
         ]);
+
+        Cache::forget("tenant:{$tenant->id}:logo_url");
 
         return back()->with('success', 'Profil lembaga berhasil diperbarui.');
     }

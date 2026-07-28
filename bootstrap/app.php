@@ -3,6 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -41,6 +44,13 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('dashboard'); // fallback untuk guard 'web' biasa (tenant)
         });
     })
+    
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (TenantCouldNotBeIdentifiedOnDomainException $e, Request $request) {
+            return Inertia::render('Tenant/NotFound', [
+                'domain' => $request->getHost(),
+            ])
+                ->toResponse($request)
+                ->setStatusCode(404);
+        });
     })->create();

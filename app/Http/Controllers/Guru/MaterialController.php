@@ -52,7 +52,6 @@ class MaterialController extends Controller
             'link' => 'nullable|url',
         ]);
 
-        // ── Cek limit untuk plan Free tier ──────────────────────
         if (tenant()->hasReachedFreeLimitForUser(Materi::class, 3)) {
             return back()->with('error', 'Plan Free hanya dapat membuat maksimal 2 materi per akun. Silakan upgrade plan untuk menambah materi lebih banyak.');
         }
@@ -60,7 +59,7 @@ class MaterialController extends Controller
         $filePath = null;
 
         if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('materials', 'public');
+            $filePath = $request->file('file')->store('materials', 'r2');   // ← ganti dari 'public'
         }
 
         Materi::create([
@@ -77,12 +76,10 @@ class MaterialController extends Controller
 
     public function destroy(Materi $material)
     {
-        // Hapus file fisik jika ada
-        if ($material->file_path && Storage::disk('public')->exists($material->file_path)) {
-            Storage::disk('public')->delete($material->file_path);
+        if ($material->file_path && Storage::disk('r2')->exists($material->file_path)) {   // ← ganti dari 'public'
+            Storage::disk('r2')->delete($material->file_path);   // ← ganti dari 'public'
         }
 
-        // Hapus data dari database
         $material->delete();
 
         return redirect()->back()->with('success', 'Material deleted successfully.');

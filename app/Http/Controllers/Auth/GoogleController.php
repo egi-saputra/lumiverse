@@ -14,14 +14,6 @@ class GoogleController extends Controller
     /**
      * Menentukan callback URL yang benar berdasarkan konteks (tenant vs central).
      */
-    // private function centralCallbackUrl(): string
-    // {
-    //     $centralDomain = config('app.central_domain', env('CENTRAL_DOMAIN', 'localhost:8000'));
-    //     $scheme = app()->environment('production') ? 'https' : 'http';
-
-    //     return "{$scheme}://{$centralDomain}/auth/google/callback";
-    // }
-
     private function centralCallbackUrl(): string
     {
         return rtrim(config('app.url'), '/') . '/auth/google/callback';
@@ -41,13 +33,6 @@ class GoogleController extends Controller
 
     public function callback(Request $request)
     {
-
-        // dd([
-        //     'state_from_query' => $request->query('state'),
-        //     'state_from_session' => session('google_oauth_state'),
-        //     'all_query' => $request->all(),
-        // ]);
-    
         // Ambil dari query param dulu, fallback ke session
         $state = $request->query('state') ?: session('google_oauth_state');
         session()->forget('google_oauth_state');
@@ -108,40 +93,6 @@ class GoogleController extends Controller
 
         return redirect()->route('owner.dashboard');
     }
-
-    /**
-     * Cari atau buat user di tenant DB, login, dan return path tujuan.
-     */
-    // private function findOrCreateUser($googleUser): string
-    // {
-    //     $user = User::where('email', $googleUser->getEmail())->first();
-
-    //     if (! $user) {
-    //         $user = User::create([
-    //             'name'      => $googleUser->getName(),
-    //             'email'     => $googleUser->getEmail(),
-    //             'password'  => null,
-    //             'google_id' => $googleUser->getId(),
-    //             'avatar'    => $googleUser->getAvatar(),
-    //             'role'      => 'user',
-    //         ]);
-    //     } else {
-    //         $user->update([
-    //             'google_id' => $googleUser->getId(),
-    //             'avatar'    => $googleUser->getAvatar(),
-    //         ]);
-    //     }
-
-    //     Auth::login($user, remember: true);
-
-    //     return match ($user->role) {
-    //         'admin'   => '/admin/dashboard',
-    //         'proktor' => '/proktor/dashboard',
-    //         'guru'    => '/guru/dashboard',
-    //         'siswa'   => '/siswa/dashboard',
-    //         default   => '/user/dashboard',
-    //     };
-    // }
 
     private function findOrCreateUser($googleUser): array
     {

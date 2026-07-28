@@ -106,7 +106,7 @@ const isPasswordValid = computed(() =>
             </div>
 
             <div class="relative z-10">
-                <img :src="page.props.tenant?.logo ?? '/images/default.png'" :alt="page.props.tenant?.name"
+                <img :src="page.props.tenant?.logo_url ?? '/images/default.png'" :alt="page.props.tenant?.name"
                     class="h-20 w-auto mb-4 ml-2 rounded-md" />
 
                 <p class="eyebrow text-[#C9A227]">{{ eyebrowText }}</p>

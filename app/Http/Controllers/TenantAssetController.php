@@ -12,9 +12,9 @@ class TenantAssetController extends Controller
         // Cegah path traversal
         abort_if(str_contains($path, '..'), 400);
 
-        abort_unless(Storage::disk('public')->exists($path), 404);
+        abort_unless(Storage::disk('r2')->exists($path), 404);
 
-        return Storage::disk('public')->response($path, null, [
+        return Storage::disk('r2')->response($path, null, [
             'Cache-Control' => 'public, max-age=31536000, immutable',
         ]);
     }

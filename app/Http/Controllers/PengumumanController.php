@@ -38,8 +38,7 @@ class PengumumanController extends Controller
         $validated = $request->validate([
             'judul'      => 'required|string|max:255',
             'pengumuman' => 'required|string|max:100000',
-            // 5 MB = 5120, 10 MB = 10240, 20 MB = 20480
-            'file' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360', // 15 MB
+            'file'       => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360', // 15 MB
             'video_url'  => 'nullable|url|max:500',
         ]);
 
@@ -48,7 +47,7 @@ class PengumumanController extends Controller
         }
 
         $filePath = $request->hasFile('file')
-            ? $request->file('file')->store('pengumuman', 'public')
+            ? $request->file('file')->store('pengumuman', 'r2')
             : null;
 
         Pengumuman::create([
@@ -87,7 +86,7 @@ class PengumumanController extends Controller
         $validated = $request->validate([
             'judul'       => 'required|string|max:255',
             'pengumuman'  => 'required|string|max:100000',
-            'file' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360', // 15 MB
+            'file'        => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360',
             'video_url'   => 'nullable|url|max:500',
             'remove_file' => 'nullable|boolean',
         ]);
@@ -95,13 +94,13 @@ class PengumumanController extends Controller
         $filePath = $pengumuman->file_path;
 
         if ($request->boolean('remove_file') && $filePath) {
-            Storage::disk('public')->delete($filePath);
+            Storage::disk('r2')->delete($filePath);
             $filePath = null;
         }
 
         if ($request->hasFile('file')) {
-            if ($filePath) Storage::disk('public')->delete($filePath);
-            $filePath = $request->file('file')->store('pengumuman', 'public');
+            if ($filePath) Storage::disk('r2')->delete($filePath);
+            $filePath = $request->file('file')->store('pengumuman', 'r2');
         }
 
         $pengumuman->update([
@@ -120,7 +119,7 @@ class PengumumanController extends Controller
         $this->authorizeOwner($pengumuman);
 
         if ($pengumuman->file_path) {
-            Storage::disk('public')->delete($pengumuman->file_path);
+            Storage::disk('r2')->delete($pengumuman->file_path);
         }
 
         $pengumuman->delete();

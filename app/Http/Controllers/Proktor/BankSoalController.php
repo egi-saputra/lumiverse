@@ -79,8 +79,7 @@ class BankSoalController extends Controller
         $file     = $request->file('lampiran_file');
         $filename = time() . '_' . $file->getClientOriginalName();
 
-        // simpan lewat disk 'public' secara eksplisit (tenant-aware otomatis)
-        return $file->storeAs('bank_soal', $filename, 'public');
+        return $file->storeAs('bank_soal', $filename, 'r2'); // ← ganti dari 'public'
     }
 
     // ─── Simpan lampiran opsi jawaban ─────────────────────────────────────────────
@@ -96,7 +95,7 @@ class BankSoalController extends Controller
         $file     = $request->file($field);
         $filename = time() . '_' . $key . '_' . $file->getClientOriginalName();
 
-        return $file->storeAs('bank_soal', $filename, 'public');
+        return $file->storeAs('bank_soal', $filename, 'r2'); // ← ganti dari 'public'
     }
 
     private function deleteAllOpsiLampiran(BankSoal $bankSoal): void
@@ -112,8 +111,8 @@ class BankSoalController extends Controller
     {
         if (!$path) return;
 
-        if (Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
+        if (Storage::disk('r2')->exists($path)) {   // ← ganti dari 'public'
+            Storage::disk('r2')->delete($path);
         }
     }
 

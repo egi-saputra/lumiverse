@@ -10,6 +10,7 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class Tenant extends BaseTenant implements TenantWithDatabase
 {
@@ -46,12 +47,23 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
     /**
      * URL publik logo tenant, null kalau belum upload.
+     * Diserve lewat proxy TenantAssetController (disk r2_logo).
+     *
+     * Dibangun manual (bukan route() helper) karena accessor ini sering
+     * dipanggil dari context CENTRAL (mis. Owner\ProfilController@edit),
+     * di mana tenancy belum diinisialisasi sehingga parameter domain
+     * {tenant}/{centralDomain} milik route 'tenant.storage' tidak tersedia.
      */
     public function getLogoUrlAttribute(): ?string
     {
-        return $this->logo_path
-            ? Storage::disk('central_public')->url($this->logo_path)
-            : null;
+        if (!$this->logo_path) {
+            return null;
+        }
+
+        return Cache::rememberForever(
+            "tenant:{$this->id}:logo_url",
+            fn () => Storage::disk('r2')->url($this->logo_path)
+        );
     }
 
     // public function setNameAttribute($value): void

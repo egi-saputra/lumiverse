@@ -112,9 +112,7 @@ class HandleInertiaRequests extends Middleware
                 'id'   => tenant('id'),
                 'code'   => tenant('code'),
                 'name' => tenant('name'),
-                'logo' => tenant('logo_path')
-                            ? Storage::disk('central_public')->url(tenant('logo_path'))
-                            : null,
+                'logo_url' => tenant()->logo_url,
                 'school_level' => tenant('school_level'),
                 'plan_id' => tenant('plan_id'),
                 'product_type' => tenant('product_type'),

@@ -55,7 +55,7 @@ async function exportSoal() {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const getJawaban = (item) => item.jawaban_benar || 'Belum ada kunci jawaban.';
 
-const jawabанLabel = (item) => {
+const jawabanLabel = (item) => {
     if (item.tipe_soal !== 'PG' || !item.jawaban_benar) return getJawaban(item);
     const map = { opsi_a: 'A', opsi_b: 'B', opsi_c: 'C', opsi_d: 'D', opsi_e: 'E' };
     const label = map[item.jawaban_benar];

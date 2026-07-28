@@ -15,10 +15,10 @@ watch(() => props.plans, (val) => { localPlans.value = [...val] })
 
 const showModal = ref(false)
 const editingPlan = ref(null)
+const confirmDeleteId = ref(null)
 
 const form = useForm({
     key: '',
-    product_type: 'school',
     name: '',
     description: '',
     price_monthly: 0,
@@ -59,7 +59,6 @@ function removeUnavailable(i) {
 function openCreate() {
     editingPlan.value = null
     form.reset()
-    form.product_type = 'school'
     form.tax = 0
     form.discount = 0
     form.accent_color = '#00d4ff'
@@ -73,7 +72,6 @@ function openCreate() {
 function openEdit(plan) {
     editingPlan.value = plan
     form.key = plan.key
-    form.product_type = plan.product_type ?? 'school'
     form.name = plan.name
     form.description = plan.description ?? ''
     form.price_monthly = plan.price_monthly
@@ -101,6 +99,16 @@ function closeModal() {
 }
 
 function submit() {
+    form.transform((data) => ({
+        ...data,
+        max_users: (data.max_users === 0 || data.max_users === '')
+            ? null
+            : data.max_users,
+        duration_days: (data.duration_days === 0 || data.duration_days === '')
+            ? null
+            : data.duration_days,
+    }))
+
     if (editingPlan.value) {
         form.put(route('developer.plans.update', editingPlan.value.id), {
             preserveScroll: true,
@@ -112,6 +120,10 @@ function submit() {
             onSuccess: closeModal,
         })
     }
+}
+
+function deletePlan(plan) {
+    confirmDeleteId.value = plan.id
 }
 
 function confirmDelete() {
@@ -208,10 +220,6 @@ onMounted(() => {
 
                 <!-- Badges -->
                 <div class="flex flex-wrap gap-1.5 mt-3">
-                    <span
-                        class="text-[0.65rem] font-bold px-2 py-0.5 rounded-full bg-white/10 text-[var(--muted)] whitespace-nowrap">
-                        {{ plan.product_type === 'workspace' ? 'Workspace' : 'School' }}
-                    </span>
                     <span v-if="plan.badge"
                         class="text-[0.65rem] font-bold px-2 py-0.5 rounded-full bg-[var(--cyan)]/15 text-[var(--cyan)] whitespace-nowrap">
                         {{ plan.badge }}
@@ -320,20 +328,6 @@ onMounted(() => {
                                     diubah setelah disimpan.</p>
                             </div>
 
-                            <!-- Produk -->
-                            <div class="flex flex-col gap-1.5">
-                                <label class="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                                    Produk <span class="text-rose-400">*</span>
-                                </label>
-                                <select v-model="form.product_type"
-                                    class="w-full px-3 py-2 bg-white/5 border border-[var(--border)] rounded-lg text-sm outline-none focus:border-[var(--cyan)] transition">
-                                    <option value="school">Lumiverse School</option>
-                                    <option value="workspace">Lumiverse Workspace</option>
-                                </select>
-                                <p v-if="form.errors.product_type" class="text-xs text-rose-400">{{
-                                    form.errors.product_type }}</p>
-                            </div>
-
                             <!-- Badge -->
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
@@ -402,7 +396,7 @@ onMounted(() => {
                             <!-- Max users + duration -->
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                                    Maks. Pengguna <span class="font-normal normal-case text-[0.73rem]">(kosong =
+                                    Maks. Pengguna <span class="font-normal normal-case text-[0.73rem]">(0 atau kosong =
                                         unlimited)</span>
                                 </label>
                                 <input v-model.number="form.max_users" type="number" min="1"
@@ -413,8 +407,8 @@ onMounted(() => {
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-xs font-bold uppercase tracking-wide text-[var(--muted)]">
-                                    Durasi Trial (hari) <span class="font-normal normal-case text-[0.73rem]">(kosong =
-                                        tanpa batas)</span>
+                                    Durasi Trial (hari) <span class="font-normal normal-case text-[0.73rem]">(0 atau
+                                        kosong = tanpa batas)</span>
                                 </label>
                                 <input v-model.number="form.duration_days" type="number" min="1"
                                     class="w-full px-3 py-2 bg-white/5 border border-[var(--border)] rounded-lg text-sm outline-none focus:border-[var(--cyan)] transition"

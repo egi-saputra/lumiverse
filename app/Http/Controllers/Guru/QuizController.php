@@ -135,27 +135,23 @@ class QuizController extends Controller
     public function destroy(Soal $soal)
     {
         foreach ($soal->bank_soal as $bankSoal) {
-            // Hapus lampiran soal utama
             if ($bankSoal->link_lampiran) {
-                $path = str_replace('storage/', 'public/', $bankSoal->link_lampiran);
-                if (Storage::exists($path)) Storage::delete($path);
+                if (Storage::disk('r2')->exists($bankSoal->link_lampiran)) {
+                    Storage::disk('r2')->delete($bankSoal->link_lampiran);
+                }
             }
 
-            // Hapus lampiran gambar opsi jawaban
             foreach (['a', 'b', 'c', 'd', 'e'] as $key) {
                 $opsiLampiran = $bankSoal->{"opsi_{$key}_lampiran"};
-                if ($opsiLampiran) {
-                    $path = str_replace('storage/', 'public/', $opsiLampiran);
-                    if (Storage::exists($path)) Storage::delete($path);
+                if ($opsiLampiran && Storage::disk('r2')->exists($opsiLampiran)) {
+                    Storage::disk('r2')->delete($opsiLampiran);
                 }
             }
         }
 
         $soal->delete();
 
-        return response()->json([
-            'success' => 'Quiz has been successfully deleted!',
-        ]);
+        return response()->json(['success' => 'Quiz has been successfully deleted!']);
     }
 
     // Show detail

@@ -32,9 +32,9 @@ $registerTenantRoutes = function () {
             ->header('Content-Type', 'text/plain');
     })->name('robots.tenant');
 
-    Route::get('/tenant-storage/{path}', [TenantAssetController::class, 'show'])
-        ->where('path', '.*')
-        ->name('tenant.storage');
+    // Route::get('/tenant-storage/{path}', [TenantAssetController::class, 'show'])
+    //     ->where('path', '.*')
+    //     ->name('tenant.storage');
 
     Route::get('/', function () {
         return Inertia::render('Auth/Login', [
@@ -45,16 +45,11 @@ $registerTenantRoutes = function () {
         ]);
     });
 
-// ====================================================================================
-
-// Route::get('/', function () {
-//     return Inertia::render('BlockPage', [
-//         'laravelVersion' => Application::VERSION,
-//         'phpVersion' => PHP_VERSION,
-//     ]);
-// });
-
-// Route::redirect('/login', '/');
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/tenant-storage/{path}', [TenantAssetController::class, 'show'])
+            ->where('path', '.*')
+            ->name('tenant.storage');
+    });
 
 // ====================================================================================
 

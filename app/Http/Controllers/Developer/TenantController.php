@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Cache;
 
 class TenantController extends Controller
 {
@@ -59,9 +60,7 @@ class TenantController extends Controller
                 'institution_email'      => $tenant->institution_email,
                 'institution_website'    => $tenant->institution_website,
                 'address'                => $tenant->address,
-                'logo_path'              => $tenant->logo_path
-                    ? Storage::disk('central_public')->url($tenant->logo_path)
-                    : null,
+                'logo_path'              => $tenant->logo_url,
                 'plan'                   => $tenant->planData?->name ?? 'Trial',
                 'plan_id'                => $tenant->plan_id,
                 'expires_at'             => $tenant->expires_at,
@@ -95,9 +94,7 @@ class TenantController extends Controller
                 'institution_email'      => $tenant->institution_email,
                 'institution_website'    => $tenant->institution_website,
                 'address'                => $tenant->address,
-                'logo_path'              => $tenant->logo_path
-                    ? Storage::disk('central_public')->url($tenant->logo_path)
-                    : null,
+                'logo_path'              => $tenant->logo_url,
                 'plan_id'                => $tenant->plan_id,
                 'max_users'              => $tenant->max_users,
                 'plan_max_users'         => $tenant->planData?->max_users,
@@ -138,9 +135,9 @@ class TenantController extends Controller
 
         if ($request->hasFile('logo')) {
             if ($tenant->logo_path) {
-                Storage::disk('central_public')->delete($tenant->logo_path);
+                Storage::disk('r2')->delete($tenant->logo_path);
             }
-            $validated['logo_path'] = $request->file('logo')->store('tenant-logos', 'central_public');
+            $validated['logo_path'] = $request->file('logo')->store('tenant-logos', 'r2');
         }
         unset($validated['logo']);
 
@@ -162,7 +159,8 @@ class TenantController extends Controller
         // 1. Hapus logo fisik di storage central_public
         if ($tenant->logo_path) {
             try {
-                Storage::disk('central_public')->delete($tenant->logo_path);
+                Storage::disk('r2')->delete($tenant->logo_path);
+                Cache::forget("tenant:{$tenant->id}:logo_url"); // ← tambahan, jaga-jaga
             } catch (\Throwable $e) {
                 Log::warning('Gagal hapus logo tenant', [
                     'tenant_id' => $tenant->id,

@@ -88,7 +88,7 @@ class AssignmentController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('assignments', 'public');
+            $filePath = $request->file('file')->store('assignments', 'r2');   // ← ganti dari 'public'
         } elseif (!empty($validated['link'])) {
             $filePath = $validated['link'];
         }
@@ -171,15 +171,12 @@ class AssignmentController extends Controller
         $filePath = $assignment->file_path; // default: keep existing
 
         if ($validated['attachment_type'] === 'none') {
-            // Remove existing file if it was a local file
             $this->deleteLocalFile($assignment->file_path);
             $filePath = null;
         } elseif ($validated['attachment_type'] === 'file' && $request->hasFile('file')) {
-            // Delete old local file before replacing
             $this->deleteLocalFile($assignment->file_path);
-            $filePath = $request->file('file')->store('assignments', 'public');
+            $filePath = $request->file('file')->store('assignments', 'r2');
         } elseif ($validated['attachment_type'] === 'link' && !empty($validated['link'])) {
-            // Switching to link: remove old local file if any
             $this->deleteLocalFile($assignment->file_path);
             $filePath = $validated['link'];
         }
@@ -189,10 +186,9 @@ class AssignmentController extends Controller
         $newRevisionNumber = $assignment->revision_count + 1;
 
         AssignmentRevision::create([
-            'tugas_id'  => $assignment->id,
+            'tugas_id'       => $assignment->id,
             'judul'          => $assignment->judul,
             'deskripsi'      => $assignment->deskripsi,
-            'file_path'      => $assignment->file_path,
             'catatan_revisi' => $validated['catatan_revisi'] ?? null,
             'revision_number' => $newRevisionNumber,
         ]);
@@ -237,9 +233,9 @@ class AssignmentController extends Controller
         if (
             $filePath &&
             !str_starts_with($filePath, 'http') &&
-            Storage::disk('public')->exists($filePath)
+            Storage::disk('r2')->exists($filePath)   // ← ganti dari 'public'
         ) {
-            Storage::disk('public')->delete($filePath);
+            Storage::disk('r2')->delete($filePath);   // ← ganti dari 'public'
         }
     }
 }

@@ -22,8 +22,7 @@ return [
         'lumiverse.co.id',
         'www.lumiverse.co.id',
         'about.lumiverse.co.id',
-        // 'article.lumiverse.co.id',
-        // 'workspace.lumiverse.co.id',
+        'article.lumiverse.co.id',
     ],
 
     /**
