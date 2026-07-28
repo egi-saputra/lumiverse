@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->validateCsrfTokens(except: [
-            'lumiverse/subscription/webhook',
+            'subscription/webhook',
         ]);
 
         $middleware->alias([
