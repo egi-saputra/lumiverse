@@ -16,7 +16,7 @@ class PlanSeeder extends Seeder
                 'description'          => 'Paket uji coba gratis.',
                 'price_monthly'        => 0,
                 'price_yearly'         => 0,
-                'max_users'            => 10,
+                'max_users'            => 50,
                 'duration_days'        => 0,
                 'features'             => [
                     'Akses semua fitur dasar',
