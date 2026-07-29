@@ -49,6 +49,33 @@ class SubscriptionController extends Controller
             return response()->json(['action' => 'downgrade']);
         }
 
+        $existingPending = SubscriptionOrder::where('tenant_id', $tenant->id)
+            ->where('status', 'pending')
+            ->where('plan_id', $newPlan->id)
+            ->where('billing_cycle', $request->billing_cycle)
+            ->latest()
+            ->first();
+
+        if ($existingPending && $existingPending->xendit_invoice_id) {
+            Configuration::setXenditKey(config('xendit.secret_key'));
+            try {
+                $invoice = (new InvoiceApi())->getInvoiceById($existingPending->xendit_invoice_id);
+                if ($invoice->getStatus() === 'PENDING') {
+                    return response()->json([
+                        'action'      => 'pay',
+                        'invoice_url' => $invoice->getInvoiceUrl(),
+                        'order_id'    => $existingPending->order_id,
+                        'amount'      => $existingPending->amount,
+                    ]);
+                }
+            } catch (XenditSdkException $e) {
+                Log::info('Cek invoice pending gagal, lanjut buat baru', [
+                    'order_id' => $existingPending->order_id,
+                    'message'  => $e->getMessage(),
+                ]);
+            }
+        }
+
         // Supersede pending order lama sebelum bikin yang baru
         $this->supersedePendingOrders($tenant);
 
