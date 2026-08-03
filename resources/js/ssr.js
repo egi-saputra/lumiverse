@@ -10,6 +10,7 @@ const SSR_ALLOWED = [
     "Home/School",
     "Home/About",
     "Home/Article",
+    "Home/Partner",
     "Home/Workspace",
 ];
 

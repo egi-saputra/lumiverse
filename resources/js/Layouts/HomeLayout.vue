@@ -1,6 +1,6 @@
 <script setup>
 import { Head } from '@inertiajs/vue3'
-import { onMounted, onUnmounted, ref, provide } from 'vue'
+import { onMounted, onUnmounted, ref, provide, nextTick } from 'vue'
 import Navbar from '@/Components/HomePage/Navbar.vue'
 import Footer from '@/Components/HomePage/Footer.vue'
 
@@ -28,6 +28,14 @@ onMounted(() => {
     )
 
     scrollRoot.value?.querySelectorAll('.reveal').forEach((el) => observer.observe(el))
+
+    nextTick(() => {
+        const target = window.location.hash
+            ? document.querySelector(window.location.hash)
+            : null
+
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
 })
 
 onUnmounted(() => {

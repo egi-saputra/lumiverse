@@ -331,6 +331,26 @@ const isPasswordValid = computed(() =>
     color: #C9A227;
 }
 
+.divider-stars {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #9C9FB3;
+}
+
+.divider-stars::before,
+.divider-stars::after {
+    content: '';
+    flex: 1;
+    height: 6px;
+    background-repeat: repeat-x;
+    background-position: center;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='6' viewBox='0 0 16 6'%3E%3Cpath d='M8 0 L11 3 L8 6 L5 3 Z' fill='%23E2E0DA'/%3E%3C/svg%3E");
+}
+
 /* ── Form fields ── */
 .field {
     display: flex;
@@ -391,71 +411,6 @@ const isPasswordValid = computed(() =>
     color: #C9A227;
 }
 
-.field-error {
-    font-size: 0.75rem;
-    color: #C0392B;
-    margin-top: 0.15rem;
-}
-
-/* ── Password strength ─────────────────────────────────────── */
-.pw-strength-wrap {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-top: 0.5rem;
-}
-
-.pw-strength-bar {
-    flex: 1;
-    height: 4px;
-    background: #E2E0DA;
-    border-radius: 100px;
-    overflow: hidden;
-}
-
-.pw-strength-fill {
-    height: 100%;
-    border-radius: 100px;
-    transition: width 0.4s ease, background 0.4s ease;
-}
-
-.pw-strength-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-/* ── Password rules checklist ──────────────────────────────── */
-.pw-rules {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.3rem 0.75rem;
-    margin-top: 0.6rem;
-    padding: 0.65rem 0.85rem;
-    background: rgba(26, 27, 58, 0.03);
-    border: 1px solid #E2E0DA;
-    border-radius: 10px;
-}
-
-.pw-rule {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.72rem;
-    color: #6B7086;
-    transition: color 0.25s ease;
-}
-
-.pw-rule-valid {
-    color: #7C9A6E;
-}
-
-.pw-rule-dot {
-    font-size: 0.7rem;
-    width: 14px;
-    text-align: center;
-}
-
 .password-toggle {
     position: absolute;
     right: 0.75rem;
@@ -490,6 +445,12 @@ input::-webkit-credentials-auto-fill-button {
     pointer-events: none;
     position: absolute;
     right: 0;
+}
+
+.remember-checkbox {
+    accent-color: #C9A227;
+    width: 1rem;
+    height: 1rem;
 }
 
 .text-link {
@@ -532,26 +493,6 @@ input::-webkit-credentials-auto-fill-button {
     cursor: not-allowed;
 }
 
-.divider-stars {
-    display: flex;
-    align-items: center;
-    gap: 0.875rem;
-    font-size: 0.7rem;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: #9C9FB3;
-}
-
-.divider-stars::before,
-.divider-stars::after {
-    content: '';
-    flex: 1;
-    height: 6px;
-    background-repeat: repeat-x;
-    background-position: center;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='6' viewBox='0 0 16 6'%3E%3Cpath d='M8 0 L11 3 L8 6 L5 3 Z' fill='%23E2E0DA'/%3E%3C/svg%3E");
-}
-
 .btn-outline {
     width: 100%;
     display: flex;
@@ -559,10 +500,11 @@ input::-webkit-credentials-auto-fill-button {
     justify-content: center;
     gap: 0.6rem;
     padding: 0.7rem 1rem;
-    border: 1.5px solid #E2E0DA;
+    border: 1.5px solid #acaba9;
     border-radius: 0.6rem;
     font-size: 0.875rem;
     font-weight: 500;
+    background-color: #FAF9F5;
     color: #1A1B3A;
     text-decoration: none;
     transition: border-color 0.2s ease, background 0.2s ease;

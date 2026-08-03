@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const faqs = [
@@ -68,14 +69,14 @@ function toggle(i) {
                                 Hubungi kami melaui email atau media sosial. Anda juga dapat
                                 mengunjungi Pusat Bantuan kami.</div>
                         </div>
-                        <a href="https://wa.me/6281234567890" class="btn-hero" target="_blank" rel="noopener">
+                        <Link href="/help" class="btn-hero" prefetch="hover">
                             Hubungi Kami
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 12H20"></path>
                                 <path d="M14 6L20 12L14 18"></path>
                             </svg>
-                        </a>
+                        </Link>
                     </div>
                 </div>
 
@@ -110,13 +111,13 @@ function toggle(i) {
                             Hubungi kami melaui email atau media sosial. Anda juga dapat
                             mengunjungi Pusat Bantuan kami.</div>
                     </div>
-                    <a href="https://wa.me/6281234567890" class="btn-hero" target="_blank" rel="noopener">
+                    <Link href="/help" class="btn-hero" prefetch="hover">
                         Hubungi Kami
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2.5">
                             <path d="M5 12h14M13 6l6 6-6 6" />
                         </svg>
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

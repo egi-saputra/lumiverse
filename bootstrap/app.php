@@ -22,6 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'subscription/webhook',
+            'api/owner/auth/*',
+            'api/partner/auth/*',
         ]);
 
         $middleware->alias([
@@ -30,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'activated' => \App\Http\Middleware\CheckActivated::class,
             'backup.ujian' => \App\Http\Middleware\BackupJawabanUjian::class,
             'role.selected' => \App\Http\Middleware\EnsureRoleSelected::class,
+            'stepup' => \App\Http\Middleware\EnsureStepUpAuth::class,
         ]);
 
         $middleware->redirectUsersTo(function (Illuminate\Http\Request $request) {

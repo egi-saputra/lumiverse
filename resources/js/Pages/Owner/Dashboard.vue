@@ -352,6 +352,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
                         </button>
                     </span>
                 </div>
+
                 <div class="info-card-row">
                     <span>Jumlah Pengguna</span>
                     <strong>
@@ -394,7 +395,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════════
-                 Baris 2: Info Teknis (read-only)
+                 Baris 3: Info Teknis (read-only)
             ════════════════════════════════════════════════════════════════ -->
         <div class="section-title">Info Teknis Lainnya</div>
         <div class="info-card">
@@ -503,7 +504,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     color: var(--muted);
     font-weight: 700;
     margin-bottom: 0.75rem;
-    margin-top: 0.25rem;
+    margin-top: 2rem;
 }
 
 .mb-gap {
@@ -585,9 +586,6 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     justify-content: center;
     width: 22px;
     height: 22px;
-    /* border-radius: 2px; */
-    /* border: 1px solid var(--border); */
-    /* background: rgba(255, 255, 255, 0.03); */
     color: var(--muted);
     cursor: pointer;
     padding: 0;

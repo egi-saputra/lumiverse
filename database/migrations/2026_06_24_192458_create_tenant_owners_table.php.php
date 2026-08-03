@@ -15,7 +15,10 @@ return new class extends Migration
             $table->string('tenant_id')->nullable();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('phone')->nullable();
+            $table->string('phone', 20)->unique()->nullable();
+            $table->string('lumiverse_id')->nullable();
+            $table->string('google_id')->nullable();
+            $table->string('avatar')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Partner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
@@ -22,7 +23,8 @@ class GoogleController extends Controller
     public function redirect(Request $request)
     {
         $tenantId = $request->query('from_tenant');
-        $state = $tenantId ? "tenant:{$tenantId}" : 'owner';
+        $fromPartner = $request->boolean('from_partner');
+        $state = $tenantId ? "tenant:{$tenantId}" : ($fromPartner ? 'partner' : 'owner');
 
         return Socialite::driver('google')
             ->redirectUrl($this->centralCallbackUrl())
@@ -76,6 +78,23 @@ class GoogleController extends Controller
         // ── Flow B: Owner ───────────────────────────────────────────────
         if ($state === 'owner') {
             return $this->handleOwnerGoogleLogin($googleUser);
+        }
+
+        if ($state === 'partner') {
+            $partner = Partner::firstOrCreate(
+                ['email' => $googleUser->getEmail()],
+                [
+                    'name' => $googleUser->getName() ?: $googleUser->getEmail(),
+                    'google_id' => $googleUser->getId(),
+                    'avatar' => $googleUser->getAvatar(),
+                    'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(40)),
+                    'referral_code' => Partner::generateUniqueReferralCode(),
+                    'is_active' => true,
+                ],
+            );
+            $partner->update(['google_id' => $googleUser->getId(), 'avatar' => $googleUser->getAvatar() ?? $partner->avatar]);
+            $token = encrypt(['partner_id' => $partner->id, 'exp' => now()->addMinutes(2)->timestamp]);
+            return redirect()->away($this->partnerUrl('/auth/google/token?token=' . urlencode($token)));
         }
 
         abort(400, 'State tidak valid.');
@@ -158,5 +177,16 @@ class GoogleController extends Controller
         $port   = isset($parsed['port']) ? ":{$parsed['port']}" : ''; // :8000
 
         return "{$scheme}://{$tenantId}.{$host}{$port}{$path}";
+    }
+
+    private function partnerUrl(string $path): string
+    {
+        $appUrl = parse_url(config('app.url'));
+        $scheme = $appUrl['scheme'] ?? 'http';
+        $host = $appUrl['host'] ?? 'localhost';
+        $port = isset($appUrl['port']) ? ":{$appUrl['port']}" : '';
+        $partnerHost = $host === 'localhost' ? 'partner.localhost' : 'partner.lumiverse.co.id';
+
+        return "{$scheme}://{$partnerHost}{$port}{$path}";
     }
 }

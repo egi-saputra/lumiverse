@@ -23,6 +23,9 @@ return [
         'www.lumiverse.co.id',
         'about.lumiverse.co.id',
         'article.lumiverse.co.id',
+        'partner.lumiverse.co.id',
+        'docs.lumiverse.co.id',
+        'docs.localhost',
     ],
 
     /**

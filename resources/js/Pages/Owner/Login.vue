@@ -1,6 +1,7 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3'
+import { Head, Link, router, useForm } from '@inertiajs/vue3'
 import { onMounted, computed, ref } from 'vue'
+import axios from 'axios'
 
 const form = useForm({
     email: '',
@@ -17,10 +18,21 @@ const errorMessage = computed(() => {
     return null
 })
 
-function submit() {
-    form.post(route('owner.login'), {
-        onFinish: () => form.reset('password'),
-    })
+async function submit() {
+    form.processing = true
+    form.clearErrors()
+
+    try {
+        await axios.post('/api/owner/auth/login', form.data())
+        router.visit(route('owner.dashboard'))
+    } catch (error) {
+        const errors = error.response?.data?.errors
+        if (errors) form.setError(errors)
+        else form.setError('email', error.response?.data?.message || 'Email atau password salah.')
+    } finally {
+        form.processing = false
+        form.reset('password')
+    }
 }
 
 onMounted(() => {

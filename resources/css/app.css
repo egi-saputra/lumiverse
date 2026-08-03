@@ -11,14 +11,17 @@
     --midnight: #f8f9ff;
     --navy: #ffffff;
     --navy-light: #f1f3f9;
-    --cyan: #0ea5c4;
-    --cyan-dim: #0b8aa6;
+    --cyan: #05236e;
+    --cyan-dim: #023bcc;
+    /* --cyan: #0ea5c4; */
+    /* --cyan-dim: #0b8aa6; */
     --gold: #f5a623;
     --gold-dim: #c98a1a;
     --white: #0b1120;
     --muted: #64748b;
     --border: rgba(15, 23, 42, 0.08);
     --glass: rgba(15, 23, 42, 0.03);
+    --nav-scroll-bg: rgba(255, 255, 255, 0.75);
     --font-display: "Plus Jakarta Sans", sans-serif;
     --font-body: "Inter", sans-serif;
     --font-mono: "JetBrains Mono", monospace;
@@ -37,6 +40,7 @@
     --muted: #8b9cc8;
     --border: rgba(255, 255, 255, 0.08);
     --glass: rgba(255, 255, 255, 0.04);
+    --nav-scroll-bg: rgba(11, 17, 32, 0.75);
 }
 
 /* ─── RESET ──────────────────────────────────────────── */
@@ -307,7 +311,7 @@ input:-webkit-autofill:active {
 .dark input:-webkit-autofill:hover,
 .dark input:-webkit-autofill:focus,
 .dark input:-webkit-autofill:active {
-    -webkit-box-shadow: 0 0 0px 1000px #131c2e inset !important;
+    -webkit-box-shadow: 0 0 0px 1000px #0b1120 inset !important;
     -webkit-text-fill-color: #f8f9ff !important;
     caret-color: #f8f9ff;
     transition: background-color 5000s ease-in-out 0s;

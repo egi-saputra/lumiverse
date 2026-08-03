@@ -2,18 +2,18 @@
 const docFeatures = [
     {
         icon: '📖', bg: 'rgba(0,212,255,0.1)',
-        title: 'REST API Lengkap',
-        desc: 'Endpoint terdokumentasi untuk semua fitur: siswa, nilai, absensi, ujian, laporan, dan manajemen pengguna.',
+        title: 'API Tenant Terarah',
+        desc: 'Dokumentasi endpoint yang tersedia untuk login sosial, informasi pengguna, dan rekap nilai proktor.',
     },
     {
         icon: '🔔', bg: 'rgba(245,166,35,0.1)',
-        title: 'Webhook & Event System',
-        desc: 'Subscribe ke events real-time: pendaftaran siswa baru, selesai ujian, upload materi, dan 20+ event lainnya.',
+        title: 'Panduan Role-Based',
+        desc: 'Panduan terpisah untuk admin, guru, proktor, siswa, dan partner sesuai alur akses masing-masing.',
     },
     {
         icon: '🧩', bg: 'rgba(52,211,153,0.1)',
-        title: 'SDK Laravel & Vue',
-        desc: 'Package Composer dan NPM resmi untuk integrasi cepat ke sistem existing berbasis Laravel + Vue.js.',
+        title: 'Referensi Endpoint',
+        desc: 'Contoh request dan penjelasan autentikasi untuk endpoint yang benar-benar tersedia di layanan lembaga.',
     },
     {
         icon: '🛟', bg: 'rgba(167,139,250,0.1)',

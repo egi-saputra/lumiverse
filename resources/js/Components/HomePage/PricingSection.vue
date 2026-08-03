@@ -153,6 +153,7 @@ const spacerStart = ref(null)   // ⬅️ ref baru untuk spacer kiri
 const cardRefs = ref([])
 const currentIndex = ref(2)
 const isDragging = ref(false)
+const isMobile = ref(false)
 const startX = ref(0)
 const scrollStart = ref(0)
 const CARD_WIDTH = ref(300)
@@ -165,6 +166,7 @@ function getCardWidth() {
 }
 
 function updateCardWidth() {
+    isMobile.value = window.innerWidth <= 768
     CARD_WIDTH.value = getCardWidth()
 }
 
@@ -280,7 +282,7 @@ onMounted(() => {
                             { 'card-far': Math.abs(currentIndex - i) >= 2 },
                             { popular: plan.popular },
                         ]" :style="{ '--accent': `var(${plan.accentVar})` }"
-                        @click="currentIndex !== i && scrollToIndex(i)">
+                        @click="!isMobile && currentIndex !== i && scrollToIndex(i)">
 
                         <div v-if="plan.popular && currentIndex === i" class="popular-badge">✦ Paling Populer</div>
 
@@ -709,8 +711,16 @@ onMounted(() => {
 
 /* ── Responsive ────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+    .slider-root {
+        display: block;
+    }
+
     .pricing-card {
-        flex: 0 0 260px;
+        flex: none;
+        width: 100%;
+        transform: none;
+        opacity: 1;
+        cursor: default;
     }
 
     .slider-arrow {
@@ -718,22 +728,38 @@ onMounted(() => {
     }
 
     .slider-track {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        overflow: visible;
+        padding: 1rem 0 0;
         -webkit-mask-image: none;
         mask-image: none;
+        cursor: default;
     }
 
     .track-spacer {
-        flex: 0 0 calc(50% - 130px);
-    }
-}
-
-@media (max-width: 480px) {
-    .pricing-card {
-        flex: 0 0 calc(100vw - 72px);
+        display: none;
     }
 
-    .track-spacer {
-        flex: 0 0 36px;
+    .card-side,
+    .card-far,
+    .card-active,
+    .card-active.popular {
+        transform: none;
+        opacity: 1;
+    }
+
+    .slider-dots,
+    .slider-labels {
+        display: none;
+    }
+
+    .popular-badge {
+        top: 0.85rem;
+        right: 1rem;
+        left: auto;
+        transform: none;
     }
 }
 </style>

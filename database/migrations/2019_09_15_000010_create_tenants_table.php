@@ -58,8 +58,8 @@ return new class extends Migration
             $table->index('pending_plan_id');
         });
 
-        // Foreign keys ditambah setelah tabel plans ada
-        // Jalankan ini via migration terpisah atau pastikan plans dibuat duluan
+        // Foreign keys ditambah setelah tabel plans ada / setelah tabel tenants
+        // selesai dibuat sepenuhnya.
         Schema::table('tenants', function (Blueprint $table) {
             $table->foreign('plan_id')
                   ->references('id')

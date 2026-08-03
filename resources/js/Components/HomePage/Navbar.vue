@@ -1,14 +1,10 @@
 <script setup>
-import { ref, onMounted, onUnmounted, inject, computed } from 'vue'
-import { useCentralUrl } from '@/Composables/useCentralUrl'
+import { ref, nextTick, onMounted, onUnmounted, inject } from 'vue'
+import { Link, router } from '@inertiajs/vue3'
 
 const isScrolled = ref(false)
 const isMenuOpen = ref(false)
 const scrollRoot = inject('scrollRoot')
-
-const { centralUrl } = useCentralUrl()
-const loginUrl = computed(() => centralUrl('/login'))
-const registerUrl = computed(() => centralUrl('/registration'))
 
 const navItems = [
     { id: 'hero', href: '#hero', label: 'Beranda Utama' },
@@ -27,10 +23,27 @@ function handleScroll() {
 
 function scrollTo(id) {
     isMenuOpen.value = false
-    setTimeout(() => {
+    nextTick(() => requestAnimationFrame(() => {
         const el = document.querySelector(id)
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 50)
+    }))
+}
+
+function handleNavClick(href) {
+    isMenuOpen.value = false
+
+    if (window.location.pathname !== '/') {
+        window.location.href = `/${href}`
+        return
+    }
+
+    scrollTo(href)
+}
+
+function prefetchHome() {
+    if (window.location.pathname !== '/') {
+        router.prefetch('/')
+    }
 }
 
 function handleLogoClick() {
@@ -68,17 +81,23 @@ onUnmounted(() => {
                 </a>
 
                 <ul class="nav-links" role="list">
-                    <li><a href="#hero" @click.prevent="scrollTo('#hero')">Beranda</a></li>
+                    <li><a href="#hero" @mouseenter="prefetchHome" @click.prevent="handleNavClick('#hero')">Beranda</a>
+                    </li>
                     <!-- <li><a href="#about" @click.prevent="scrollTo('#about')">Tentang Kami</a></li> -->
                     <!-- <li><a href="#hero" @click.prevent="scrollTo('#hero')">Artikel</a></li> -->
-                    <li><a href="#layanan" @click.prevent="scrollTo('#layanan')">Fitur & Layanan</a></li>
-                    <li><a href="#cara-kerja" @click.prevent="scrollTo('#cara-kerja')">Dokumentasi</a></li>
-                    <li><a href="#kontak" @click.prevent="scrollTo('#kontak')">Kontak Kami</a></li>
+                    <li><a href="#layanan" @mouseenter="prefetchHome" @click.prevent="handleNavClick('#layanan')">Fitur
+                            & Layanan</a></li>
+                    <li><a href="#cara-kerja" @mouseenter="prefetchHome"
+                            @click.prevent="handleNavClick('#cara-kerja')">Dokumentasi</a></li>
+                    <li><a href="#kontak" @mouseenter="prefetchHome" @click.prevent="handleNavClick('#kontak')">Kontak
+                            Kami</a></li>
                 </ul>
 
                 <div class="nav-actions">
-                    <a :href="loginUrl" class="btn-ghost">Log In</a>
-                    <a :href="registerUrl" class="btn-primary">Daftar Sekarang</a>
+                    <Link :href="route('login')" class="btn-ghost" prefetch="hover">Log In</Link>
+                    <Link :href="route('tenant.register.form')" class="btn-primary" prefetch="hover">
+                        Daftar Sekarang
+                    </Link>
                 </div>
 
                 <!-- Burger animasi (rotate jadi X) menggantikan icon SVG statis -->
@@ -94,15 +113,18 @@ onUnmounted(() => {
             <div class="mobile-menu" :class="{ open: isMenuOpen }">
                 <ul class="mobile-links">
                     <li v-for="(item, i) in navItems" :key="item.id" :style="`--i: ${i}`">
-                        <a class="mobile-link" :href="item.href" @click.prevent="scrollTo(item.href)">
+                        <a class="mobile-link" :href="item.href" @mouseenter="prefetchHome"
+                            @click.prevent="handleNavClick(item.href)">
                             {{ item.label }}
                         </a>
                     </li>
                 </ul>
 
                 <div class="mobile-cta-group">
-                    <a :href="loginUrl" class="btn-mob-ghost" @click="isMenuOpen = false">Masuk</a>
-                    <a :href="registerUrl" class="btn-mob-cta" @click="isMenuOpen = false">Daftar Sekarang</a>
+                    <Link :href="route('login')" class="btn-mob-ghost" prefetch="hover" @click="isMenuOpen = false">
+                        Masuk</Link>
+                    <Link :href="route('tenant.register.form')" class="btn-mob-cta" prefetch="hover"
+                        @click="isMenuOpen = false">Daftar Sekarang</Link>
                 </div>
             </div>
         </div>

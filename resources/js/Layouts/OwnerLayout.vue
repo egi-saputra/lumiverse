@@ -13,7 +13,8 @@ import {
     ArrowLeftOnRectangleIcon,
     SunIcon,
     MoonIcon,
-    ClockIcon
+    ClockIcon,
+    GiftIcon
 } from '@heroicons/vue/24/outline'
 
 const page = usePage()
@@ -100,7 +101,14 @@ onMounted(() => {
                     Riwayat Pembayaran
                     <span v-if="pendingInvoiceCount > 0" class="nav-badge">{{ pendingInvoiceCount }}</span>
                 </Link>
+
+                <!-- <Link href="/referral" class="nav-item" :class="{ 'nav-item-active': isActive('/referral') }" prefetch
+                    @click="sidebarOpen = false">
+                    <GiftIcon class="nav-icon" />
+                    My Referral Rewards
+                </Link> -->
             </nav>
+
 
             <div class="sidebar-footer">
                 <!-- <button @click="toggleDarkMode" class="nav-item">

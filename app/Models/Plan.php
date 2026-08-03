@@ -8,7 +8,6 @@ class Plan extends Model
 {
     protected $fillable = [
         'key',
-        'product_type',
         'name',
         'description',
         'price_monthly',
@@ -54,7 +53,6 @@ class Plan extends Model
     {
         return [
             'key'          => $this->key,
-            'productType'  => $this->product_type,
             'name'         => $this->name,
             'desc'         => $this->description,
             'price'        => [

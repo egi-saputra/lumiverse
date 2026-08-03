@@ -5,6 +5,8 @@ use App\Http\Controllers\Developer\AuthController;
 use App\Http\Controllers\Developer\PlanController;
 use App\Http\Controllers\Developer\TenantController;
 use App\Http\Controllers\TenantRegistrationController;
+
+use App\Http\Controllers\Webhooks\XenditPayoutWebhookController;
 use App\Http\Controllers\Owner\AuthController as AdminAuthController;
 // use App\Http\Controllers\Api\Auth\OwnerSocialAuthController;
 use App\Http\Controllers\Owner\ProfilController;
@@ -92,8 +94,59 @@ Route::domain('article.lumiverse.co.id')->middleware('web')->group(function () {
 });
 
 
+// Partner — subdomain khusus (landing, auth, dashboard)
+// $partnerDomains = ['partner.localhost', 'partner.lumiverse.co.id'];
+
+// Route::domain('{partnerHost}')
+//     ->where(['partnerHost' => implode('|', array_map('preg_quote', $partnerDomains))])
+//     ->middleware(['web', SetPartnerHostDefault::class, StripPartnerHostParameter::class])
+//     ->group(function () {
+//         Route::get('/', function () {
+//             return Inertia::render('Home/Partner', [
+//                 'laravelVersion' => Application::VERSION,
+//                 'phpVersion' => PHP_VERSION,
+//             ]);
+//         })->name('home.partner');
+
+//         Route::name('partner.')->group(function () {
+//             Route::middleware('guest:partner')->group(function () {
+//                 Route::get('/login', [PartnerAuthController::class, 'showLogin'])->name('login');
+//                 Route::post('/login', [PartnerAuthController::class, 'login'])->name('login.store');
+//                 Route::get('/register', [PartnerAuthController::class, 'showRegister'])->name('register');
+//                 Route::post('/register', [PartnerAuthController::class, 'register'])->name('register.store');
+//             });
+
+//             Route::middleware('auth:partner')->group(function () {
+//                 Route::get('/dashboard', [PartnerAuthController::class, 'dashboard'])->name('dashboard');
+//                 Route::post('/logout', [PartnerAuthController::class, 'logout'])->name('logout');
+//                 Route::get('/referral', [ReferralController::class, 'index'])->name('referral.index');
+//                 Route::patch('/referral/code', [ReferralController::class, 'updateCode'])
+//                     ->name('referral.update-code');
+
+//                 Route::prefix('bank-accounts')->name('bank-accounts.')->group(function () {
+//                     Route::get('/', [BankAccountController::class, 'index'])->name('index');
+//                     Route::post('/', [BankAccountController::class, 'store'])->name('store');
+//                     Route::patch('/{bankAccount}/primary', [BankAccountController::class, 'setPrimary'])->name('primary');
+//                     Route::delete('/{bankAccount}', [BankAccountController::class, 'destroy'])->name('destroy');
+//                 });
+
+//                 Route::prefix('payout')->name('payout.')->group(function () {
+//                     Route::get('/', [PayoutController::class, 'index'])->name('index');
+//                     Route::post('/', [PayoutController::class, 'store'])->name('store');
+//                 });
+//             });
+
+//             Route::post('/webhooks/xendit/payout', [XenditPayoutWebhookController::class, 'handle'])
+//                 ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+//                 ->name('webhooks.xendit.payout');
+//         });
+//     });
+
+
 // Route::post('/api/auth/owner/social/login', [OwnerSocialAuthController::class, 'login']);
 
+require __DIR__ . '/partner.php';
+require __DIR__ . '/docs.php';
 /*
 |--------------------------------------------------------------------------
 | Rute bersama — SATU KALI untuk semua central domain (termasuk workspace).
@@ -108,6 +161,8 @@ Route::domain('{centralHost}')
         \App\Http\Middleware\StripCentralHostParameter::class,
     ])
     ->group(function () {
+        require __DIR__ . '/owner-api.php';
+
         Route::get('/robots.txt', function () {
             $content = "User-agent: *\n"
                 . "Allow: /\n\n"
@@ -121,6 +176,26 @@ Route::domain('{centralHost}')
         Route::get('/sitemap.xml', function () {
             return response()->file(public_path('sitemap.xml'), ['Content-Type' => 'application/xml']);
         })->name('sitemap.central');
+
+        Route::get('/privasi', function () {
+            return Inertia::render('Legal/Privacy');
+        })->name('privacy');
+
+        Route::get('/syarat', function () {
+            return Inertia::render('Legal/Terms');
+        })->name('terms');
+
+        Route::get('/cookie', function () {
+            return Inertia::render('Legal/Cookies');
+        })->name('cookies');
+
+        Route::get('/help', function () {
+            return Inertia::render('Help/Index');
+        })->name('help');
+
+        Route::get('/pricing-list', function () {
+            return Inertia::render('Home/Pricing');
+        })->name('pricing.public');
 
         Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google.redirect.central');
         Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google.callback.central');
@@ -191,6 +266,8 @@ Route::domain('{centralHost}')
                 Route::post('/subscription/retry/{order_id}', [SubscriptionController::class, 'retryPayment'])->name('subscription.retry');
                 Route::post('/subscription/cancel-order/{order_id}', [SubscriptionController::class, 'cancelOrder'])->name('subscription.cancel-order');
                 Route::get('/subscription/order-preview/{order_id}', [SubscriptionController::class, 'orderPreview'])->name('subscription.order-preview');
+
+                // Route::get('/referral', [ReferralController::class, 'index'])->name('owner.referral.index');
             });
 
             Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])->name('subscription.webhook');

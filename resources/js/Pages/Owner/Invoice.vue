@@ -183,7 +183,10 @@ function print() {
                                     <span v-else-if="order.action === 'downgrade'"> · Downgrade</span>
                                 </div>
                             </td>
-                            <td class="text-right">{{ formatPrice(order.subtotal) }}</td>
+                            <!-- Tampilkan harga SEBELUM diskon tahunan (subtotal + yearly_discount),
+         supaya baris "Diskon tahunan" di bawah jadi pengurangan yang nyata
+         secara visual, bukan sekadar badge "hemat sekian" yang membingungkan. -->
+                            <td class="text-right">{{ formatPrice(order.subtotal + order.yearly_discount) }}</td>
                         </tr>
 
                         <tr v-if="order.yearly_discount > 0">
@@ -201,6 +204,11 @@ function print() {
                             <td class="text-right inv-green">− {{ formatPrice(order.credit_amount) }}</td>
                         </tr>
 
+                        <tr v-if="order.referral_discount_amount > 0">
+                            <td class="text-muted">Diskon referral</td>
+                            <td class="text-right inv-green">− {{ formatPrice(order.referral_discount_amount) }}</td>
+                        </tr>
+
                         <tr v-if="order.bonus_days > 0">
                             <td class="text-muted">Renewal bonus</td>
                             <td class="text-right inv-green">+ {{ order.bonus_days }} days</td>
@@ -211,8 +219,7 @@ function print() {
                 <div class="inv-summary">
                     <div class="inv-summary-row">
                         <span>Sub Total</span>
-                        <span>{{ formatPrice(order.subtotal - order.yearly_discount - order.discount_amount -
-                            order.credit_amount) }}</span>
+                        <span>{{ formatPrice(order.amount - order.tax_amount) }}</span>
                     </div>
                     <div class="inv-summary-row" v-if="order.tax_amount > 0">
                         <span>PPN ({{ order.tax_percent }}%)</span>

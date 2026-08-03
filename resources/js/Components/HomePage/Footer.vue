@@ -1,31 +1,45 @@
 <script setup>
-import { Link } from '@inertiajs/vue3'
+import { Link, usePage } from '@inertiajs/vue3'
+import { computed } from 'vue'
+
+const page = usePage()
+
+const partnerProgramUrl = computed(() => {
+    const hostname = window.location.hostname
+    const port = window.location.port ? `:${window.location.port}` : ''
+    const protocol = window.location.protocol
+
+    const isLocal = hostname === 'localhost' || /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname)
+
+    if (isLocal) {
+        return `${protocol}//partner.localhost${port}/`
+    }
+
+    return `${protocol}//partner.lumiverse.co.id/`
+})
+
+const docsUrl = computed(() => {
+    const hostname = window.location.hostname
+    const port = window.location.port ? `:${window.location.port}` : ''
+    const protocol = window.location.protocol
+
+    const isLocal = hostname === 'localhost' || /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)
+    return isLocal ? `${protocol}//docs.localhost${port}/` : 'https://docs.lumiverse.co.id/'
+})
 
 const productLinks = [
     { href: '/', label: 'LMS Platform', anchor: true },
-    { href: '/', label: 'Pricing List', anchor: true },
-    // { href: '/', label: 'Blog' },
-    // { href: '/', label: 'Cashtify Lite', anchor: true },
-    // { href: '/', label: 'Lumi Workspace', anchor: true },
-    // { href: '/', label: 'KreatiCraft ID', anchor: true },
-    // { href: '/', label: 'Roadmap' },
-    // { href: '/', label: 'Changelog' },
-    // { href: '/', label: 'Status Sistem' },
+    { href: '/pricing-list', label: 'Pricing List', fullReload: true },
 ]
-const companyLinks = [
+const companyLinks = computed(() => [
     { href: '/', label: 'Company Info' },
-    // { href: '/', label: 'Careers Info' },
     { href: '/', label: 'Media Gallery' },
     { href: '/', label: 'Brand Resources' },
-    { href: '/', label: 'Partner Programs' },
-    // { href: '#testimonial', label: 'Testimoni', anchor: true },
-    // { href: '/', label: 'Press Kit' },
-]
+    { href: partnerProgramUrl.value, label: 'Partner Programs' },
+])
 const supportLinks = [
-    { href: '/', label: 'Help Center' },
-    { href: '/', label: 'Documentation', anchor: true },
-    // { href: '#docs', label: 'API Docs', anchor: true },
-    // { href: '/', label: 'Video Tutorial' },
+    { href: '/help', label: 'Help Center' },
+    { href: docsUrl.value, label: 'Documentation' },
     { href: 'mailto:info@lumiverse.co.id', label: 'Email Support' },
     { href: 'https://wa.me/+628987504976', label: 'WhatsApp Support', external: true },
 ]
@@ -121,9 +135,10 @@ const supportLinks = [
                 <div>
                     <div class="footer-col-title">Products</div>
                     <nav class="footer-links" aria-label="Product links">
-                        <a v-for="link in productLinks" :key="link.label" :href="link.href">
-                            {{ link.label }}
-                        </a>
+                        <template v-for="link in productLinks" :key="link.label">
+                            <a v-if="link.fullReload" :href="link.href">{{ link.label }}</a>
+                            <Link v-else :href="link.href" prefetch="hover">{{ link.label }}</Link>
+                        </template>
                     </nav>
                 </div>
 
@@ -131,9 +146,12 @@ const supportLinks = [
                 <div>
                     <div class="footer-col-title">About us</div>
                     <nav class="footer-links" aria-label="Company links">
-                        <a v-for="link in companyLinks" :key="link.label" :href="link.href">
-                            {{ link.label }}
-                        </a>
+                        <template v-for="link in companyLinks" :key="link.label">
+                            <Link v-if="link.href.startsWith('/')" :href="link.href" prefetch="hover">
+                                {{ link.label }}
+                            </Link>
+                            <a v-else :href="link.href">{{ link.label }}</a>
+                        </template>
                     </nav>
                 </div>
 
@@ -141,11 +159,15 @@ const supportLinks = [
                 <div>
                     <div class="footer-col-title">Contact us</div>
                     <nav class="footer-links" aria-label="Support links">
-                        <a v-for="link in supportLinks" :key="link.label" :href="link.href"
-                            :target="link.external ? '_blank' : undefined"
-                            :rel="link.external ? 'noopener noreferrer' : undefined">
-                            {{ link.label }}
-                        </a>
+                        <template v-for="link in supportLinks" :key="link.label">
+                            <Link v-if="link.href.startsWith('/')" :href="link.href" prefetch="hover">
+                                {{ link.label }}
+                            </Link>
+                            <a v-else :href="link.href" :target="link.external ? '_blank' : undefined"
+                                :rel="link.external ? 'noopener noreferrer' : undefined">
+                                {{ link.label }}
+                            </a>
+                        </template>
                     </nav>
                 </div>
             </div>
@@ -161,9 +183,9 @@ const supportLinks = [
                         undang-undang.</span><span class="inline-flex sm:hidden">All rights reserved.</span>
                 </p>
                 <nav class="footer-legal-links" aria-label="Legal links">
-                    <a href="/privasi">Kebijakan Privasi</a>
-                    <a href="/syarat">Syarat & Ketentuan</a>
-                    <a href="/cookie">Kelola Cookie</a>
+                    <Link href="/privasi" prefetch="hover">Kebijakan Privasi</Link>
+                    <Link href="/syarat" prefetch="hover">Syarat & Ketentuan</Link>
+                    <Link href="/cookie" prefetch="hover">Kelola Cookie</Link>
                     <!-- <a href="#legalitas">Legalitas</a> -->
                 </nav>
             </div>

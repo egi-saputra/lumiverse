@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Models\Partner;
 use App\Models\Plan;
+use App\Models\ReferralReward;
 use App\Models\SubscriptionOrder;
 use App\Models\Tenant;
+use App\Models\TenantReferral;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +22,14 @@ use Xendit\XenditSdkException;
 
 class SubscriptionController extends Controller
 {
+    /**
+     * Diskon referral (referral.php config) cuma berlaku untuk N kali
+     * checkout pertama tenant yang terkait kode partner — setelah itu
+     * harga normal, walaupun atribusi partner tetap permanen (reward
+     * partner tetap jalan terus, cuma diskon tenant-nya yang berhenti).
+     */
+    public const REFERRAL_DISCOUNT_MAX_USES = 3;
+
     // ─────────────────────────────────────────────────────────────────────────
     // Buat Xendit Invoice → return invoice_url ke frontend untuk REDIRECT
     // (bukan popup token seperti Snap — frontend harus window.location = invoice_url)
@@ -28,6 +39,7 @@ class SubscriptionController extends Controller
         $request->validate([
             'plan_key'      => ['required', 'string', 'exists:plans,key'],
             'billing_cycle' => ['required', 'in:monthly,yearly'],
+            'referral_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         $owner  = Auth::guard('owner')->user();
@@ -38,7 +50,9 @@ class SubscriptionController extends Controller
             ->firstOrFail();
 
         $currentPlan = $tenant->plan_id ? Plan::find($tenant->plan_id) : null;
-        $calc        = $this->calculate($tenant, $currentPlan, $newPlan, $request->billing_cycle);
+        $referrer = $this->resolveReferrer($tenant, $request->referral_code);
+        $applyReferralDiscount = $referrer !== null && $this->referralDiscountUsageCount($tenant) < self::REFERRAL_DISCOUNT_MAX_USES;
+        $calc = $this->calculate($tenant, $currentPlan, $newPlan, $request->billing_cycle, $applyReferralDiscount);
 
         // Downgrade — sama seperti sebelumnya, tidak ada pembayaran, dijadwalkan
         // lewat pending_plan_id. Tidak ada yang berubah di jalur ini.
@@ -53,6 +67,7 @@ class SubscriptionController extends Controller
             ->where('status', 'pending')
             ->where('plan_id', $newPlan->id)
             ->where('billing_cycle', $request->billing_cycle)
+            ->where('referrer_partner_id', $referrer?->id)
             ->latest()
             ->first();
 
@@ -103,6 +118,8 @@ class SubscriptionController extends Controller
                 'tax_amount'        => $calc['tax_amount'],
                 'discount_percent'  => $calc['discount_percent'],
                 'discount_amount'   => $calc['discount_amount'],
+                'referral_discount_amount' => $calc['referral_discount_amount'] ?? 0,
+                'referrer_partner_id'      => $referrer?->id,
                 'amount'            => 0,
                 'status'            => 'pending',
                 'expires_at'        => $calc['new_expires_at'],
@@ -125,6 +142,8 @@ class SubscriptionController extends Controller
             'tax_amount'        => $calc['tax_amount'],
             'discount_percent'  => $calc['discount_percent'],
             'discount_amount'   => $calc['discount_amount'],
+            'referral_discount_amount' => $calc['referral_discount_amount'] ?? 0,
+            'referrer_partner_id'      => $referrer?->id,
             'amount'            => $amount,
             'status'            => 'pending',
             'expires_at'        => $calc['new_expires_at'],
@@ -328,6 +347,7 @@ class SubscriptionController extends Controller
         $request->validate([
             'plan_key'      => ['required', 'string', 'exists:plans,key'],
             'billing_cycle' => ['required', 'in:monthly,yearly'],
+            'referral_code' => ['nullable', 'string', 'max:20'],
         ]);
 
         $owner  = Auth::guard('owner')->user();
@@ -338,7 +358,19 @@ class SubscriptionController extends Controller
             ->firstOrFail();
 
         $currentPlan = $tenant->plan_id ? Plan::find($tenant->plan_id) : null;
-        $calc        = $this->calculate($tenant, $currentPlan, $newPlan, $request->billing_cycle);
+        $referrer    = $this->resolveReferrer($tenant, $request->referral_code);
+
+        $usageCount            = $this->referralDiscountUsageCount($tenant);
+        $applyReferralDiscount = $referrer !== null && $usageCount < self::REFERRAL_DISCOUNT_MAX_USES;
+
+        $calc = $this->calculate($tenant, $currentPlan, $newPlan, $request->billing_cycle, $applyReferralDiscount);
+
+        // Beri tahu frontend apakah tenant sudah permanen ter-link (biar field
+        // input disembunyikan), apakah kode yang diinput tadi valid, dan
+        // sisa berapa kali lagi diskon referral bisa dipakai.
+        $calc['referral_locked']             = (bool) $tenant->referral;
+        $calc['referral_code_valid']         = $referrer !== null;
+        $calc['referral_discount_remaining'] = max(0, self::REFERRAL_DISCOUNT_MAX_USES - $usageCount);
 
         return response()->json($calc);
     }
@@ -356,26 +388,27 @@ class SubscriptionController extends Controller
         $subtotalAfterDiscount = $order->subtotal - $order->discount_amount;
 
         return response()->json([
-            'order_id'                => $order->order_id,
-            'action'                  => $order->action,
-            'billing_cycle'           => $order->billing_cycle,
-            'plan_name'               => $order->plan?->name,
-            'plan_accent'             => $order->plan?->accent_color,
-            'price_per_month'         => $order->billing_cycle === 'yearly'
+            'order_id'                 => $order->order_id,
+            'action'                   => $order->action,
+            'billing_cycle'            => $order->billing_cycle,
+            'plan_name'                => $order->plan?->name,
+            'plan_accent'              => $order->plan?->accent_color,
+            'price_per_month'          => $order->billing_cycle === 'yearly'
                                             ? $order->plan?->price_yearly
                                             : $order->plan?->price_monthly,
-            'subtotal'                => $order->subtotal,
-            'yearly_discount'         => $order->yearly_discount,
-            'discount_percent'        => $order->discount_percent,
-            'discount_amount'         => $order->discount_amount,
-            'credit_amount'           => $order->credit_amount,
-            'bonus_days'              => $order->bonus_days,
-            'tax_percent'             => $order->plan?->tax ?? 0,
-            'tax_amount'              => $order->tax_amount,
-            'amount_to_pay'           => $order->amount - $order->tax_amount,
-            'amount_to_pay_after_tax' => $order->amount,
-            'new_expires_at'          => $order->expires_at?->toDateString(),
-            'downgrade_note'          => null,
+            'subtotal'                 => $order->subtotal,
+            'yearly_discount'          => $order->yearly_discount,
+            'discount_percent'         => $order->discount_percent,
+            'discount_amount'          => $order->discount_amount,
+            'referral_discount_amount' => $order->referral_discount_amount,
+            'credit_amount'            => $order->credit_amount,
+            'bonus_days'               => $order->bonus_days,
+            'tax_percent'              => $order->plan?->tax ?? 0,
+            'tax_amount'               => $order->tax_amount,
+            'amount_to_pay'            => $order->amount - $order->tax_amount,
+            'amount_to_pay_after_tax'  => $order->amount,
+            'new_expires_at'           => $order->expires_at?->toDateString(),
+            'downgrade_note'           => null,
         ]);
     }
 
@@ -397,22 +430,33 @@ class SubscriptionController extends Controller
     // Helper: aktifkan plan setelah pembayaran sukses (idempotent) — tidak berubah,
     // sudah gateway-agnostic dari awal.
     // ─────────────────────────────────────────────────────────────────────────
-    protected function handlePaymentSuccess(SubscriptionOrder $order): void
+    public function handlePaymentSuccess(SubscriptionOrder $order): void
     {
-        if ($order->status === 'paid') return;
-
         DB::transaction(function () use ($order) {
-            $order->update([
+            // Kunci baris ini — kalau ada request lain (webhook vs redirect finish())
+            // yang masuk bersamaan, request kedua akan MENUNGGU sampai transaction
+            // pertama commit, lalu baca status yang sudah 'paid' dan langsung return.
+            $locked = SubscriptionOrder::whereKey($order->getKey())
+                ->lockForUpdate()
+                ->first();
+
+            if (!$locked || $locked->status === 'paid') {
+                return;
+            }
+
+            $locked->update([
                 'status'  => 'paid',
                 'paid_at' => now(),
             ]);
 
-            $tenant  = $order->tenant;
-            $newPlan = $order->plan;
+            // Kunci juga baris tenant — mencegah dua order (mis. upgrade cepat 2x)
+            // saling timpa plan_id/expires_at kalau diproses bersamaan.
+            $tenant  = Tenant::whereKey($locked->tenant_id)->lockForUpdate()->first();
+            $newPlan = $locked->plan;
 
-            $newExpiresAt = $order->expires_at
-                ? Carbon::parse($order->expires_at)
-                : $this->addCyclePeriod(Carbon::now(), $order->billing_cycle);
+            $newExpiresAt = $locked->expires_at
+                ? Carbon::parse($locked->expires_at)
+                : $this->addCyclePeriod(Carbon::now(), $locked->billing_cycle);
 
             $tenant->plan_id               = $newPlan->id;
             $tenant->expires_at            = $newExpiresAt;
@@ -421,8 +465,87 @@ class SubscriptionController extends Controller
             $tenant->pending_billing_cycle = null;
             $tenant->trial_used_at         = $tenant->trial_used_at ?? now();
             $tenant->quota_grace_until     = null;
+
             $tenant->save();
+
+            if ($locked->referrer_partner_id && $locked->amount > 0) {
+                $this->processReferralReward($locked);
+            }
         });
+    }
+
+    /**
+     * Kunci atribusi permanen tenant -> partner (tenant_referrals), kalau
+     * belum ada. Dipanggil hanya saat order BERHASIL dibayar — order yang
+     * gagal/dibatalkan tidak pernah mengunci atribusi kemana pun, jadi
+     * tenant yang masukin kode tapi gak jadi bayar masih bisa pakai kode
+     * partner lain nanti.
+     */
+    protected function lockReferralAttribution(SubscriptionOrder $order): ?TenantReferral
+    {
+        if (!$order->referrer_partner_id) {
+            return null;
+        }
+
+        return TenantReferral::firstOrCreate(
+            ['tenant_id' => $order->tenant_id],
+            [
+                'partner_id'         => $order->referrer_partner_id,
+                'referral_code_used' => $order->referrerPartner?->referral_code,
+                'attributed_at'      => now(),
+            ]
+        );
+    }
+
+    /**
+     * Kreditkan reward ke saldo Partner (referrer), dicatat di
+     * referral_rewards biar ada audit trail per transaksi. Persen reward
+     * ditentukan oleh Partner::rewardPercentForReferral() — tier berdasar
+     * urutan tenant yang di-lock partner ini, TIDAK dari Plan.
+     */
+    protected function processReferralReward(SubscriptionOrder $order): void
+    {
+        $referral = $this->lockReferralAttribution($order);
+        if (!$referral) return;
+
+        $partner = $referral->partner;
+        if (!$partner) return;
+
+        $rewardPercent = $partner->rewardPercentForReferral($referral);
+        if ($rewardPercent <= 0) return;
+
+        // Basis reward = amount SEBELUM pajak (bukan order->amount yang
+        // sudah termasuk PPN) — supaya referrer tidak ikut dapat komisi
+        // dari komponen pajak yang disetor ke negara, bukan revenue kita.
+        $preTaxAmount = $order->amount - $order->tax_amount;
+        $rewardAmount = (int) round($preTaxAmount * $rewardPercent / 100);
+        if ($rewardAmount <= 0) return;
+
+        try {
+            DB::transaction(function () use ($order, $partner, $rewardPercent, $rewardAmount) {
+                // create() akan gagal dengan unique violation kalau order_id
+                // sudah pernah dipakai — ini row-level guarantee terakhir,
+                // independen dari lock di handlePaymentSuccess().
+                ReferralReward::create([
+                    'order_id'            => $order->id,
+                    'referrer_partner_id' => $partner->id,
+                    'reward_percent'      => $rewardPercent,
+                    'reward_amount'       => $rewardAmount,
+                    'credited_at'         => now(),
+                ]);
+
+                $partner->addReferralCredit($rewardAmount);
+            });
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Kode 23505 = unique_violation (Postgres), 1062 = duplicate entry (MySQL)
+            if (!in_array($e->getCode(), ['23505', '23000'], true)) {
+                throw $e;
+            }
+
+            Log::info('Referral reward sudah pernah dibuat untuk order ini, dilewati', [
+                'order_id' => $order->order_id,
+            ]);
+        }
     }
 
     protected function resolveAction(Tenant $tenant, ?Plan $currentPlan, Plan $newPlan): string
@@ -452,7 +575,7 @@ class SubscriptionController extends Controller
         return $now->diffInDays($this->addCyclePeriod($now, $cycle));
     }
 
-    protected function calculate(Tenant $tenant, ?Plan $currentPlan, Plan $newPlan, string $cycle): array
+    protected function calculate(Tenant $tenant, ?Plan $currentPlan, Plan $newPlan, string $cycle, bool $hasReferral = false): array
     {
         $action   = $this->resolveAction($tenant, $currentPlan, $newPlan);
         $isYearly = $cycle === 'yearly';
@@ -475,28 +598,34 @@ class SubscriptionController extends Controller
         $taxRate    = $taxPercent / 100;
 
         if ($action === 'subscribe' || !$currentPlan || !$tenant->expires_at) {
-            $taxAmount  = (int) round($subtotalAfterDiscount * $taxRate);
-            $grandTotal = $subtotalAfterDiscount + $taxAmount;
+            // Referral dihitung dari basis SEBELUM pajak, supaya PPN yang
+            // tercatat merefleksikan harga final yang benar-benar dibayar.
+            $referral   = $this->calculateReferralDiscount($subtotalAfterDiscount, $hasReferral);
+            $taxAmount  = (int) round($referral['base_after_referral'] * $taxRate);
+            $grandTotal = $referral['base_after_referral'] + $taxAmount;
 
             return [
-                'action'                  => $action,
-                'billing_cycle'           => $cycle,
-                'price_per_month'         => $pricePerMonth,
-                'months'                  => $isYearly ? 12 : 1,
-                'subtotal'                => $subtotal,
-                'yearly_discount'         => $yearlyDiscount,
-                'discount_percent'        => $discountPercent,
-                'discount_amount'         => $discountAmount,
-                'credit_amount'           => 0,
-                'credit_days'             => 0,
-                'bonus_days'              => 0,
-                'tax_rate'                => $taxRate,
-                'tax_percent'             => $taxPercent,
-                'tax_amount'              => $taxAmount,
-                'amount_to_pay'           => $subtotalAfterDiscount,
-                'amount_to_pay_after_tax' => $grandTotal,
-                'new_expires_at'          => $this->addCyclePeriod(Carbon::now(), $cycle)->toDateString(),
-                'downgrade_note'          => null,
+                'action'                    => $action,
+                'billing_cycle'             => $cycle,
+                'price_per_month'           => $pricePerMonth,
+                'months'                    => $isYearly ? 12 : 1,
+                'subtotal'                  => $subtotal,
+                'yearly_discount'           => $yearlyDiscount,
+                'discount_percent'          => $discountPercent,
+                'discount_amount'           => $discountAmount,
+                'referral_discount_type'    => $referral['referral_discount_type'],
+                'referral_discount_percent' => $referral['referral_discount_percent'],
+                'referral_discount_amount'  => $referral['referral_discount_amount'],
+                'credit_amount'             => 0,
+                'credit_days'               => 0,
+                'bonus_days'                => 0,
+                'tax_rate'                  => $taxRate,
+                'tax_percent'               => $taxPercent,
+                'tax_amount'                => $taxAmount,
+                'amount_to_pay'             => $referral['base_after_referral'],
+                'amount_to_pay_after_tax'   => $grandTotal,
+                'new_expires_at'            => $this->addCyclePeriod(Carbon::now(), $cycle)->toDateString(),
+                'downgrade_note'            => null,
             ];
         }
 
@@ -563,8 +692,13 @@ class SubscriptionController extends Controller
         $creditAmount   = (int) round($daysLeft * $oldPricePerDay);
 
         $amountAfterCredit = max(0, $subtotalAfterDiscount - $creditAmount);
-        $taxAmount          = (int) round($amountAfterCredit * $taxRate);
-        $grandTotal          = $amountAfterCredit + $taxAmount;
+
+        // Urutan stacking diskon tetap: plan discount → kredit prorata →
+        // referral. Cuma titik hitung pajaknya dipindah ke paling akhir,
+        // setelah SEMUA potongan (termasuk referral) selesai.
+        $referral   = $this->calculateReferralDiscount($amountAfterCredit, $hasReferral);
+        $taxAmount  = (int) round($referral['base_after_referral'] * $taxRate);
+        $grandTotal = $referral['base_after_referral'] + $taxAmount;
 
         $creditUsed      = min($creditAmount, $subtotalAfterDiscount);
         $creditLeftover  = max(0, $creditAmount - $subtotalAfterDiscount);
@@ -576,24 +710,65 @@ class SubscriptionController extends Controller
         $newExpiresAt = $this->addCyclePeriod(Carbon::now(), $cycle)->addDays($bonusDays);
 
         return [
-            'action'                  => 'upgrade',
-            'billing_cycle'           => $cycle,
-            'price_per_month'         => $pricePerMonth,
-            'months'                  => $isYearly ? 12 : 1,
-            'subtotal'                => $subtotal,
-            'yearly_discount'         => $yearlyDiscount,
-            'discount_percent'        => $discountPercent,
-            'discount_amount'         => $discountAmount,
-            'credit_amount'           => $creditUsed,
-            'credit_days'             => $daysLeft,
-            'bonus_days'              => $bonusDays,
-            'tax_rate'                => $taxRate,
-            'tax_percent'             => $taxPercent,
-            'tax_amount'              => $taxAmount,
-            'amount_to_pay'           => $amountAfterCredit,
-            'amount_to_pay_after_tax' => $grandTotal,
-            'new_expires_at'          => $newExpiresAt->toDateString(),
-            'downgrade_note'          => null,
+            'action'                    => 'upgrade',
+            'billing_cycle'             => $cycle,
+            'price_per_month'           => $pricePerMonth,
+            'months'                    => $isYearly ? 12 : 1,
+            'subtotal'                  => $subtotal,
+            'yearly_discount'           => $yearlyDiscount,
+            'discount_percent'          => $discountPercent,
+            'discount_amount'           => $discountAmount,
+            'referral_discount_type'    => $referral['referral_discount_type'],
+            'referral_discount_percent' => $referral['referral_discount_percent'],
+            'referral_discount_amount'  => $referral['referral_discount_amount'],
+            'credit_amount'             => $creditUsed,
+            'credit_days'               => $daysLeft,
+            'bonus_days'                => $bonusDays,
+            'tax_rate'                  => $taxRate,
+            'tax_percent'               => $taxPercent,
+            'tax_amount'                => $taxAmount,
+            'amount_to_pay'             => $referral['base_after_referral'],
+            'amount_to_pay_after_tax'   => $grandTotal,
+            'new_expires_at'            => $newExpiresAt->toDateString(),
+            'downgrade_note'            => null,
+        ];
+    }
+
+    /**
+     * Hitung potongan referral dari basis SEBELUM pajak. Dipanggil di dalam
+     * calculate()/calculateRenewal() sebelum taxAmount dihitung — bukan di
+     * akhir seperti versi lama — supaya PPN yang dicatat merefleksikan
+     * harga final yang benar-benar dibayar setelah diskon referral,
+     * bukan basis yang belum dipotong referral.
+     */
+    public function calculateReferralDiscount(int $baseAmount, bool $hasReferral): array
+    {
+        if (!$hasReferral) {
+            return [
+                'referral_discount_type'    => null,
+                'referral_discount_percent' => 0,
+                'referral_discount_amount'  => 0,
+                'base_after_referral'       => $baseAmount,
+            ];
+        }
+
+        $type = config('referral.discount_type', 'percent');
+
+        if ($type === 'fixed') {
+            $percent = null;
+            // Cap supaya tidak melebihi basis — mencegah amount_to_pay jadi negatif
+            // kalau suatu saat nominal fixed diset lebih besar dari harga plan murah.
+            $amount = min((int) config('referral.discount_amount', 0), $baseAmount);
+        } else {
+            $percent = (int) config('referral.discount_percent', 10);
+            $amount  = $percent > 0 ? (int) round($baseAmount * $percent / 100) : 0;
+        }
+
+        return [
+            'referral_discount_type'    => $type,
+            'referral_discount_percent' => $percent, // null kalau mode fixed
+            'referral_discount_amount'  => $amount,
+            'base_after_referral'       => max(0, $baseAmount - $amount),
         ];
     }
 
@@ -632,23 +807,24 @@ class SubscriptionController extends Controller
 
         return Inertia::render('Owner/Invoice', [
             'order' => [
-                'order_id'         => $order->order_id,
-                'plan_name'        => $order->plan?->name,
-                'billing_cycle'    => $order->billing_cycle,
-                'action'           => $order->action,
-                'subtotal'         => $order->subtotal,
-                'yearly_discount'  => $order->yearly_discount,
-                'discount_amount'  => $order->discount_amount,
-                'discount_percent' => $order->discount_percent,
-                'credit_amount'    => $order->credit_amount,
-                'bonus_days'       => $order->bonus_days,
-                'tax_amount'       => $order->tax_amount,
-                'tax_percent'      => $order->plan?->tax ?? 0,
-                'amount'           => $order->amount,
-                'status'           => $order->status,
-                'paid_at'          => $order->paid_at?->toDateTimeString(),
-                'created_at'       => $order->created_at->toDateTimeString(),
-                'expires_at'       => $order->expires_at?->toDateString(),
+                'order_id'                 => $order->order_id,
+                'plan_name'                => $order->plan?->name,
+                'billing_cycle'            => $order->billing_cycle,
+                'action'                   => $order->action,
+                'subtotal'                 => $order->subtotal,
+                'yearly_discount'          => $order->yearly_discount,
+                'discount_amount'          => $order->discount_amount,
+                'discount_percent'         => $order->discount_percent,
+                'referral_discount_amount' => $order->referral_discount_amount,   // ← tambahkan
+                'credit_amount'            => $order->credit_amount,
+                'bonus_days'               => $order->bonus_days,
+                'tax_amount'               => $order->tax_amount,
+                'tax_percent'              => $order->plan?->tax ?? 0,
+                'amount'                   => $order->amount,
+                'status'                   => $order->status,
+                'paid_at'                  => $order->paid_at?->toDateTimeString(),
+                'created_at'               => $order->created_at->toDateTimeString(),
+                'expires_at'               => $order->expires_at?->toDateString(),
             ],
             'tenant' => [
                 'name'    => $order->tenant->name,
@@ -794,7 +970,7 @@ class SubscriptionController extends Controller
         return back()->with('success', 'Pesanan berhasil dibatalkan.');
     }
 
-    public function calculateRenewal(Plan $plan, string $cycle, Carbon $anchorExpiresAt): array
+    public function calculateRenewal(Plan $plan, string $cycle, Carbon $anchorExpiresAt, bool $hasReferral = false): array
     {
         $isYearly      = $cycle === 'yearly';
         $pricePerMonth = $isYearly ? $plan->price_yearly : $plan->price_monthly;
@@ -813,21 +989,68 @@ class SubscriptionController extends Controller
 
         $taxPercent = $plan->tax ?? 0;
         $taxRate    = $taxPercent / 100;
-        $taxAmount  = (int) round($subtotalAfterDiscount * $taxRate);
-        $grandTotal = $subtotalAfterDiscount + $taxAmount;
+
+        // Konsisten dengan calculate(): referral dipotong dari basis
+        // sebelum pajak, supaya recurring reward & PPN sinkron dengan
+        // alur subscribe/upgrade.
+        $referral   = $this->calculateReferralDiscount($subtotalAfterDiscount, $hasReferral);
+        $taxAmount  = (int) round($referral['base_after_referral'] * $taxRate);
+        $grandTotal = $referral['base_after_referral'] + $taxAmount;
 
         return [
-            'action'                  => 'renewal',
-            'billing_cycle'           => $cycle,
-            'subtotal'                => $subtotal,
-            'yearly_discount'         => $yearlyDiscount,
-            'discount_percent'        => $discountPercent,
-            'discount_amount'         => $discountAmount,
-            'tax_percent'             => $taxPercent,
-            'tax_amount'              => $taxAmount,
-            'bonus_days'              => 0,
-            'amount_to_pay_after_tax' => $grandTotal,
-            'new_expires_at'          => $this->addCyclePeriod($anchorExpiresAt->copy(), $cycle)->toDateString(),
+            'action'                    => 'renewal',
+            'billing_cycle'             => $cycle,
+            'subtotal'                  => $subtotal,
+            'yearly_discount'           => $yearlyDiscount,
+            'discount_percent'          => $discountPercent,
+            'discount_amount'           => $discountAmount,
+            'referral_discount_type'    => $referral['referral_discount_type'],
+            'referral_discount_percent' => $referral['referral_discount_percent'],
+            'referral_discount_amount'  => $referral['referral_discount_amount'],
+            'tax_percent'               => $taxPercent,
+            'tax_amount'                => $taxAmount,
+            'bonus_days'                => 0,
+            'amount_to_pay'             => $referral['base_after_referral'],
+            'amount_to_pay_after_tax'   => $grandTotal,
+            'new_expires_at'            => $this->addCyclePeriod($anchorExpiresAt->copy(), $cycle)->toDateString(),
         ];
+    }
+
+    /**
+     * Cari partner referrer yang berlaku untuk order ini.
+     * Kalau tenant SUDAH punya atribusi permanen (tenant_referrals), selalu
+     * pakai partner itu — input kode baru diabaikan. Kalau BELUM, coba
+     * resolve dari kode yang diinput saat checkout. Atribusi itu sendiri
+     * baru DIKUNCI kalau order-nya berhasil dibayar (lihat
+     * lockReferralAttribution()), jadi di sini cuma resolve kandidat.
+     */
+    public function resolveReferrer(Tenant $tenant, ?string $referralCodeInput): ?Partner
+    {
+        $existing = $tenant->referral; // TenantReferral, kalau sudah pernah terkunci
+
+        if ($existing) {
+            return $existing->partner;
+        }
+
+        if (empty($referralCodeInput)) {
+            return null;
+        }
+
+        return Partner::where('referral_code', strtoupper(trim($referralCodeInput)))
+            ->where('is_active', true)
+            ->first();
+    }
+
+    /**
+     * Berapa kali tenant ini SUDAH memakai diskon referral pada order yang
+     * berhasil dibayar. Dipakai untuk batasi diskon checkout referral cuma
+     * berlaku REFERRAL_DISCOUNT_MAX_USES kali pertama, sisanya harga normal.
+     */
+    public function referralDiscountUsageCount(Tenant $tenant): int
+    {
+        return SubscriptionOrder::where('tenant_id', $tenant->id)
+            ->where('status', 'paid')
+            ->where('referral_discount_amount', '>', 0)
+            ->count();
     }
 }

@@ -1,14 +1,22 @@
 <script setup>
-defineProps({
+import { ref, watch } from 'vue'
+
+const props = defineProps({
     show: Boolean,
     loading: Boolean,
     submitting: Boolean,
-    calc: Object,       // shape sama seperti hasil calculate() / orderPreview()
+    calc: Object,
     planName: String,
     accentColor: { type: String, default: '#00d4ff' },
 })
 
-const emit = defineEmits(['close', 'confirm'])
+const emit = defineEmits(['close', 'confirm', 'apply-referral'])
+const referralInput = ref('')
+
+// reset input tiap kali modal dibuka ulang
+watch(() => props.show, (val) => {
+    if (val) referralInput.value = ''
+})
 
 function formatPrice(amount) {
     if (amount === null || amount === undefined) return null
@@ -20,6 +28,13 @@ function formatDate(dateStr) {
     if (!dateStr) return '-'
     const d = new Date(dateStr)
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function referralLabelText(c) {
+    if (!c) return ''
+    return c.referral_discount_type === 'fixed'
+        ? `Rp ${formatPrice(c.referral_discount_amount)}`
+        : `${c.referral_discount_percent}%`
 }
 </script>
 
@@ -90,6 +105,15 @@ function formatDate(dateStr) {
                             <span class="inv-value inv-green">− Rp {{ formatPrice(calc.discount_amount) }}</span>
                         </div>
 
+                        <div v-if="calc.referral_discount_amount > 0" class="inv-row inv-row-discount">
+                            <span class="inv-label">
+                                Diskon Referral {{ referralLabelText(calc) }}
+                                <span class="inv-label-sub">Menggunakan kode referral</span>
+                            </span>
+                            <span class="inv-value inv-green">− Rp {{ formatPrice(calc.referral_discount_amount)
+                                }}</span>
+                        </div>
+
                         <div v-if="calc.credit_amount > 0" class="inv-row inv-row-credit">
                             <span class="inv-label">
                                 Kredit paket sebelumnya
@@ -141,6 +165,26 @@ function formatDate(dateStr) {
                         <div v-if="calc.user_count_warning" class="modal-warning">
                             ⚠️ {{ calc.user_count_warning }}
                         </div>
+                    </div>
+
+                    <div v-if="calc && !calc.referral_locked" class="referral-input-box">
+                        <label for="referral_code_input" class="referral-label">Punya kode referral?</label>
+                        <div class="referral-input-row">
+                            <input id="referral_code_input" type="text" v-model="referralInput"
+                                placeholder="Contoh: A3F9K2XZ" class="referral-input" />
+                            <button type="button" class="referral-apply-btn"
+                                @click="emit('apply-referral', referralInput)">
+                                Terapkan
+                            </button>
+                        </div>
+                        <div v-if="calc.referral_discount_amount > 0" class="referral-applied-note">
+                            ✓ Diskon referral {{ referralLabelText(calc) }} diterapkan
+                        </div>
+                    </div>
+
+                    <div v-if="calc && calc.referral_locked && calc.referral_discount_amount > 0"
+                        class="referral-applied-note">
+                        ✓ Diskon referral {{ referralLabelText(calc) }} otomatis diterapkan
                     </div>
 
                     <div class="modal-actions">
@@ -479,5 +523,60 @@ function formatDate(dateStr) {
     to {
         transform: rotate(360deg);
     }
+}
+
+.referral-input-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+
+.referral-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.referral-input-row {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.referral-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--white);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+}
+
+.referral-input:focus {
+    outline: none;
+    border-color: var(--accent, #00d4ff);
+}
+
+.referral-apply-btn {
+    padding: 0.5rem 0.9rem;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--accent, #00d4ff) 35%, transparent);
+    background: color-mix(in srgb, var(--accent, #00d4ff) 12%, transparent);
+    color: var(--accent, #00d4ff);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.referral-applied-note {
+    font-size: 0.78rem;
+    color: #34d399;
+    font-weight: 600;
 }
 </style>

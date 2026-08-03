@@ -3,6 +3,7 @@
 use App\Models\User;
 use App\Models\Developer;
 use App\Models\TenantOwner;
+use App\Models\Partner;
 
 return [
 
@@ -54,6 +55,8 @@ return [
             'driver' => 'session',
             'provider' => 'tenant_owners',
         ],
+
+        'partner' => ['driver' => 'session', 'provider' => 'partners'],
     ],
 
     /*
@@ -88,6 +91,11 @@ return [
             'driver' => 'eloquent',
             'model' => TenantOwner::class,
         ],
+
+        'partners' => [
+            'driver' => 'eloquent',
+            'model' => Partner::class,
+        ],
     ],
 
     /*
@@ -113,6 +121,20 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'tenant_owners' => [
+            'provider' => 'tenant_owners',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'partners' => [
+            'provider' => 'partners',
+            'table' => 'partner_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

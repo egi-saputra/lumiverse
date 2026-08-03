@@ -219,4 +219,26 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
         return $modelClass::where($userColumn, Auth::id())->count() >= $freeLimit;
     }
+
+    /**
+     * Atribusi permanen: partner mana yang mereferensikan tenant ini
+     * (dikunci sekali saat signup, tidak berubah walau kode referral
+     * partner tsb sudah diganti).
+     */
+    public function referral()
+    {
+        return $this->hasOne(TenantReferral::class, 'tenant_id');
+    }
+
+    public function referredByPartner()
+    {
+        return $this->hasOneThrough(
+            Partner::class,
+            TenantReferral::class,
+            'tenant_id',   // FK di tenant_referrals -> tenants
+            'id',          // FK di partners -> tenant_referrals.partner_id
+            'id',          // local key di tenants
+            'partner_id'   // local key di tenant_referrals
+        );
+    }
 }

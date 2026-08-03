@@ -1,22 +1,33 @@
 <script setup>
+import {
+    BellAlertIcon,
+    CalendarDaysIcon,
+    ChartBarIcon,
+    ChatBubbleLeftRightIcon,
+    CheckCircleIcon,
+    DevicePhoneMobileIcon,
+    HomeIcon,
+    UserCircleIcon,
+} from '@heroicons/vue/24/outline'
+
 const serviceFeatures = [
     {
-        icon: '📊', bg: 'rgba(0,212,255,0.1)',
+        icon: ChartBarIcon, bg: 'rgba(0,212,255,0.1)',
         title: 'Absensi & Nilai Real-time',
         desc: 'Guru input sekali, orang tua dan siswa langsung melihat pembaruan absensi dan nilai secara instan.',
     },
     {
-        icon: '🔔', bg: 'rgba(245,166,35,0.1)',
+        icon: BellAlertIcon, bg: 'rgba(245,166,35,0.1)',
         title: 'Notifikasi WhatsApp Otomatis',
         desc: 'Pemberitahuan pendaftaran, hasil ujian, dan pengumuman penting dikirim otomatis ke WhatsApp orang tua.',
     },
     {
-        icon: '📅', bg: 'rgba(52,211,153,0.1)',
+        icon: CalendarDaysIcon, bg: 'rgba(52,211,153,0.1)',
         title: 'Jadwal & Kalender Akademik',
         desc: 'Jadwal pelajaran, ujian, dan agenda sekolah tersinkronisasi otomatis di aplikasi setiap siswa dan guru.',
     },
     {
-        icon: '📱', bg: 'rgba(167,139,250,0.1)',
+        icon: DevicePhoneMobileIcon, bg: 'rgba(167,139,250,0.1)',
         title: 'Aplikasi Mobile Native',
         desc: 'Akses kapan saja lewat aplikasi Android & iOS yang ringan, cepat, dan bisa dipakai offline sebagian fitur.',
     },
@@ -111,16 +122,16 @@ const serviceFeatures = [
                             <!-- Bottom nav -->
                             <div class="app-nav w-64 absolute bottom-6 left-6">
                                 <div class="app-nav-item active">
-                                    <span class="app-nav-icon">🏠</span>
+                                    <HomeIcon class="app-nav-icon" aria-hidden="true" />
                                 </div>
                                 <div class="app-nav-item">
-                                    <span class="app-nav-icon">📅</span>
+                                    <CalendarDaysIcon class="app-nav-icon" aria-hidden="true" />
                                 </div>
                                 <div class="app-nav-item">
-                                    <span class="app-nav-icon">📊</span>
+                                    <ChartBarIcon class="app-nav-icon" aria-hidden="true" />
                                 </div>
                                 <div class="app-nav-item">
-                                    <span class="app-nav-icon">👤</span>
+                                    <UserCircleIcon class="app-nav-icon" aria-hidden="true" />
                                 </div>
                             </div>
                         </div>
@@ -128,14 +139,14 @@ const serviceFeatures = [
 
                     <!-- Floating notification cards -->
                     <div class="float-card float-card--top">
-                        <span class="float-icon">✅</span>
+                        <CheckCircleIcon class="float-icon" aria-hidden="true" />
                         <div>
                             <div class="float-title">Absensi berhasil</div>
                             <div class="float-sub">Tercatat 07:28 WIB</div>
                         </div>
                     </div>
                     <div class="float-card float-card--bottom">
-                        <span class="float-icon wa">💬</span>
+                        <ChatBubbleLeftRightIcon class="float-icon wa" aria-hidden="true" />
                         <div>
                             <div class="float-title">WhatsApp terkirim</div>
                             <div class="float-sub">Nilai Ujian Fisika telah diperbarui</div>
@@ -160,7 +171,9 @@ const serviceFeatures = [
                     <div class="layanan-features">
                         <div v-for="(feat, i) in serviceFeatures" :key="feat.title" class="svc-feature reveal"
                             :style="{ transitionDelay: `${(i + 1) * 0.1}s` }">
-                            <div class="svc-feature-icon" :style="{ background: feat.bg }">{{ feat.icon }}</div>
+                            <div class="svc-feature-icon" :style="{ background: feat.bg }">
+                                <component :is="feat.icon" aria-hidden="true" />
+                            </div>
                             <div class="svc-feature-text">
                                 <div class="title">{{ feat.title }}</div>
                                 <div class="desc">{{ feat.desc }}</div>
@@ -387,13 +400,19 @@ const serviceFeatures = [
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    font-size: 0.85rem;
+    color: var(--muted);
     opacity: 0.5;
 }
 
 .app-nav-item.active {
     opacity: 1;
+    color: var(--cyan);
     background: rgba(0, 212, 255, 0.12);
+}
+
+.app-nav-icon {
+    width: 16px;
+    height: 16px;
 }
 
 /* ── Floating notification cards ─────────────────────── */
@@ -442,7 +461,9 @@ const serviceFeatures = [
 }
 
 .float-icon {
-    font-size: 1.1rem;
+    width: 20px;
+    height: 20px;
+    color: #34d399;
     flex-shrink: 0;
 }
 
@@ -530,7 +551,12 @@ const serviceFeatures = [
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
+    color: var(--cyan);
+}
+
+.svc-feature-icon svg {
+    width: 22px;
+    height: 22px;
 }
 
 .svc-feature-text .title {

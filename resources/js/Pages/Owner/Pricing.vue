@@ -24,9 +24,42 @@ const props = defineProps({
 })
 
 const billingCycle = ref('yearly') // 'monthly' | 'yearly'
+const appliedReferralCode = ref('')
 
 // Safety wrapper — selalu Array meski prop belum siap
 const planList = computed(() => props.plans ?? [])
+
+async function applyReferralCode(code) {
+    if (!modalPlan.value) return
+    modalLoading.value = true
+    try {
+        const res = await fetch(route('owner.subscription.preview'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken(),
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({
+                plan_key: modalPlan.value.key,
+                billing_cycle: billingCycle.value,
+                referral_code: code,
+            }),
+        })
+        const data = await res.json()
+        if (!data.referral_code_valid && code) {
+            alert('Kode referral tidak valid.')
+            appliedReferralCode.value = ''   // ← jangan simpan kode yang invalid
+        } else {
+            appliedReferralCode.value = code
+        }
+        modalCalc.value = data
+    } catch (e) {
+        // diamkan, calc lama tetap tampil
+    } finally {
+        modalLoading.value = false
+    }
+}
 
 // ─── Tentukan aksi per plan ───────────────────────────────────────────────────
 function getPlanAction(plan) {
@@ -77,6 +110,7 @@ async function handleCta(plan) {
     // }
 
     // Ambil preview kalkulasi dari server
+    appliedReferralCode.value = ''
     modalPlan.value = plan
     modalCalc.value = null
     modalLoading.value = true
@@ -108,6 +142,7 @@ function closeModal() {
     showModal.value = false
     modalPlan.value = null
     modalCalc.value = null
+    appliedReferralCode.value = ''
 }
 
 async function confirmSubscribe() {
@@ -118,7 +153,7 @@ async function confirmSubscribe() {
         const data = await postSubscriptionJson(
             route('owner.subscription.charge'),
             csrfToken(),
-            { plan_key: modalPlan.value.key, billing_cycle: billingCycle.value }
+            { plan_key: modalPlan.value.key, billing_cycle: billingCycle.value, referral_code: appliedReferralCode.value }
         )
 
         closeModal()
@@ -317,7 +352,7 @@ function formatDate(dateStr) {
                     <ChevronLeftIcon class="arrow-icon" />
                 </button>
 
-                <div class="slider-track" ref="track" @scroll.passive="onCarouselScroll">
+                <div class="slider-track" ref="track" @scroll.passive="updateActiveFromScroll">
 
                     <div class="track-spacer" aria-hidden="true" />
 
@@ -531,7 +566,7 @@ function formatDate(dateStr) {
         <!-- ── Modal Konfirmasi Pembayaran ───────────────────────────────────────── -->
         <SubscriptionInvoiceModal :show="showModal" :loading="modalLoading" :submitting="submitting" :calc="modalCalc"
             :plan-name="modalPlan?.name" :accent-color="modalPlan?.accent" @close="closeModal"
-            @confirm="confirmSubscribe" />
+            @confirm="confirmSubscribe" @apply-referral="applyReferralCode" />
 
     </OwnerLayout>
 </template>

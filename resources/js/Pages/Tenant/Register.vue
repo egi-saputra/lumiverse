@@ -136,7 +136,7 @@ function nextStep() {
 function prevStep() {
     // Di step paling awal, "Kembali" langsung ke homepage
     if (currentStep.value <= 1) {
-        window.location.href = '/'
+        router.visit('/', { preserveScroll: false })
         return
     }
     currentStep.value--
@@ -234,6 +234,7 @@ function goToDashboard() {
 /* ─── Dark Mode — dipaksa selalu aktif ──── */
 onMounted(() => {
     document.documentElement.classList.add('dark')
+    router.prefetch('/')
 })
 </script>
 

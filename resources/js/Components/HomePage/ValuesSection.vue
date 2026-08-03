@@ -33,7 +33,7 @@ const values = [
             <!-- ── Desktop: Bento cards ─────────────────────────── -->
             <div class="values-bento">
                 <div v-for="(val, i) in values" :key="`bento-${val.title}`" class="value-card reveal" :class="`v-${i}`"
-                    :style="`transition-delay: ${i * 0.08}s`">
+                    :style="{ '--reveal-delay': `${Math.min(i * 0.045, 0.24)}s` }">
                     <span class="value-glow" aria-hidden="true"></span>
                     <div class="value-icon">{{ val.icon }}</div>
                     <h3 class="value-title">{{ val.title }}</h3>
@@ -44,8 +44,8 @@ const values = [
             <!-- ── Mobile: Timeline ─────────────────────────────── -->
             <div class="timeline" role="list">
                 <div v-for="(val, i) in values" :key="`tl-${val.title}`" class="timeline-item reveal"
-                    :class="{ 'timeline-item--right': i % 2 !== 0 }" :style="`transition-delay: ${i * 0.1}s`"
-                    role="listitem">
+                    :class="{ 'timeline-item--right': i % 2 !== 0 }"
+                    :style="{ '--reveal-delay': `${Math.min(i * 0.045, 0.24)}s` }" role="listitem">
                     <!-- <div class="timeline-icon" aria-hidden="true"> {{ val.title }}</div> -->
                     <h4 class="timeline-title">{{ val.title }}</h4>
                     <div class="timeline-connector" aria-hidden="true">
@@ -85,7 +85,8 @@ const values = [
     border-radius: 50%;
     filter: blur(90px);
     opacity: 0.16;
-    animation: float 18s ease-in-out infinite;
+    animation: float 24s ease-in-out infinite;
+    will-change: transform;
 }
 
 .orb--cyan {
@@ -118,8 +119,13 @@ const values = [
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .orb {
+
+    .orb,
+    .value-card.reveal,
+    .timeline-item.reveal {
         animation: none;
+        transition: none;
+        transform: none;
     }
 }
 
@@ -190,9 +196,23 @@ const values = [
     border-radius: 20px;
     padding: 2rem 1.75rem;
     overflow: hidden;
-    transition: transform 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+    transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
     display: flex;
     flex-direction: column;
+}
+
+/* Keep scroll reveal separate from hover motion so transforms do not compete. */
+.value-card.reveal,
+.timeline-item.reveal {
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+        transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0s);
+    will-change: opacity, transform;
+}
+
+.value-card.reveal.visible,
+.timeline-item.reveal.visible {
+    transition-delay: 0s;
 }
 
 .value-card.v-0 {
@@ -224,6 +244,7 @@ const values = [
     border-radius: 20px;
     padding: 1px;
     background: conic-gradient(from 180deg, var(--cyan), #a78bfa, var(--gold), var(--cyan));
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;

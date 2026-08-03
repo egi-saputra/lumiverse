@@ -39,7 +39,6 @@ class AuthController extends Controller
         Auth::guard('owner')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        // return redirect()->route('owner.login');
         return redirect('/');
     }
 
@@ -64,7 +63,6 @@ class AuthController extends Controller
             ],
             'tenant' => [
                 'name'                   => $tenant->name,
-                'product_type'           => $tenant->product_type,
                 'subdomain'              => $tenant->domains->first()?->domain,
                 'code'                   => $tenant->code,
                 'institution_type'       => $tenant->institution_type,
