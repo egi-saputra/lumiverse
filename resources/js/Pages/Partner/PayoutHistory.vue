@@ -145,9 +145,7 @@ function formatDate(dt) {
             <form class="pin-modal" @submit.prevent="confirmPin">
                 <h2 class="pin-title">{{ pinMode === 'setup' ? 'Atur PIN Keamanan' : 'Konfirmasi Keamanan' }}</h2>
                 <p class="pin-subtitle">
-                    {{ pinMode === 'setup' ? 'Konfirmasi password akun lalu buat PIN 6 digit.' : 'Masukkan PIN 6 digit
-                    untuk
-                    melanjutkan.' }}
+                    {{ pinMode === 'setup' ? 'Konfirmasi password akun lalu buat PIN 6 digit.' : 'Masukkan PIN 6 digit untuk melanjutkan.' }}
                 </p>
                 <input v-if="pinMode === 'setup'" v-model="currentPassword" class="field-input" type="password"
                     autocomplete="current-password" placeholder="Password akun" required />
