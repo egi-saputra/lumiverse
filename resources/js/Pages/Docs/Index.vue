@@ -72,17 +72,10 @@ onMounted(() => {
                 <p v-else>Access is divided by role. Admins manage organization data, teachers manage learning, proctors
                     handle exam operations, and students follow learning activities.</p>
                 <div class="role-grid">
-                    <div><strong>Admin</strong><span>{{ language === 'en' ? 'Manage organizations, users, classes, and
-                            settings.' : 'Kelola lembaga, pengguna, kelas, dan konfigurasi.' }}</span></div>
-                    <div><strong>{{ language === 'en' ? 'Teacher' : 'Guru' }}</strong><span>{{ language === 'en' ?
-                        'Create materials, assignments, exams, attendance, and grades.' : 'Buat materi, tugas,
-                            ujian, presensi, dan nilai.' }}</span></div>
-                    <div><strong>{{ language === 'en' ? 'Proctor' : 'Proktor' }}</strong><span>{{ language === 'en' ?
-                        'Manage participants, question banks, exam rooms, and reports.' : 'Kelola peserta, bank
-                            soal, ruang ujian, dan rekap.' }}</span></div>
-                    <div><strong>{{ language === 'en' ? 'Student' : 'Siswa' }}</strong><span>{{ language === 'en' ?
-                        'Take part in learning, assignments, exams, and attendance.' : 'Ikuti pembelajaran, tugas,
-                            ujian, dan presensi.' }}</span></div>
+                    <div><strong>Admin</strong><span>{{ language === 'en' ? 'Manage organizations, users, classes, and settings.' : 'Kelola lembaga, pengguna, kelas, dan konfigurasi.' }}</span></div>
+                    <div><strong>{{ language === 'en' ? 'Teacher' : 'Guru' }}</strong><span>{{ language === 'en' ? 'Create materials, assignments, exams, attendance, and grades.' : 'Buat materi, tugas, ujian, presensi, dan nilai.' }}</span></div>
+                    <div><strong>{{ language === 'en' ? 'Proctor' : 'Proktor' }}</strong><span>{{ language === 'en' ? 'Manage participants, question banks, exam rooms, and reports.' : 'Kelola peserta, bank soal, ruang ujian, dan rekap.' }}</span></div>
+                    <div><strong>{{ language === 'en' ? 'Student' : 'Siswa' }}</strong><span>{{ language === 'en' ? 'Take part in learning, assignments, exams, and attendance.' : 'Ikuti pembelajaran, tugas, ujian, dan presensi.' }}</span></div>
                 </div>
             </div>
         </div>
@@ -96,14 +89,10 @@ onMounted(() => {
                 <p v-else>The admin is the center of organization settings. Make sure user data and roles are correct
                     before learning activities begin.</p>
                 <ul class="bullet-list">
-                    <li>{{ language === 'en' ? 'Update the organization profile and information.' : 'Perbarui profil dan
-                        informasi lembaga.' }}</li>
-                    <li>{{ language === 'en' ? 'Add users and assign the right roles.' : 'Tambahkan pengguna dan berikan
-                        peran yang sesuai.' }}</li>
-                    <li>{{ language === 'en' ? 'Set up classes, subjects, and academic years.' : 'Atur kelas, mata
-                    pelajaran, dan tahun ajaran.' }}</li>
-                    <li>{{ language === 'en' ? 'Review user access regularly.' : 'Periksa akses pengguna secara
-                        berkala.' }}</li>
+                    <li>{{ language === 'en' ? 'Update the organization profile and information.' : 'Perbarui profil dan informasi lembaga.' }}</li>
+                    <li>{{ language === 'en' ? 'Add users and assign the right roles.' : 'Tambahkan pengguna dan berikan peran yang sesuai.' }}</li>
+                    <li>{{ language === 'en' ? 'Set up classes, subjects, and academic years.' : 'Atur kelas, mata pelajaran, dan tahun ajaran.' }}</li>
+                    <li>{{ language === 'en' ? 'Review user access regularly.' : 'Periksa akses pengguna secara berkala.' }}</li>
                 </ul>
             </div>
         </div>
@@ -117,14 +106,10 @@ onMounted(() => {
                 <p v-else>Teachers can structure the learning flow from materials to assessment. Use clear titles and
                     instructions so students can follow each activity.</p>
                 <ul class="bullet-list">
-                    <li>{{ language === 'en' ? 'Share learning materials or modules.' : 'Bagikan materi atau modul
-                        pembelajaran.' }}</li>
-                    <li>{{ language === 'en' ? 'Create assignments with clear instructions and deadlines.' : 'Buat tugas
-                        dengan instruksi dan tenggat yang jelas.' }}</li>
-                    <li>{{ language === 'en' ? 'Prepare online exams and review the results.' : 'Siapkan ujian online
-                        dan tinjau hasilnya.' }}</li>
-                    <li>{{ language === 'en' ? 'Manage attendance and student grade reports.' : 'Kelola presensi serta
-                        rekap nilai siswa.' }}</li>
+                    <li>{{ language === 'en' ? 'Share learning materials or modules.' : 'Bagikan materi atau modul pembelajaran.' }}</li>
+                    <li>{{ language === 'en' ? 'Create assignments with clear instructions and deadlines.' : 'Buat tugas dengan instruksi dan tenggat yang jelas.' }}</li>
+                    <li>{{ language === 'en' ? 'Prepare online exams and review the results.' : 'Siapkan ujian online dan tinjau hasilnya.' }}</li>
+                    <li>{{ language === 'en' ? 'Manage attendance and student grade reports.' : 'Kelola presensi serta rekap nilai siswa.' }}</li>
                 </ul>
             </div>
         </div>
@@ -137,8 +122,7 @@ onMounted(() => {
                     presensi, dan memantau hasil belajar melalui akun yang diberikan lembaga.</p>
                 <p v-else>Students can open materials, complete assignments, take exams, view attendance, and track
                     learning results through their organization account.</p>
-                <div class="callout"><b>{{ language === 'en' ? 'Tip:' : 'Tips:' }}</b> {{ language === 'en' ? 'Use a
-                    stable connection, check schedules, and save answers according to the teacher instructions.' :
+                <div class="callout"><b>{{ language === 'en' ? 'Tip:' : 'Tips:' }}</b> {{ language === 'en' ? 'Use a stable connection, check schedules, and save answers according to the teacher instructions.' :
                     'gunakan koneksi yang stabil, periksa jadwal, dan simpan jawaban sesuai instruksi guru.' }}</div>
             </div>
         </div>
@@ -153,10 +137,7 @@ onMounted(() => {
                 <p v-else>Partners can use a referral code to introduce new organizations and earn rewards according to
                     the program terms. Manage codes, reward balances, primary bank accounts, and payouts from the
                     partner area.</p>
-                <div class="callout"><b>{{ language === 'en' ? 'Security:' : 'Keamanan:' }}</b> {{ language === 'en' ?
-                    'Actions such as changing a bank account or requesting a payout may require additional
-                    verification.' : 'tindakan seperti perubahan rekening dan pencairan dapat memerlukan verifikasi
-                    tambahan.' }}</div>
+                <div class="callout"><b>{{ language === 'en' ? 'Security:' : 'Keamanan:' }}</b> {{ language === 'en' ? 'Actions such as changing a bank account or requesting a payout may require additional verification.' : 'tindakan seperti perubahan rekening dan pencairan dapat memerlukan verifikasi tambahan.' }}</div>
             </div>
         </div>
 
@@ -208,14 +189,10 @@ Content-Type: application/json
                 <p v-else>Protect your password, verification codes, and the devices used to access your account. Never
                     share security information through unofficial email or messages.</p>
                 <ul class="bullet-list">
-                    <li>{{ language === 'en' ? 'Use a unique, hard-to-guess password.' : 'Gunakan password yang unik dan
-                        tidak mudah ditebak.' }}</li>
-                    <li>{{ language === 'en' ? 'Limit access based on user roles.' : 'Batasi akses berdasarkan peran
-                        pengguna.' }}</li>
-                    <li>{{ language === 'en' ? 'Report suspicious activity to support.' : 'Laporkan aktivitas yang
-                        mencurigakan kepada support.' }}</li>
-                    <li>{{ language === 'en' ? 'Use additional verification for sensitive actions.' : 'Gunakan
-                        verifikasi tambahan untuk tindakan sensitif.' }}</li>
+                    <li>{{ language === 'en' ? 'Use a unique, hard-to-guess password.' : 'Gunakan password yang unik dan tidak mudah ditebak.' }}</li>
+                    <li>{{ language === 'en' ? 'Limit access based on user roles.' : 'Batasi akses berdasarkan peran pengguna.' }}</li>
+                    <li>{{ language === 'en' ? 'Report suspicious activity to support.' : 'Laporkan aktivitas yang  mencurigakan kepada support.' }}</li>
+                    <li>{{ language === 'en' ? 'Use additional verification for sensitive actions.' : 'Gunakan verifikasi tambahan untuk tindakan sensitif.' }}</li>
                 </ul>
             </div>
         </div>
