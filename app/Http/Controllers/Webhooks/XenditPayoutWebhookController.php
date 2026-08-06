@@ -30,9 +30,11 @@ class XenditPayoutWebhookController extends Controller
         }
 
         $payload = $request->all();
-        $status = $payload['status'] ?? null;
-        $referenceId = $payload['reference_id'] ?? null;
-        $xenditId = $payload['id'] ?? null;
+        $data = $payload['data'] ?? [];
+
+        $status = $data['status'] ?? null;
+        $referenceId = $data['reference_id'] ?? null;
+        $xenditId = $data['id'] ?? null;
 
         return DB::transaction(function () use ($xenditId, $referenceId, $status, $payload) {
             $payout = PayoutRequest::where('xendit_payout_id', $xenditId)
