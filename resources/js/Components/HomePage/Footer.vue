@@ -5,6 +5,10 @@ import { computed } from 'vue'
 const page = usePage()
 
 const partnerProgramUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return 'https://partner.lumiverse.co.id/'
+    }
+
     const hostname = window.location.hostname
     const port = window.location.port ? `:${window.location.port}` : ''
     const protocol = window.location.protocol
@@ -19,6 +23,10 @@ const partnerProgramUrl = computed(() => {
 })
 
 const docsUrl = computed(() => {
+    if (typeof window === 'undefined') {
+        return 'https://docs.lumiverse.co.id/'
+    }
+
     const hostname = window.location.hostname
     const port = window.location.port ? `:${window.location.port}` : ''
     const protocol = window.location.protocol
