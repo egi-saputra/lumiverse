@@ -9,7 +9,8 @@ import {
     ClipboardDocumentCheckIcon,
     CheckBadgeIcon,
     ChevronDownIcon,
-    AcademicCapIcon
+    AcademicCapIcon,
+    ChartBarIcon,
 } from '@heroicons/vue/24/outline';
 
 const page = usePage();
@@ -21,6 +22,11 @@ const menuItems = [
     { name: 'Student Dashboard', routeName: 'siswa.dashboard', icon: HomeIcon },
     // { name: 'Student Directory', routeName: 'siswa.absensi.index', icon: UsersIcon },
     { name: 'Daily Attendance', routeName: 'siswa.absensi.index', icon: UsersIcon },
+    {
+        name: 'Presention Analytics',
+        routeName: 'public.absensi.analytics',
+        icon: ChartBarIcon,
+    },
     { name: 'Learning Materials', routeName: 'siswa.material.index', icon: ClipboardDocumentCheckIcon },
     { name: 'Assignment Rooms', routeName: 'siswa.assignment.index', icon: CheckBadgeIcon },
     { name: 'Exam Rooms / Test', routeName: 'siswa.ujian.token', icon: AcademicCapIcon },

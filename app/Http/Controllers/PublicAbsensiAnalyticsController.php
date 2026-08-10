@@ -36,7 +36,6 @@ class PublicAbsensiAnalyticsController extends Controller
      */
     public function index(Request $request): Response
     {
-        // ── Validasi query param ────────────────────────────────────────────
         $validated = $request->validate([
             'kelas_id' => ['nullable', 'integer', 'exists:kelas,id'],
             'mode'     => ['nullable', 'string', 'in:bulan,rentang'],
@@ -46,35 +45,52 @@ class PublicAbsensiAnalyticsController extends Controller
             'sampai'   => ['nullable', 'date_format:Y-m-d', 'after_or_equal:mulai'],
         ]);
 
+        // ── Kunci kelas untuk siswa: abaikan kelas_id dari query, pakai kelasnya sendiri ──
+        $lockedKelasId = null;
+        $user = $request->user();
+
+        if ($user && $user->role === 'siswa') {
+            $siswa = $user->siswa;
+            if (! $siswa || ! $siswa->kelas_id) {
+                abort(403, 'Data siswa tidak lengkap.');
+            }
+            $lockedKelasId = $siswa->kelas_id;
+            $validated['kelas_id'] = $lockedKelasId; // paksa override, abaikan input user
+        }
+
+        $isLockedForSiswa = $lockedKelasId !== null;
+
         // ── Daftar kelas publik untuk picker ───────────────────────────────
-        // Jika kamu punya kolom `is_public` di tabel kelas, aktifkan ->where('is_public', true)
-        // Jika tidak ada kolom itu, hapus baris where tersebut — semua kelas akan tampil.
-        $kelasList = Kelas::with('guru:id,nama_lengkap')
-            ->withCount('siswa')
-            // ->where('is_public', true) // ← aktifkan jika ingin filter kelas tertentu saja
-            ->orderBy('kelas')
-            ->get()
-            ->map(fn (Kelas $k) => [
-                'id'           => $k->id,
-                'kelas'        => $k->kelas,
-                'guru_nama'    => $k->guru?->nama_lengkap ?? '—',
-                'jumlah_siswa' => $k->siswa_count,
-            ]);
+        // Siswa locked tidak pernah lihat picker → skip query ini sepenuhnya, hemat DB.
+        $kelasList = $isLockedForSiswa
+            ? []
+            : Kelas::with('guru:id,nama_lengkap')
+                ->withCount('siswa')
+                // ->where('is_public', true) // ← aktifkan jika ingin filter kelas tertentu saja
+                ->orderBy('kelas')
+                ->get()
+                ->map(fn (Kelas $k) => [
+                    'id'           => $k->id,
+                    'kelas'        => $k->kelas,
+                    'guru_nama'    => $k->guru?->nama_lengkap ?? '—',
+                    'jumlah_siswa' => $k->siswa_count,
+                ]);
 
         // ── Jika belum pilih kelas ─────────────────────────────────────────
         if (empty($validated['kelas_id'])) {
             return Inertia::render('Public/AbsensiAnalytics', [
-                'kelasList'   => $kelasList,
-                'kelas'       => null,
-                'dataLoaded'  => false,
-                'mode'        => 'bulan',
-                'bulan'       => now()->month,
-                'tahun'       => now()->year,
-                'mulai'       => null,
-                'sampai'      => null,
-                'label'       => '',
-                'hariEfektif' => [],
-                'analytics'   => null,
+                'kelasList'      => $kelasList,
+                'kelas'          => null,
+                'dataLoaded'     => false,
+                'mode'           => 'bulan',
+                'bulan'          => now()->month,
+                'tahun'          => now()->year,
+                'mulai'          => null,
+                'sampai'         => null,
+                'label'          => '',
+                'hariEfektif'    => [],
+                'analytics'      => null,
+                'lockedForSiswa' => $isLockedForSiswa,
             ]);
         }
 
@@ -136,33 +152,73 @@ class PublicAbsensiAnalyticsController extends Controller
         // Tidak ada data sama sekali
         if ($analytics === null) {
             return Inertia::render('Public/AbsensiAnalytics', [
-                'kelasList'   => $kelasList,
-                'kelas'       => $kelasData,
-                'dataLoaded'  => true,
-                'mode'        => $mode,
-                'bulan'       => $bulan,
-                'tahun'       => $tahun,
-                'mulai'       => $mulai,
-                'sampai'      => $sampai,
-                'label'       => $label,
-                'hariEfektif' => [],
-                'analytics'   => null,
+                'kelasList'      => $kelasList,
+                'kelas'          => $kelasData,
+                'dataLoaded'     => true,
+                'mode'           => $mode,
+                'bulan'          => $bulan,
+                'tahun'          => $tahun,
+                'mulai'          => $mulai,
+                'sampai'         => $sampai,
+                'label'          => $label,
+                'hariEfektif'    => [],
+                'analytics'      => null,
+                'lockedForSiswa' => $isLockedForSiswa,
             ]);
         }
 
         return Inertia::render('Public/AbsensiAnalytics', [
-            'kelasList'   => $kelasList,
-            'kelas'       => $kelasData,
-            'dataLoaded'  => true,
-            'mode'        => $mode,
-            'bulan'       => $bulan,
-            'tahun'       => $tahun,
-            'mulai'       => $mulai,
-            'sampai'      => $sampai,
-            'label'       => $label,
-            'hariEfektif' => $analytics['hari_efektif_list'],
-            'analytics'   => $analytics,
+            'kelasList'      => $kelasList,
+            'kelas'          => $kelasData,
+            'dataLoaded'     => true,
+            'mode'           => $mode,
+            'bulan'          => $bulan,
+            'tahun'          => $tahun,
+            'mulai'          => $mulai,
+            'sampai'         => $sampai,
+            'label'          => $label,
+            'hariEfektif'    => $analytics['hari_efektif_list'],
+            'analytics'      => $analytics,
+            'lockedForSiswa' => $isLockedForSiswa,
+            'title'          => 'Analitik Kehadiran',
         ]);
+    }
+
+    /**
+     * Bangun analytics untuk kelas tertentu, default periode bulan berjalan.
+     * Dipakai oleh dashboard siswa — tampil terbuka tanpa perlu pilih kelas/filter,
+     * karena kelas sudah otomatis terkunci ke kelas siswa yang login.
+     *
+     * Reuse cache & logic yang sama persis dengan buildAnalytics() di halaman publik.
+     */
+    public function buildForDashboard(Kelas $kelas): array
+    {
+        $now   = now();
+        $bulan = $now->month;
+        $tahun = $now->year;
+
+        $bulanNames = [
+            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember',
+        ];
+
+        $label = ($bulanNames[$bulan] ?? '') . ' ' . $tahun;
+
+        $cacheKey = 'public_analytics_' . $kelas->id . '_bulan_' . "{$bulan}_{$tahun}";
+
+        $analytics = Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL_MINUTES), function () use (
+            $kelas, $bulan, $tahun, $bulanNames
+        ) {
+            return $this->buildAnalytics($kelas, 'bulan', $bulan, $tahun, null, null, $bulanNames);
+        });
+
+        return [
+            'analytics'   => $analytics,
+            'hariEfektif' => $analytics['hari_efektif_list'] ?? [],
+            'label'       => $label,
+            'title'       => 'Analitik Kehadiran',
+        ];
     }
 
     // ── Core builder (dipisah agar mudah di-cache) ─────────────────────────
@@ -295,6 +351,7 @@ class PublicAbsensiAnalyticsController extends Controller
             'trend_harian'      => $trendHarian,
             'trend_mingguan'    => $trendMingguan,
             'trend_bulanan'     => $trendBulanan,
+            'title'             => 'Analitik Kehadiran',
         ];
     }
 

@@ -164,21 +164,46 @@ Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
         ]);
     })->name('proktor.dashboard')->middleware(['auth']);
 
-    Route::get('/siswa/dashboard', function () {
+    Route::get('/siswa/dashboard', function (PublicAbsensiAnalyticsController $analyticsController) {
         $user = Auth::user();
+
+        $siswaExists = Siswa::where('user_id', $user->id)->exists();
+
+        if (!$siswaExists) {
+            return redirect()->route('siswa.form.create');
+        }
 
         $siswa = Siswa::with(['kelas', 'kejuruan'])
             ->where('user_id', $user->id)
             ->first();
 
+        if (!$siswa) {
+            return redirect()->route('siswa.form.create');
+        }
+
+        // Default kosong kalau siswa belum punya kelas
+        $analyticsData = [
+            'analytics'   => null,
+            'hariEfektif' => [],
+            'label'       => '',
+            'title'       => 'Analitik Kehadiran',
+        ];
+
+        if ($siswa->kelas) {
+            $analyticsData = $analyticsController->buildForDashboard($siswa->kelas);
+        }
+
         return Inertia::render('Siswa/Dashboard', [
-            'siswa' => $siswa,
+            'siswa'       => $siswa,
+            'analytics'   => $analyticsData['analytics'],
+            'hariEfektif' => $analyticsData['hariEfektif'],
+            'label'       => $analyticsData['label'],
             'auth' => [
                 'user' => $user,
                 'role' => $user->role,
             ],
         ]);
-    })->middleware(['auth', 'check.siswa.data'])->name('siswa.dashboard');
+    })->middleware(['auth'])->name('siswa.dashboard');
 
     Route::get('/user/dashboard', fn() =>
         Inertia::render('User/Dashboard')
