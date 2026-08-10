@@ -68,4 +68,9 @@ class Guru extends Model
     {
         return $this->hasMany(Materi::class);
     }
+
+    public function journal()
+    {
+        return $this->hasMany(Journal::class, 'guru_id');
+    }
 }

@@ -44,7 +44,7 @@ return new class extends Migration
             $table->string('pending_billing_cycle')->nullable();
             $table->timestamp('quota_grace_until')->nullable();
             $table->integer('max_users')->nullable();
-            $table->date('expires_at')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->boolean('is_active')->default(true);
 
             // Laravel

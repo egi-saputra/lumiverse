@@ -46,6 +46,26 @@ const showToast = (message, type = 'info') => {
     }, 2000);
 };
 
+// Status jendela pengisian jurnal, dikirim dari server lewat shared Inertia props
+// (lihat app/Support/JournalWindow.php + HandleInertiaRequests)
+const journalWindow = computed(() => page.props.journal ?? {
+    isOpen: false,
+    phase: 'after',
+    opensAt: '06:00',
+    closesAt: '14:00',
+})
+
+const journalStatusText = computed(() => {
+    switch (journalWindow.value.phase) {
+        case 'open':
+            return 'Tap untuk isi jurnal sekarang'
+        case 'before':
+            return `Buka pukul ${journalWindow.value.opensAt}`
+        default:
+            return `Sudah Ditutup, akan dibuka kembali besok pada pukul ${journalWindow.value.opensAt}`
+    }
+})
+
 const menuItems = computed(() => {
     const items = [
         {
@@ -169,6 +189,7 @@ const getInitials = (name) => {
         </Transition>
 
         <!-- ── HERO WELCOME ── -->
+        <!-- ── HERO WELCOME ── -->
         <div class="relative mb-7 overflow-hidden rounded-2xl">
             <!-- Background layers -->
             <div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 
@@ -199,6 +220,8 @@ const getInitials = (name) => {
                 </div>
                 <!-- Text -->
                 <div class="flex-1">
+                    <!-- <p class="text-white/60 text-xs sm:text-sm font-medium uppercase tracking-widest mb-1">Dashboard
+                        Guru</p> -->
                     <h1 class="text-2xl sm:text-3xl font-bold text-white leading-tight">
                         Welcome, {{ userName }}! 👋
                     </h1>
@@ -206,11 +229,43 @@ const getInitials = (name) => {
                     </p>
                 </div>
                 <!-- Badge -->
-                <div class="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 
-                            px-4 py-2 rounded-full text-white/80 text-sm">
-                    <SparklesIcon class="w-4 h-4 text-amber-300" />
-                    <span>Lumiverse School</span>
-                </div>
+                <a href="https://lumiverse.co.id" target="_blank" rel="noopener noreferrer" class="hidden sm:flex items-center gap-2 relative overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20 
+           px-4 py-2 rounded-full text-white/80 text-sm hover:bg-white/15 hover:text-white hover:border-white/30
+           transition-colors duration-300">
+                    <SparklesIcon class="w-4 h-4 text-amber-300 relative z-10" />
+                    <span class="relative z-10">Lumiverse School</span>
+                    <span class="badge-shimmer absolute inset-0 pointer-events-none"></span>
+                </a>
+            </div>
+
+            <!-- Jurnal Mengajar — badge/tombol status di dalam hero card -->
+            <div class="relative px-6 sm:px-8 pb-6 sm:pb-8">
+                <component :is="journalWindow.isOpen ? Link : 'div'"
+                    v-bind="journalWindow.isOpen ? { href: route('guru.journal.create'), prefetch: 'hover' } : {}"
+                    class="group flex items-center gap-3 sm:gap-4 w-full px-4 sm:px-5 py-3.5 rounded-2xl border backdrop-blur-sm transition-all duration-300"
+                    :class="journalWindow.isOpen
+                        ? 'bg-gradient-to-r from-blue-500/90 to-indigo-600/90 border-blue-400/30 shadow-lg shadow-blue-900/20 hover:shadow-blue-900/30 hover:-translate-y-0.5 cursor-pointer'
+                        : 'bg-gradient-to-r from-rose-500/80 to-red-600/80 border-rose-400/30 shadow-lg shadow-rose-900/10 opacity-90 cursor-not-allowed'">
+
+                    <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center flex-shrink-0 transition-transform duration-300"
+                        :class="journalWindow.isOpen ? 'group-hover:scale-110' : ''">
+                        <BookOpenIcon v-if="journalWindow.isOpen" class="w-5 h-5 text-white" />
+                        <LockClosedIcon v-else class="w-5 h-5 text-white" />
+                    </div>
+
+                    <div class="flex-1 min-w-0 text-left">
+                        <p class="text-white text-sm font-semibold leading-tight">Jurnal Mengajar</p>
+                        <p class="text-white/75 text-xs leading-tight mt-0.5">{{ journalStatusText }}</p>
+                    </div>
+
+                    <span
+                        class="flex-shrink-0 px-2.5 sm:flex hidden py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/20 text-white">
+                        {{ journalWindow.isOpen ? 'Open' : 'Closed' }}
+                    </span>
+
+                    <ArrowRightIcon v-if="journalWindow.isOpen"
+                        class="w-4 h-4 text-white/70 flex-shrink-0 hidden sm:block transition-transform duration-300 group-hover:translate-x-0.5" />
+                </component>
             </div>
         </div>
 
@@ -263,7 +318,7 @@ const getInitials = (name) => {
                             Guru</p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page.props.usersCount.guru
-                                }}</h3>
+                            }}</h3>
                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">pengguna</span>
                         </div>
                     </div>
@@ -290,7 +345,7 @@ const getInitials = (name) => {
                             Siswa</p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page.props.usersCount.siswa
-                                }}</h3>
+                            }}</h3>
                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">pengguna</span>
                         </div>
                     </div>

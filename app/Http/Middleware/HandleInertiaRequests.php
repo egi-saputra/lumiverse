@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Models\Pengumuman;
 use App\Models\Assignment;
 use App\Models\Guru;
+use App\Support\JournalWindow;
 use App\Models\SubscriptionOrder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -177,6 +178,17 @@ class HandleInertiaRequests extends Middleware
             'isWalas'        => $isWalas,
 
             // 'pesan' => fn () => $this->loadPesanForUser($isTenant, $user, $kelasId),
+
+            'journal' => function () use ($request) {
+                $user = $request->user();
+    
+                // Hanya relevan untuk user yang punya data guru
+                if (!$user || !$user->guru) {
+                    return null;
+                }
+    
+                return JournalWindow::toArray();
+            },
         ];
     }
 

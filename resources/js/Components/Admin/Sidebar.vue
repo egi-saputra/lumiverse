@@ -9,7 +9,7 @@ import {
     BuildingLibraryIcon,
     ChevronDownIcon,
     SquaresPlusIcon,
-    BuildingOffice2Icon,
+    BookOpenIcon,
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -34,6 +34,7 @@ const menuItems = computed(() => [
     { name: 'Admin Dashboard', routeName: 'admin.dashboard', icon: HomeIcon },
     // { name: 'School Management', routeName: 'admin.profil_sekolah.index', icon: BuildingOffice2Icon },
     { name: 'User Management', routeName: 'admin.users.index', icon: UsersIcon },
+    { name: 'Teachers Journal', routeName: 'admin.journal.index', icon: BookOpenIcon },
 
     // School Management
     {

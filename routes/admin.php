@@ -3,7 +3,9 @@
 // Tambahkan use Inertia\Inertia; di bagian atas web.php jika belum ada
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\JournalController as AdminJournalController;
 use App\Http\Controllers\Admin\{
+    JournalSettingController,
     UserController,
     KelasController,
     KejuruanController,
@@ -74,4 +76,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
         // Akses: http://localhost:8000/admin/hero-slides
         // Named route: route('admin.hero-slides')
+
+        // ===== PENGATURAN LOKASI JURNAL (harus sebelum jurnal-guru/{guru}) =====
+        Route::get('jurnal-guru/pengaturan-lokasi', [JournalSettingController::class, 'edit'])
+            ->name('journal-setting.edit');
+        Route::put('jurnal-guru/pengaturan-lokasi', [JournalSettingController::class, 'update'])
+            ->name('journal-setting.update');
+
+        // ===== JURNAL GURU (rekap & detail, read-only) =====
+        Route::get('jurnal-guru', [AdminJournalController::class, 'index'])->name('journal.index');
+        Route::get('jurnal-guru/{guru}', [AdminJournalController::class, 'show'])->name('journal.show');
     });
