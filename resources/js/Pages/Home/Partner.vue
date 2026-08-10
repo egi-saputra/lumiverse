@@ -49,7 +49,7 @@ initTheme()
                 </p>
 
                 <div class="hero-actions reveal" style="--d:3">
-                    <Link :href="route('partner.register')" class="btn-primary" prefetch>Daftar Program Partner</Link>
+                    <Link :href="route('partner.login')" class="btn-primary" prefetch>Daftar Program Partner</Link>
                     <Link :href="route('partner.login')" class="btn-ghost" prefetch>Masuk ke Akun</Link>
                 </div>
 
@@ -143,7 +143,7 @@ initTheme()
         <section class="cta-band">
             <h2>Siap mulai menghasilkan dari jaringanmu?</h2>
             <p>Pendaftaran cuma butuh waktu beberapa menit, kode referral langsung aktif setelah itu.</p>
-            <Link :href="route('partner.register')" class="btn-primary btn-primary--lg mx-auto" prefetch>Gabung Sekarang
+            <Link :href="route('partner.login')" class="btn-primary btn-primary--lg mx-auto" prefetch>Gabung Sekarang
             </Link>
         </section>
     </main>

@@ -74,7 +74,7 @@ onUnmounted(() => {
                     </button>
 
                     <Link :href="route('login')" class="btn-ghost" prefetch>Masuk</Link>
-                    <Link :href="route('register')" class="btn-primary" prefetch>
+                    <Link :href="route('login')" class="btn-primary" prefetch>
                         <span class="full-label">Daftar Sekarang</span>
                         <span class="short-label">Daftar</span>
                     </Link>
