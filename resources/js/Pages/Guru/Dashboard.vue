@@ -15,7 +15,8 @@ import {
     SparklesIcon,
     ArrowTrendingUpIcon,
     MegaphoneIcon,
-    EnvelopeIcon, UsersIcon
+    EnvelopeIcon, UsersIcon,
+    ArrowRightOnRectangleIcon,
 } from '@heroicons/vue/24/solid'
 import {
     BookOpenIcon,
@@ -130,6 +131,94 @@ const menuItems = computed(() => {
     return items.filter(item => !item.walasOnly || props.isWalas)
 })
 
+// ── Menu tambahan khusus grid mobile: dokumentasi, partner, logout ──
+// Ditempel di akhir daftar kartu supaya ikut masuk ke halaman
+// carousel terakhir, bukan navigasi utama seperti menuItems di atas.
+const extraMobileItems = [
+    {
+        title: 'Dokumentasi',
+        icon: DocumentTextIcon,
+        type: 'external',
+        route: 'https://docs.lumiverse.co.id',
+        color: 'from-slate-500 to-gray-700',
+        bg: 'bg-slate-50 dark:bg-slate-900/20',
+    },
+    {
+        title: 'Partner',
+        icon: UserGroupIcon,
+        type: 'external',
+        route: 'https://partner.lumiverse.co.id',
+        color: 'from-cyan-500 to-blue-600',
+        bg: 'bg-cyan-50 dark:bg-cyan-900/20',
+    },
+    {
+        title: 'Logout',
+        icon: ArrowRightOnRectangleIcon,
+        type: 'logout',
+        color: 'from-red-500 to-rose-600',
+        bg: 'bg-red-50 dark:bg-red-900/20',
+    },
+]
+
+const mobileMenuItems = computed(() => [
+    ...menuItems.value.map(item => ({ type: 'link', ...item })),
+    ...extraMobileItems,
+])
+
+// ── Carousel: 4 kartu per halaman, geser ke samping (drag/swipe) ──
+const CARDS_PER_PAGE = 4
+
+const menuPages = computed(() => {
+    const pages = []
+    for (let i = 0; i < mobileMenuItems.value.length; i += CARDS_PER_PAGE) {
+        pages.push(mobileMenuItems.value.slice(i, i + CARDS_PER_PAGE))
+    }
+    return pages
+})
+
+const carouselRef = ref(null)
+const activePage = ref(0)
+let isDragging = false
+let dragStartX = 0
+let scrollStartX = 0
+
+const onDragStart = (e) => {
+    if (!carouselRef.value) return
+    isDragging = true
+    dragStartX = e.clientX
+    scrollStartX = carouselRef.value.scrollLeft
+    carouselRef.value.setPointerCapture?.(e.pointerId)
+}
+
+const onDragMove = (e) => {
+    if (!isDragging || !carouselRef.value) return
+    const delta = e.clientX - dragStartX
+    carouselRef.value.scrollLeft = scrollStartX - delta
+}
+
+const onDragEnd = () => {
+    isDragging = false
+}
+
+const onCarouselScroll = () => {
+    if (!carouselRef.value) return
+    const pageWidth = carouselRef.value.clientWidth
+    if (!pageWidth) return
+    activePage.value = Math.round(carouselRef.value.scrollLeft / pageWidth)
+}
+
+const scrollToPage = (index) => {
+    if (!carouselRef.value) return
+    carouselRef.value.scrollTo({
+        left: index * carouselRef.value.clientWidth,
+        behavior: 'smooth',
+    })
+}
+
+const handleLogout = () => {
+    router.post(route('logout'))
+}
+
 const goTo = (url) => {
     router.visit(url, {
         preserveScroll: true,
@@ -188,7 +277,6 @@ const getInitials = (name) => {
             </div>
         </Transition>
 
-        <!-- ── HERO WELCOME ── -->
         <!-- ── HERO WELCOME ── -->
         <div class="relative mb-7 overflow-hidden rounded-2xl">
             <!-- Background layers -->
@@ -376,10 +464,14 @@ const getInitials = (name) => {
                         <CheckBadgeIcon class="w-4 h-4 text-amber-500" />
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-white mb-1">Coming Soon</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Insya Allah kalo dapet moodnya! — Wali Kelas, Journal Online Prakerin, Nilai Harian, SPMB
-                            dan Sistem Pembayaran Digital.
+                        <p class="text-md font-semibold text-gray-800 dark:text-white mb-1">Homeroom Teacher &
+                            Attendance Recap</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Fitur ini dapat diakses oleh wali kelas untuk melihat dan mengelola data kelas mulai dari
+                            daftar siswa di kelas tersebut dan menentukan sekretaris kelas untuk memberikan kewenangan
+                            terhadap siswa dalam melakukan input absensi harian siswa di kelasnya. Attedance Recap
+                            merupakan fitur pendukungnya yang berfungsi agar wali kelas dapat mengambil data kehadiran
+                            siswa pada periode waktu tertentu (Rekap Absensi Siswa).
                         </p>
                     </div>
                 </div>
@@ -392,10 +484,14 @@ const getInitials = (name) => {
                         <CheckBadgeIcon class="w-4 h-4 text-emerald-500" />
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-white mb-1">Learning Materials</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Membuat materi pembelajaran yang sudah support semua tipe external data seperti PDF, Excel,
-                            Word, PPT, Image, Video!
+                        <p class="text-md font-semibold text-gray-800 dark:text-white mb-1">Presention Analitycs</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                            Fitur ini memungkinkan semua guru dan juga siswa untuk dapat melihat hasil analitik
+                            kehadiran
+                            siswa dan memantau perkembangan kehadiran siswa di sekolah. Fitur ini bertujuan agar dapat
+                            menyajikan sebuah data
+                            berbasis fakta dalam membantu pengambilan sebuah keputusan apabila memang diperlukan di
+                            kemudian hari atau waktu mendatang.
                         </p>
                     </div>
                 </div>
@@ -408,40 +504,149 @@ const getInitials = (name) => {
                         <CheckBadgeIcon class="w-4 h-4 text-sky-500" />
                     </div>
                     <div>
-                        <p class="text-sm font-semibold text-gray-800 dark:text-white mb-1">Assignment List</p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Mengumpulkan tugas siswa jadi lebih mudah dan terindeks tanpa harus membuat drive terlebih
-                            dahulu. Biarkan siswa upload tugasnya berdasarkan nama guru yang telah memberikan tugas —
-                            tinggal tunggu sambil ngopi! ☕
+                        <p class="text-md font-semibold text-gray-800 dark:text-white mb-1">Jurnal Mengajar</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
+                            Fitur ini berfungsi sebagai data history setiap guru dalam proses mengajar, seperti kapan
+                            seorang guru mengajar di kelas tertentu pada hari apa, jam berapa dan materi apa yang
+                            diberikan di kelas tersebut. Selain itu basis data riwayat mengajar ini akan dijadikan
+                            sebagai acuan dalam menetapkan jumlah jam mengajar / kehadiran seorang guru pada periode
+                            waktu tertentu (dalam sebulan). Penting untuk dipahami terkait aturan dari fitur ini
+                            adalah sebagai berikut:
                         </p>
+                        <ol
+                            class="list-decimal list-outside pl-4 space-y-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                            <li>
+                                Fitur jurnal mengajar hanya dapat diakses / dibuka setiap jam 13:00 setiap harinya, dan
+                                akan ditutup secara otomatis setiap hari pada pukul 18:00 (sehingga guru tidak dapat
+                                melakukan input jurnal jika sudah melewati batas waktu tersebut).
+                            </li>
+                            <li>
+                                Setiap satu baris data / satu kali input jurnal mengajar pada kelas yang telah
+                                dijadwalkan akan mengakumulasi jumlah jam mengajar sebanyak 2 jam (45 menit x 2).
+                            </li>
+                            <li>
+                                Guru tidak dapat mengisi jurnal dalam durasi yang sama atau belum selesai. Sebagai
+                                contoh: seorang guru menginput jurnal mengajar pada hari Senin pukul 13:00 dan selesai
+                                pada pukul 14:30 (waktu ini terisi otomatis berdasarkan ketepatan waktu saat guru
+                                tersebut menginput jurnal). Guru tersebut tidak dapat melakukan input jurnal jadwal
+                                selanjutnya di hari yang sama sebelum pukul 14:30 - baru bisa menginput kembali setelah
+                                durasi mengajar sebelumnya selesai, misalnya pukul 14:31. Hal ini berulang hingga pukul
+                                14:00, saat fitur ini otomatis tertutup.
+                            </li>
+                        </ol>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ── MOBILE MENU GRID ── -->
-        <div class="max-w-7xl mx-auto">
-            <div class="grid md:hidden grid-cols-2 gap-3.5">
-                <Link v-for="item in menuItems" :key="item.title" :href="item.route" prefetch="hover" preserve-scroll
-                    preserve-state class="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl
-                           border transition-all duration-300 active:scale-[0.97]
-                           bg-white border-gray-100 shadow-sm
-                           dark:bg-gray-900/60 dark:border-gray-800 dark:backdrop-blur-xl">
-                    <!-- Hover glow -->
-                    <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
-                        :class="item.bg"></div>
-                    <!-- Icon bubble -->
-                    <div class="relative w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 bg-gradient-to-br"
-                        :class="item.color">
-                        <component :is="item.icon" class="w-6 h-6 text-white" />
-                    </div>
-                    <span
-                        class="relative text-sm font-semibold text-gray-700 dark:text-gray-200 text-center leading-tight">
-                        {{ item.title }}
-                    </span>
-                </Link>
+        <!-- ── MOBILE MENU CAROUSEL ── -->
+        <div class="max-w-7xl mx-auto md:hidden overflow-x-hidden">
+
+            <div ref="carouselRef" @scroll="onCarouselScroll" @pointerdown="onDragStart" @pointermove="onDragMove"
+                @pointerup="onDragEnd" @pointerleave="onDragEnd" @pointercancel="onDragEnd"
+                class="no-scrollbar flex overflow-x-auto snap-x snap-mandatory scroll-smooth select-none cursor-grab active:cursor-grabbing">
+
+                <div v-for="(cardsPage, pageIndex) in menuPages" :key="pageIndex"
+                    class="grid grid-cols-2 grid-rows-2 gap-3.5 shrink-0 w-full snap-start snap-always box-border px-1">
+
+                    <template v-for="item in cardsPage" :key="item.title">
+
+                        <!-- Item navigasi internal -->
+                        <Link v-if="item.type === 'link'" :href="item.route" prefetch="hover" preserve-scroll
+                            preserve-state class="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl
+                                   border transition-all duration-300 active:scale-[0.97]
+                                   bg-white border-gray-100 shadow-sm
+                                   dark:bg-gray-900/60 dark:border-gray-800 dark:backdrop-blur-xl">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                                :class="item.bg"></div>
+                            <div class="relative w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 bg-gradient-to-br"
+                                :class="item.color">
+                                <component :is="item.icon" class="w-6 h-6 text-white" />
+                            </div>
+                            <span
+                                class="relative text-sm font-semibold text-gray-700 dark:text-gray-200 text-center leading-tight">
+                                {{ item.title }}
+                            </span>
+                        </Link>
+
+                        <!-- Item tautan eksternal (dokumentasi, partner) -->
+                        <a v-else-if="item.type === 'external'" :href="item.route" target="_blank"
+                            rel="noopener noreferrer" class="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl
+                                   border transition-all duration-300 active:scale-[0.97]
+                                   bg-white border-gray-100 shadow-sm
+                                   dark:bg-gray-900/60 dark:border-gray-800 dark:backdrop-blur-xl">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                                :class="item.bg"></div>
+                            <div class="relative w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 bg-gradient-to-br"
+                                :class="item.color">
+                                <component :is="item.icon" class="w-6 h-6 text-white" />
+                            </div>
+                            <span
+                                class="relative text-sm font-semibold text-gray-700 dark:text-gray-200 text-center leading-tight">
+                                {{ item.title }}
+                            </span>
+                        </a>
+
+                        <!-- Item logout -->
+                        <button v-else type="button" @click="handleLogout" class="group relative overflow-hidden flex flex-col items-center justify-center gap-3 p-5 rounded-2xl
+                                   border transition-all duration-300 active:scale-[0.97]
+                                   bg-white border-gray-100 shadow-sm
+                                   dark:bg-gray-900/60 dark:border-gray-800 dark:backdrop-blur-xl">
+                            <div class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+                                :class="item.bg"></div>
+                            <div class="relative w-12 h-12 rounded-xl flex items-center justify-center shadow-lg transition-transform duration-300 group-hover:scale-110 bg-gradient-to-br"
+                                :class="item.color">
+                                <component :is="item.icon" class="w-6 h-6 text-white" />
+                            </div>
+                            <span
+                                class="relative text-sm font-semibold text-gray-700 dark:text-gray-200 text-center leading-tight">
+                                {{ item.title }}
+                            </span>
+                        </button>
+
+                    </template>
+                </div>
+            </div>
+
+            <!-- Dots indikator halaman -->
+            <div v-if="menuPages.length > 1" class="flex items-center justify-center gap-1.5 mt-4">
+                <button v-for="(cardsPage, i) in menuPages" :key="i" type="button" @click="scrollToPage(i)"
+                    class="h-1.5 rounded-full transition-all duration-300"
+                    :class="i === activePage ? 'w-5 bg-blue-600 dark:bg-blue-400' : 'w-1.5 bg-gray-300 dark:bg-gray-700'" />
             </div>
         </div>
 
     </UserLayout>
 </template>
+
+<style>
+.badge-shimmer {
+    background: linear-gradient(110deg,
+            transparent 20%,
+            rgba(255, 255, 255, 0.35) 45%,
+            rgba(255, 255, 255, 0.35) 55%,
+            transparent 80%);
+    background-size: 200% 100%;
+    animation: badge-shimmer-move 2.8s ease-in-out infinite;
+}
+
+@keyframes badge-shimmer-move {
+    0% {
+        background-position: 150% 0;
+    }
+
+    100% {
+        background-position: -50% 0;
+    }
+}
+
+/* Sembunyikan scrollbar carousel menu mobile, geser tetap berfungsi */
+.no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+</style>

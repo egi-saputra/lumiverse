@@ -400,7 +400,7 @@ const logout = () => router.post(route('logout'))
                        border-r dark:border-gray-600 border-gray-300
                        pt-4 overflow-y-auto overflow-x-hidden" />
 
-            <div class="flex-1 px-4 sm:px-8 py-6 pb-20
+            <div class="flex-1 px-4 sm:px-8 py-6
                         bg-gray-100 dark:bg-[#020617] overflow-auto">
                 <slot />
             </div>

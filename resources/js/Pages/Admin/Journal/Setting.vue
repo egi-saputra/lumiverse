@@ -151,7 +151,7 @@ const labelClass = 'block text-xs font-semibold text-gray-500 dark:text-gray-400
                         <label :class="labelClass">Radius lokasi (meter)</label>
                         <input v-model.number="form.radius_meter" type="number" min="1" :class="inputClass" />
                         <p v-if="form.errors.radius_meter" class="text-xs text-red-500 mt-1">{{ form.errors.radius_meter
-                        }}</p>
+                            }}</p>
                     </div>
                     <div>
                         <label :class="labelClass">Toleransi jarak (meter)</label>

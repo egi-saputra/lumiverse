@@ -12,7 +12,11 @@ import {
     CalendarDaysIcon,
     ChevronDownIcon,
     ChartBarIcon,
-    UsersIcon
+    UsersIcon,
+    DocumentTextIcon,
+    UserGroupIcon,
+    ArrowTopRightOnSquareIcon,
+    ArrowRightOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
 
 // ── Props ─────────────────────────────────────────────────────
@@ -109,6 +113,31 @@ const resolvedItems = computed(() =>
             : false,
     }))
 )
+
+// ── Footer items (dokumentasi, partner, logout) ────────────────
+/**
+ * Menu tambahan yang selalu menempel di bagian bawah sidebar,
+ * terpisah dari navigasi utama karena bukan bagian dari
+ * active-route matching di atas.
+ */
+const footerLinks = [
+    {
+        name: 'Documentation',
+        href: 'https://docs.lumiverse.co.id',
+        icon: DocumentTextIcon,
+        external: true,
+    },
+    {
+        name: 'Partner Program',
+        href: 'https://partner.lumiverse.co.id',
+        icon: UserGroupIcon,
+        external: true,
+    },
+]
+
+const handleLogout = () => {
+    router.post(route('logout'))
+}
 
 // ── Dropdown state ────────────────────────────────────────────
 /**
@@ -254,12 +283,31 @@ const leaveDropdown = (el) => {
             </template>
         </div>
 
-        <!-- ── Footer strip ────────────────────────────────── -->
-        <!-- <div class="px-4 py-3 border-t border-gray-100 dark:border-white/5">
-            <p class="text-[10px] text-gray-400 dark:text-gray-600 tracking-wide uppercase font-medium">
-                powered by kreaticraft
-            </p>
-        </div> -->
+        <!-- ── Footer strip: dokumentasi, partner, logout ──── -->
+        <div class="px-3 py-3 border-t border-gray-100 dark:border-white/5 space-y-0.5">
+
+            <a v-for="link in footerLinks" :key="link.name" :href="link.href" target="_blank" rel="noopener noreferrer"
+                class="group flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition-all duration-150">
+
+                <component :is="link.icon"
+                    class="w-[18px] h-[18px] flex-shrink-0 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors duration-150" />
+
+                <span class="flex-1 truncate">{{ link.name }}</span>
+
+                <ArrowTopRightOnSquareIcon
+                    class="w-3.5 h-3.5 flex-shrink-0 text-gray-300 dark:text-gray-600 group-hover:text-gray-500 dark:group-hover:text-gray-400 transition-colors duration-150" />
+            </a>
+
+            <button type="button" @click="handleLogout"
+                class="group flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-600 dark:hover:text-red-300 transition-all duration-150">
+
+                <ArrowRightOnRectangleIcon
+                    class="w-[18px] h-[18px] flex-shrink-0 text-red-400 dark:text-red-400/80 group-hover:text-red-500 dark:group-hover:text-red-300 transition-colors duration-150" />
+
+                <span class="flex-1 text-left truncate">Logout / Sign Out</span>
+            </button>
+
+        </div>
 
     </nav>
 </template>
