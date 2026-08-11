@@ -3,12 +3,15 @@ import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { Head, router, Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import { ref, computed, watch } from 'vue'
+import Swal from 'sweetalert2'
 import {
     BookOpenIcon,
     ClockIcon,
     UserCircleIcon,
     ChevronRightIcon,
     MapPinIcon,
+    TrashIcon,
+    ArrowDownTrayIcon,
 } from '@heroicons/vue/24/solid'
 
 const props = defineProps({
@@ -57,6 +60,48 @@ const bukaDetail = (guruId) => {
     })
 }
 
+const hapusRekap = (item) => {
+    const namaPeriode = `${namaBulan[bulan.value - 1]} ${tahun.value}`
+
+    Swal.fire({
+        title: 'Hapus riwayat jurnal?',
+        html: `Semua entri jurnal <b>${item.guru?.nama_lengkap}</b> untuk periode <b>${namaPeriode}</b> (${item.total_pertemuan}x pertemuan) akan dihapus permanen dan tidak bisa dikembalikan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+    }).then((result) => {
+        if (!result.isConfirmed) return
+
+        router.delete(route('admin.journal.destroyByGuru', item.guru_id), {
+            data: { bulan: bulan.value, tahun: tahun.value },
+            preserveScroll: true,
+            onSuccess: () => {
+                Swal.fire({
+                    title: 'Berhasil dihapus',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+            },
+            onError: () => {
+                Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus data.', 'error')
+            },
+        })
+    })
+}
+
+const exportExcel = () => {
+    window.location.href = route('admin.journal.export', {
+        bulan: bulan.value,
+        tahun: tahun.value,
+        search: search.value,
+    })
+}
+
 const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-200 text-gray-800 \
     dark:bg-gray-900/60 dark:border-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-cyan-500/40'
 </script>
@@ -81,11 +126,19 @@ const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-2
                     </div>
                 </div>
 
-                <Link :href="route('admin.journal-setting.edit')"
-                    class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-cyan-500 to-teal-500 shadow-lg shadow-cyan-500/20 hover:opacity-90 transition-opacity">
-                    <MapPinIcon class="w-4 h-4" />
-                    <span class="hidden sm:inline">Atur Lokasi</span>
-                </Link>
+                <div class="flex items-center gap-2">
+                    <button @click="exportExcel"
+                        class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
+                        <ArrowDownTrayIcon class="w-4 h-4" />
+                        <span class="hidden sm:inline">Export Excel</span>
+                    </button>
+
+                    <Link :href="route('admin.journal-setting.edit')"
+                        class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-cyan-500 to-teal-500 shadow-lg shadow-cyan-500/20 hover:opacity-90 transition-opacity">
+                        <MapPinIcon class="w-4 h-4" />
+                        <span class="hidden sm:inline">Atur Lokasi</span>
+                    </Link>
+                </div>
             </div>
 
             <!-- Filters -->
@@ -115,7 +168,7 @@ const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-2
                                 <th class="px-5 py-3">Guru</th>
                                 <th class="px-5 py-3">Jumlah Pertemuan</th>
                                 <th class="px-5 py-3">Total Jam Mengajar</th>
-                                <th class="px-5 py-3 text-right">Detail</th>
+                                <th class="px-5 py-3 text-right">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -135,7 +188,13 @@ const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-2
                                     </span>
                                 </td>
                                 <td class="px-5 py-4 whitespace-nowrap text-right">
-                                    <ChevronRightIcon class="w-4 h-4 text-gray-400 inline-block" />
+                                    <div class="flex items-center justify-end gap-3">
+                                        <button @click.stop="hapusRekap(item)" title="Hapus riwayat periode ini"
+                                            class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                                            <TrashIcon class="w-4 h-4" />
+                                        </button>
+                                        <ChevronRightIcon class="w-4 h-4 text-gray-400" />
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>
@@ -162,6 +221,10 @@ const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-2
                                     <ClockIcon class="w-3.5 h-3.5" />
                                     {{ item.total_jam }} jam
                                 </span>
+                                <button @click.stop="hapusRekap(item)" title="Hapus riwayat periode ini"
+                                    class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                                    <TrashIcon class="w-4 h-4" />
+                                </button>
                                 <ChevronRightIcon class="w-4 h-4 text-gray-400" />
                             </div>
                         </div>

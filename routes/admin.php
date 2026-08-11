@@ -86,4 +86,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         // ===== JURNAL GURU (rekap & detail, read-only) =====
         Route::get('jurnal-guru', [AdminJournalController::class, 'index'])->name('journal.index');
         Route::get('jurnal-guru/{guru}', [AdminJournalController::class, 'show'])->name('journal.show');
-    });
+        Route::delete('/journal/guru/{guru}', [JournalController::class, 'destroyByGuru'])
+            ->name('journal.destroyByGuru');
+        Route::delete('/admin/journal/{journal}', [JournalController::class, 'destroy'])
+            ->name('journal.destroy');
+            });
+        Route::get('/journal/export', [JournalController::class, 'export'])
+            ->name('journal.export');
+        Route::get('/journal/{guru}', [JournalController::class, 'show'])
+            ->name('journal.show');

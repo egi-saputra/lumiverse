@@ -3,6 +3,7 @@ import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { Head, router, Link } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import { ref } from 'vue'
+import Swal from 'sweetalert2'
 import {
     BookOpenIcon,
     ClockIcon,
@@ -10,6 +11,7 @@ import {
     ArrowLeftIcon,
     EyeIcon,
     XMarkIcon,
+    TrashIcon,
 } from '@heroicons/vue/24/solid'
 
 const props = defineProps({
@@ -64,6 +66,39 @@ const bukaModalMateri = (journal) => {
 const tutupModalMateri = () => {
     materiAktif.value = null
 }
+
+// ---- Hapus entri jurnal ----
+const hapusJurnal = (journal) => {
+    Swal.fire({
+        title: 'Hapus entri jurnal ini?',
+        html: `<b>${formatTanggal(journal.tanggal)}</b><br>${journal.kelas?.kelas ?? '-'} · ${journal.mapel?.mapel ?? '-'}<br><br>Data yang dihapus tidak bisa dikembalikan.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+    }).then((result) => {
+        if (!result.isConfirmed) return
+
+        router.delete(route('admin.journal.destroy', journal.id), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                Swal.fire({
+                    title: 'Berhasil dihapus',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+            },
+            onError: () => {
+                Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus data.', 'error')
+            },
+        })
+    })
+}
 </script>
 
 <template>
@@ -86,7 +121,7 @@ const tutupModalMateri = () => {
                 <div>
                     <h1 class="text-xl font-bold text-gray-900 dark:text-white">{{ guru.nama_lengkap }}</h1>
                     <p class="text-sm text-gray-500 dark:text-gray-400">Detail jurnal mengajar - Periode {{ periodeLabel
-                        }}</p>
+                    }}</p>
                 </div>
             </div>
 
@@ -104,6 +139,7 @@ const tutupModalMateri = () => {
                                 <th class="px-5 py-3 text-center">Kelas</th>
                                 <th class="px-5 py-3 text-center">Mapel</th>
                                 <th class="px-5 py-3">Materi Pembelajaran</th>
+                                <th class="px-5 py-3 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -141,6 +177,12 @@ const tutupModalMateri = () => {
                                         </button>
                                     </div>
                                 </td>
+                                <td class="px-5 py-4 whitespace-nowrap text-center">
+                                    <button @click="hapusJurnal(journal)" title="Hapus entri ini"
+                                        class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                                        <TrashIcon class="w-4 h-4" />
+                                    </button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -163,10 +205,16 @@ const tutupModalMateri = () => {
                                         formatJam(journal.jam_selesai) }}</template>
                                 </span>
                             </div>
-                            <span
-                                class="flex-shrink-0 px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-400">
-                                {{ journal.jumlah_jam }} jam
-                            </span>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <span
+                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-50 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-400">
+                                    {{ journal.jumlah_jam }} jam
+                                </span>
+                                <button @click="hapusJurnal(journal)" title="Hapus entri ini"
+                                    class="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors">
+                                    <TrashIcon class="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
 
                         <div class="flex flex-wrap gap-2 mb-2">
