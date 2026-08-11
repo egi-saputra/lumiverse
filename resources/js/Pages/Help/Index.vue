@@ -14,8 +14,9 @@ const contactEmails = [
     { label: 'Dukungan umum', email: 'support@lumiverse.co.id' },
     { label: 'Legal & privasi', email: 'legal@lumiverse.co.id' },
     { label: 'Program partner', email: 'partner@lumiverse.co.id' },
-    { label: 'Penjualan', email: 'sales@lmiverse.co.id' },
-    { label: 'Karier', email: 'recruitment@lumiverse.co.id' },
+    { label: 'Penjualan', email: 'sales@lumiverse.co.id' },
+    { label: 'Pembayaran', email: 'Billing@lumiverse.co.id' },
+    { label: 'Karir', email: 'recruitment@lumiverse.co.id' },
 ]
 
 const articles = [
@@ -783,7 +784,7 @@ h1 .hero-line {
 
 @media (max-width: 640px) {
     .help-page {
-        padding: 6.5rem 1rem 4rem;
+        padding: 3rem 1rem 4rem;
     }
 
     .help-hero {
@@ -791,7 +792,8 @@ h1 .hero-line {
     }
 
     .back-link {
-        margin-bottom: 2.5rem;
+        display: none;
+        /* margin-bottom: 2.5rem; */
     }
 
     .hero-grid,

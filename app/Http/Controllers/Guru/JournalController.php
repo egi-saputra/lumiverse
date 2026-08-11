@@ -106,7 +106,7 @@ class JournalController extends Controller
             ->first();
 
         if ($entriTerakhir) {
-            $waktuTerakhir = Carbon::parse($entriTerakhir->tanggal->toDateString() . ' ' . $entriTerakhir->jam_mulai, JournalWindow::TIMEZONE);
+            $waktuTerakhir = Carbon::parse($entriTerakhir->tanggal->toDateString() . ' ' . $entriTerakhir->jam_mulai, JournalWindow::timezone());
 
             $wajar = JournalLocation::kecepatanWajar(
                 (float) $entriTerakhir->latitude,

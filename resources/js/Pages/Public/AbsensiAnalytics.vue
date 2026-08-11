@@ -19,6 +19,7 @@ const props = defineProps({
     label: { type: String, default: '' },
     hariEfektif: { type: Array, default: () => [] },
     analytics: { type: Object, default: null },
+    lockedForSiswa: { type: Boolean, default: false },
 })
 
 // ─── Konstanta ────────────────────────────────────────────────────────────────
@@ -345,7 +346,7 @@ onBeforeUnmount(() => {
             <!-- ══ NAVBAR PUBLIK ══════════════════════════════════════════════ -->
             <nav
                 class="bg-white sm:block hidden dark:bg-slate-900 rounded-xl border-b border-slate-200 dark:border-slate-800 z-30">
-                <div class="max-w-5xl mx-auto px-4 sm:py-3 flex items-center justify-between gap-4">
+                <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
                     <div class="flex items-center gap-2.5">
                         <div
                             class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-500 flex items-center justify-center text-base flex-shrink-0">
@@ -437,7 +438,7 @@ onBeforeUnmount(() => {
                                     kelas.guru_nama }}</div>
                             </div>
                         </div>
-                        <button @click="changeKelas"
+                        <button v-if="!lockedForSiswa" @click="changeKelas"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-600 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-all">
                             🔄 Ganti Kelas
                         </button>
@@ -468,7 +469,7 @@ onBeforeUnmount(() => {
                                         class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-900/50 text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 min-w-[150px] transition">
                                         <option v-for="(nama, idx) in BULAN_NAMES" :key="idx" :value="idx + 1">{{
                                             nama
-                                            }}
+                                        }}
                                         </option>
                                     </select>
                                 </div>
@@ -733,10 +734,14 @@ onBeforeUnmount(() => {
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <div class="text-sm font-semibold text-slate-800 dark:text-white truncate">
-                                                {{
-                                                    s.nama_lengkap }}</div>
-                                            <div class="text-xs text-slate-400 dark:text-slate-500">
-                                                alpha {{ s.counts?.alpha ?? 0 }}×
+                                                {{ s.nama_lengkap }}</div>
+                                            <div
+                                                class="text-xs text-slate-400 dark:text-slate-500 flex flex-wrap gap-x-2">
+                                                <span v-if="s.counts?.sakit">🩺 sakit {{ s.counts.sakit }}×</span>
+                                                <span v-if="s.counts?.izin">📋 izin {{ s.counts.izin }}×</span>
+                                                <span v-if="s.counts?.alpha">🚫 alpha {{ s.counts.alpha }}×</span>
+                                                <span v-if="!s.counts?.sakit && !s.counts?.izin && !s.counts?.alpha"
+                                                    class="italic">tidak ada catatan</span>
                                             </div>
                                         </div>
                                         <div class="w-20 flex-shrink-0">
