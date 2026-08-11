@@ -93,6 +93,8 @@ Route::middleware(['auth', 'verified', 'role:admin'])
             ->name('journal.export');
         Route::delete('jurnal-guru/guru/{guru}', [AdminJournalController::class, 'destroyByGuru'])
             ->name('journal.destroyByGuru');
+        Route::delete('jurnal-guru', [AdminJournalController::class, 'destroyAllPeriode'])
+            ->name('journal.destroyAllPeriode');
 
         Route::get('jurnal-guru/{guru}', [AdminJournalController::class, 'show'])->name('journal.show');
         Route::delete('jurnal-guru/{journal}', [AdminJournalController::class, 'destroy'])

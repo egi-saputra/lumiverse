@@ -102,6 +102,32 @@ class JournalController extends Controller
     }
 
     /**
+     * Hapus SEMUA entri jurnal dari SEMUA guru untuk periode (bulan/tahun)
+     * tertentu — tombol "Hapus Semua" di toolbar atas tabel rekap.
+     * Catatan: sengaja tidak ikut filter search, karena tombol ini eksplisit
+     * "semua guru" pada periode itu, bukan cuma yang lagi tampil di layar.
+     */
+    public function destroyAllPeriode(Request $request)
+    {
+        $bulan = (int) ($request->bulan ?? now()->month);
+        $tahun = (int) ($request->tahun ?? now()->year);
+
+        $namaBulan = [
+            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
+        ];
+
+        $jumlahTerhapus = Journal::whereMonth('tanggal', $bulan)
+            ->whereYear('tanggal', $tahun)
+            ->delete();
+
+        return back()->with(
+            'success',
+            "Berhasil menghapus {$jumlahTerhapus} entri jurnal dari semua guru untuk periode {$namaBulan[$bulan - 1]} {$tahun}."
+        );
+    }
+
+    /**
      * Export rekap jurnal (per guru) ke Excel untuk periode & filter search yang aktif.
      */
     public function export(Request $request)

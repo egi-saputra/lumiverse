@@ -94,6 +94,40 @@ const hapusRekap = (item) => {
     })
 }
 
+const hapusSemua = () => {
+    const namaPeriode = `${namaBulan[bulan.value - 1]} ${tahun.value}`
+
+    Swal.fire({
+        title: 'Hapus SEMUA data periode ini?',
+        html: `Seluruh entri jurnal dari <b>semua guru</b> untuk periode <b>${namaPeriode}</b> akan dihapus permanen dan tidak bisa dikembalikan. Tindakan ini tidak terbatas pada hasil pencarian yang sedang tampil.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus semua',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#e11d48',
+        cancelButtonColor: '#6b7280',
+        reverseButtons: true,
+    }).then((result) => {
+        if (!result.isConfirmed) return
+
+        router.delete(route('admin.journal.destroyAllPeriode'), {
+            data: { bulan: bulan.value, tahun: tahun.value },
+            preserveScroll: true,
+            onSuccess: () => {
+                Swal.fire({
+                    title: 'Berhasil dihapus',
+                    icon: 'success',
+                    timer: 1500,
+                    showConfirmButton: false,
+                })
+            },
+            onError: () => {
+                Swal.fire('Gagal', 'Terjadi kesalahan saat menghapus data.', 'error')
+            },
+        })
+    })
+}
+
 const exportExcel = () => {
     window.location.href = route('admin.journal.export', {
         bulan: bulan.value,
@@ -126,19 +160,11 @@ const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-2
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <button @click="exportExcel"
-                        class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
-                        <ArrowDownTrayIcon class="w-4 h-4" />
-                        <span class="hidden sm:inline">Export Excel</span>
-                    </button>
-
-                    <Link :href="route('admin.journal-setting.edit')"
-                        class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-cyan-500 to-teal-500 shadow-lg shadow-cyan-500/20 hover:opacity-90 transition-opacity">
-                        <MapPinIcon class="w-4 h-4" />
-                        <span class="hidden sm:inline">Atur Lokasi</span>
-                    </Link>
-                </div>
+                <Link :href="route('admin.journal-setting.edit')"
+                    class="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-cyan-500 to-teal-500 shadow-lg shadow-cyan-500/20 hover:opacity-90 transition-opacity">
+                    <MapPinIcon class="w-4 h-4" />
+                    <span class="hidden sm:inline">Atur Lokasi</span>
+                </Link>
             </div>
 
             <!-- Filters -->
@@ -155,6 +181,21 @@ const inputClass = 'px-4 py-2.5 rounded-xl border text-sm bg-white border-gray-2
                         <option v-for="t in tahunOptions" :key="t" :value="t">{{ t }}</option>
                     </select>
                 </div>
+            </div>
+
+            <!-- Toolbar: Hapus Semua & Export (di atas tabel, rata kanan) -->
+            <div class="flex items-center justify-end gap-2 mb-3">
+                <button @click="hapusSemua" :disabled="!rekap.length"
+                    class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-rose-600 bg-rose-50 border border-rose-100 hover:bg-rose-100 transition-colors disabled:opacity-40 disabled:cursor-not-allowed dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-900/40">
+                    <TrashIcon class="w-4 h-4" />
+                    <span class="hidden sm:inline">Hapus Semua</span>
+                </button>
+
+                <button @click="exportExcel"
+                    class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 transition-colors dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-900/40">
+                    <ArrowDownTrayIcon class="w-4 h-4" />
+                    <span class="hidden sm:inline">Export Excel</span>
+                </button>
             </div>
 
             <template v-if="rekap.length">

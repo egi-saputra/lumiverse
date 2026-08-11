@@ -9,6 +9,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class JournalRekapExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
 {
@@ -56,8 +57,20 @@ class JournalRekapExport implements FromCollection, WithHeadings, WithMapping, W
 
     public function styles(Worksheet $sheet)
     {
-        return [
-            1 => ['font' => ['bold' => true]],
-        ];
+        // Baris terakhir yang punya data (minimal 2 supaya range A2:D2 tetap valid
+        // walau collection-nya kosong, biar gak error "invalid range").
+        $lastRow = max($sheet->getHighestRow(), 2);
+
+        // Heading (baris 1): bold + center semua kolom
+        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:D1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Data: center semua kolom dulu (A sampai D)...
+        $sheet->getStyle("A2:D{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // ...lalu override kolom B (Nama Guru) balik ke rata kiri
+        $sheet->getStyle("B1:B{$lastRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+        return [];
     }
 }
