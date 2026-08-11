@@ -83,15 +83,18 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::put('jurnal-guru/pengaturan-lokasi', [JournalSettingController::class, 'update'])
             ->name('journal-setting.update');
 
-        // ===== JURNAL GURU (rekap & detail, read-only) =====
+        // ===== JURNAL GURU (rekap & detail) =====
         Route::get('jurnal-guru', [AdminJournalController::class, 'index'])->name('journal.index');
-        Route::get('jurnal-guru/{guru}', [AdminJournalController::class, 'show'])->name('journal.show');
-        Route::delete('/journal/guru/{guru}', [JournalController::class, 'destroyByGuru'])
-            ->name('journal.destroyByGuru');
-        Route::delete('/admin/journal/{journal}', [JournalController::class, 'destroy'])
-            ->name('journal.destroy');
-            });
-        Route::get('/journal/export', [JournalController::class, 'export'])
+
+        // Export & destroyByGuru pakai segment literal, HARUS didaftarkan
+        // sebelum route wildcard {guru} di bawahnya, biar 'export' & 'guru'
+        // gak ketelen jadi nilai {guru}.
+        Route::get('jurnal-guru/export', [AdminJournalController::class, 'export'])
             ->name('journal.export');
-        Route::get('/journal/{guru}', [JournalController::class, 'show'])
-            ->name('journal.show');
+        Route::delete('jurnal-guru/guru/{guru}', [AdminJournalController::class, 'destroyByGuru'])
+            ->name('journal.destroyByGuru');
+
+        Route::get('jurnal-guru/{guru}', [AdminJournalController::class, 'show'])->name('journal.show');
+        Route::delete('jurnal-guru/{journal}', [AdminJournalController::class, 'destroy'])
+            ->name('journal.destroy');
+    });
