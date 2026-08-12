@@ -27,11 +27,11 @@ Route::middleware([
     });
 
     // ── Proktor — rekap nilai (update ke sanctum juga) ──────────────────────
-    Route::middleware(['auth:sanctum', 'role:proktor'])->group(function () {
-        Route::get('/rekap-nilai',     [NilaiController::class, 'rekapNilai']);
-        Route::get('/list-soal',       [NilaiController::class, 'listSoal']);
-        Route::get('/list-mapel',      [NilaiController::class, 'listMapel']);
-        Route::get('/list-kelas',      [NilaiController::class, 'listKelas']);
-        Route::post('/rekap-filtered', [NilaiController::class, 'rekapFiltered']);
-    });
+    // Route::middleware(['auth:sanctum', 'role:proktor'])->group(function () {
+    //     Route::get('/rekap-nilai',     [NilaiController::class, 'rekapNilai']);
+    //     Route::get('/list-soal',       [NilaiController::class, 'listSoal']);
+    //     Route::get('/list-mapel',      [NilaiController::class, 'listMapel']);
+    //     Route::get('/list-kelas',      [NilaiController::class, 'listKelas']);
+    //     Route::post('/rekap-filtered', [NilaiController::class, 'rekapFiltered']);
+    // });
 });

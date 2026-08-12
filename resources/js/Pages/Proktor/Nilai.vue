@@ -99,9 +99,9 @@ const visiblePages = computed(() => {
 onMounted(async () => {
     try {
         const [soalRes, mapelRes, kelasRes] = await Promise.all([
-            fetch('/api/list-soal'),
-            fetch('/api/list-mapel'),
-            fetch('/api/list-kelas'),
+            fetch('/proktor/list-soal'),
+            fetch('/proktor/list-mapel'),
+            fetch('/proktor/list-kelas'),
         ]);
         [listSoal.value, listMapel.value, listKelas.value] = await Promise.all([
             soalRes.json(), mapelRes.json(), kelasRes.json(),
@@ -129,7 +129,7 @@ const generate = async () => {
     loaded.value = false;
 
     try {
-        const res = await fetch('/api/rekap-filtered', {
+        const res = await fetch('/proktor/rekap-filtered', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

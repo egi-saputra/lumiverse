@@ -78,6 +78,11 @@ Route::middleware(['auth', 'verified', 'role:proktor'])->prefix('proktor')->name
         Route::delete('/ruang-ujian/peserta/{peserta}', [RuangUjianController::class, 'destroyPeserta'])
             ->name('ruangUjian.destroyPeserta');
 
+        Route::get('/list-soal', [NilaiController::class, 'listSoal'])->name('nilai.listSoal');
+        Route::get('/list-mapel', [NilaiController::class, 'listMapel'])->name('nilai.listMapel');
+        Route::get('/list-kelas', [NilaiController::class, 'listKelas'])->name('nilai.listKelas');
+        Route::post('/rekap-filtered', [NilaiController::class, 'rekapFiltered'])->name('nilai.rekapFiltered');
+
         // Rekap Nilai Ujian Siswa
         Route::get('/rekap-nilai', [NilaiController::class, 'index'])
             ->name('nilai.index');
