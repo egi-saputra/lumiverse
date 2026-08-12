@@ -53,6 +53,29 @@ class GoogleController extends Controller
         }
 
         // ── Flow A: Tenant ──────────────────────────────────────────────
+        // if (str_starts_with($state ?? '', 'tenant:')) {
+        //     $tenantId = substr($state, 7);
+
+        //     $tenant = Tenant::find($tenantId);
+        //     if (! $tenant) {
+        //         abort(404, 'Sekolah/lembaga tidak ditemukan.');
+        //     }
+
+        //     try {
+        //         $result = $tenant->run(function () use ($googleUser) {
+        //             return $this->findOrCreateUser($googleUser);
+        //         });
+        //     } catch (\Exception $e) {
+        //         return redirect()->away($this->buildTenantUrl($tenantId, '/login?error=email_not_registered'));
+        //     }
+
+        //     // Buat signed URL agar user bisa login di subdomain
+        //     $token = encrypt(['user_id' => $result['user_id'], 'path' => $result['path'], 'tenant_id' => $tenantId, 'exp' => now()->addMinutes(2)->timestamp]);
+
+        //     return redirect()->away($this->buildTenantUrl($tenantId, '/auth/google/token?token=' . urlencode($token)));
+        // }
+
+        // ── Flow A: Tenant ──────────────────────────────────────────────
         if (str_starts_with($state ?? '', 'tenant:')) {
             $tenantId = substr($state, 7);
 
@@ -61,13 +84,9 @@ class GoogleController extends Controller
                 abort(404, 'Sekolah/lembaga tidak ditemukan.');
             }
 
-            try {
-                $result = $tenant->run(function () use ($googleUser) {
-                    return $this->findOrCreateUser($googleUser);
-                });
-            } catch (\Exception $e) {
-                return redirect()->away($this->buildTenantUrl($tenantId, '/login?error=email_not_registered'));
-            }
+            $result = $tenant->run(function () use ($googleUser) {
+                return $this->findOrCreateUser($googleUser);
+            });
 
             // Buat signed URL agar user bisa login di subdomain
             $token = encrypt(['user_id' => $result['user_id'], 'path' => $result['path'], 'tenant_id' => $tenantId, 'exp' => now()->addMinutes(2)->timestamp]);
@@ -113,18 +132,54 @@ class GoogleController extends Controller
         return redirect()->route('owner.dashboard');
     }
 
+    // private function findOrCreateUser($googleUser): array
+    // {
+    //     $user = User::where('email', $googleUser->getEmail())->first();
+
+    //     if (! $user) {
+    //         throw new \Exception('Email tidak terdaftar.');
+    //     }
+
+    //     $user->update([
+    //         'google_id' => $googleUser->getId(),
+    //         'avatar'    => $googleUser->getAvatar(),
+    //     ]);
+
+    //     // Return user id dan path, bukan langsung login
+    //     return [
+    //         'user_id' => $user->id,
+    //         'path'    => match ($user->role) {
+    //             'admin'   => '/admin/dashboard',
+    //             'proktor' => '/proktor/dashboard',
+    //             'guru'    => '/guru/dashboard',
+    //             'siswa'   => '/siswa/dashboard',
+    //             default   => '/user/dashboard',
+    //         },
+    //     ];
+    // }
+
     private function findOrCreateUser($googleUser): array
     {
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if (! $user) {
-            throw new \Exception('Email tidak terdaftar.');
+            // Auto-create untuk user tenant (siswa/guru) via Google Sign-In.
+            // Berbeda dengan flow Owner: di sana kalau akun belum ada, TIDAK dibuatkan
+            // otomatis — owner wajib register manual karena harus isi data tenant dulu.
+            $user = User::create([
+                'name'              => $googleUser->getName() ?: $googleUser->getEmail(),
+                'email'             => $googleUser->getEmail(),
+                'password'          => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(40)),
+                'google_id'         => $googleUser->getId(),
+                'avatar'            => $googleUser->getAvatar(),
+                'email_verified_at' => now(),
+            ]);
+        } else {
+            $user->update([
+                'google_id' => $googleUser->getId(),
+                'avatar'    => $googleUser->getAvatar(),
+            ]);
         }
-
-        $user->update([
-            'google_id' => $googleUser->getId(),
-            'avatar'    => $googleUser->getAvatar(),
-        ]);
 
         // Return user id dan path, bukan langsung login
         return [

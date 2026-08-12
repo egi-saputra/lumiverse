@@ -15,6 +15,7 @@ use App\Http\Controllers\MadingController;
 use App\Http\Controllers\PesanController;
 use App\Http\Controllers\PublicAbsensiAnalyticsController;
 use App\Http\Controllers\TenantAssetController;
+use App\Http\Controllers\Siswa\FormController;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
@@ -67,6 +68,18 @@ Route::middleware(['auth'])->prefix('onboarding')->name('role.')->group(function
     Route::get('/peran/orang-tua', [RoleSelectionController::class, 'createOrangTua'])->name('orangtua.create');
     Route::get('/peran/orang-tua/cek', [RoleSelectionController::class, 'lookupOrangTua'])->name('orangtua.lookup'); // baru
     Route::post('/peran/orang-tua', [RoleSelectionController::class, 'storeOrangTua'])->name('orangtua.store');
+});
+
+// ── Form onboarding siswa ──────────────────────────────────────
+// Diakses SEBELUM role user final jadi 'siswa' (role baru dikunci
+// setelah data tersimpan di FormController@store), jadi middleware-nya
+// cukup 'auth' — TIDAK boleh pakai 'role:siswa' seperti route siswa.php lainnya.
+Route::middleware(['auth'])->group(function () {
+    Route::get('/siswa/form/create', [FormController::class, 'create'])
+        ->name('siswa.form.create');
+
+    Route::post('/siswa/form', [FormController::class, 'store'])
+        ->name('siswa.form.store');
 });
 
 Route::middleware(['auth'])->group(function () {

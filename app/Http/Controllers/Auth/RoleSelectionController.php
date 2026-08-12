@@ -34,13 +34,20 @@ class RoleSelectionController extends Controller
     {
         $request->validate(['peran' => 'required|in:siswa']);
 
-        Auth::user()->update(['role' => 'siswa']); // ← role sudah final di sini
+        // Role BELUM disimpan di sini — sama seperti flow guru.
+        // Role baru jadi final setelah data siswa berhasil disimpan
+        // di FormController@store, supaya user masih bisa "batal" dan
+        // balik pilih peran lain tanpa nyangkut di role siswa.
 
         $siswaExists = Siswa::where('user_id', Auth::id())->exists();
 
         if (!$siswaExists) {
-            return redirect()->route('siswa.form.create'); // baru di sini diarahkan ke form
+            return redirect()->route('siswa.form.create');
         }
+
+        // Edge case: data siswa sudah ada tapi role belum final (jarang terjadi,
+        // misal race condition) — set role di sini biar konsisten lalu lanjut dashboard.
+        Auth::user()->update(['role' => 'siswa']);
 
         return redirect()->route('siswa.dashboard');
     }

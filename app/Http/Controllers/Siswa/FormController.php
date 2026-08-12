@@ -152,6 +152,9 @@ class FormController extends Controller
                 // id_siswa otomatis di-generate di Siswa::boot()
                 'status'        => 'Activated',
             ]);
+
+            // Role baru dikunci jadi 'siswa' setelah data siswa benar-benar tersimpan.
+            $request->user()->update(['role' => 'siswa']);
         } catch (\Exception $e) {
             \Log::error('FormController@store failed: ' . $e->getMessage());
 

@@ -283,7 +283,7 @@ const submit = () => {
     })
 }
 
-const logout = () => router.post(route('logout'))
+const kembaliKePilihPeran = () => router.visit(route('role.select'))
 
 /* ─── Pilihan dropdown ───────────────────────────────────── */
 const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu']
@@ -346,10 +346,10 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                 Isi dengan data yang sesuai ijazah terakhir kamu.
                             </p>
                         </div>
-                        <button type="button" @click="logout" class="flex items-center gap-1.5 text-xs font-medium text-gray-400
-                                   hover:text-red-500 transition-colors mt-1 shrink-0">
-                            <ArrowLeftOnRectangleIcon class="w-4 h-4" />
-                            <span class="hidden sm:inline">Keluar</span>
+                        <button type="button" @click="kembaliKePilihPeran"
+                            class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-blue-500 transition-colors mt-1 shrink-0">
+                            <ArrowLeftIcon class="w-4 h-4" />
+                            <span class="hidden sm:inline">Kembali</span>
                         </button>
                     </div>
 
@@ -736,13 +736,10 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                             </button>
                         </div>
 
-                        <button v-if="isFirstStep" type="button" @click="logout" class="w-full mt-1 flex items-center justify-center gap-2
-                                   px-6 py-2.5 rounded-xl text-sm font-medium
-                                   text-gray-500 hover:text-red-500
-                                   border border-gray-200 hover:border-red-200
-                                   transition-colors sm:hidden">
-                            <ArrowLeftOnRectangleIcon class="w-4 h-4" />
-                            Keluar dari Akun
+                        <button v-if="isFirstStep" type="button" @click="kembaliKePilihPeran"
+                            class="w-full mt-1 flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:text-blue-500 border border-gray-200 hover:border-blue-200 transition-colors sm:hidden">
+                            <ArrowLeftIcon class="w-4 h-4" />
+                            Kembali
                         </button>
 
                     </form>

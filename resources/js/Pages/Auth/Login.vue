@@ -40,14 +40,6 @@ const directoryItems = computed(() => {
         },
     ]
 
-    // if (!isWorkspace.value) {
-    //     items.push({
-    //         routeName: 'mading.index',
-    //         external: false,
-    //         label: `Mading Digital ${page.props.tenant?.name ?? ''}`,
-    //     })
-    // }
-
     items.push({
         href: 'https://www.lumiverse.co.id',
         external: true,
@@ -102,7 +94,7 @@ onMounted(() => {
 
     <Head title="Login" />
 
-    <div class="flex flex-col h-screen md:flex-row">
+    <div class="flex flex-col h-screen md:flex-row force-light">
 
         <AlertError ref="alertError" title="Login Failed" />
 
@@ -145,16 +137,6 @@ onMounted(() => {
                                 <path d="M6 11L11 6M11 6H7M11 6V10" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </a>
-
-                        <!-- <Link v-else :href="route(item.routeName)" prefetch preserve-scroll preserve-state
-                            class="directory-row">
-                            <span class="directory-index">{{ String(i + 1).padStart(2, '0') }}</span>
-                            <span class="flex-1 capitalize">{{ item.label }}</span>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor"
-                                stroke-width="1.5" class="text-[#C9A227]/70" aria-hidden="true">
-                                <path d="M6 11L11 6M11 6H7M11 6V10" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </Link> -->
                     </li>
                 </ul>
             </nav>
@@ -226,7 +208,7 @@ onMounted(() => {
                     </div>
 
                     <!-- Submit -->
-                    <button type="submit" :disabled="form.processing" class="btn-primary">
+                    <button type="submit" :disabled="form.processing" class="btn-primer">
                         <svg v-if="form.processing" class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"
                             aria-hidden="true">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -256,17 +238,6 @@ onMounted(() => {
                         <span>Continue with Google</span>
                     </a>
                 </form>
-
-                <!-- <div
-                    class="sm:hidden fixed bottom-0 left-0 right-0 flex justify-center py-3 bg-[#FAF9F5]/95 backdrop-blur-sm border-t border-black/5">
-                    <a href="https://lumiverse.co.id" class="flex items-center justify-center">
-                        <img src="/images/logo-dark.webp" alt="Lumiverse School"
-                            class="h-7 w-auto object-contain mt-1 grayscale" />
-                        <span class="text-sm font-semibold text-[#6B7086] leading-none">
-                            Lumiverse School
-                        </span>
-                    </a>
-                </div> -->
             </div>
         </main>
     </div>
@@ -274,6 +245,14 @@ onMounted(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* ── Paksa light mode untuk seluruh halaman ini ──
+   color-scheme di-inherit ke semua descendant, jadi native controls
+   (checkbox, autofill, scrollbar) ikut render sebagai light meskipun
+   OS/browser user pakai dark mode. */
+.force-light {
+    color-scheme: light;
+}
 
 * {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -369,14 +348,15 @@ onMounted(() => {
     border: none;
     border-bottom: 1.5px solid #E2E0DA;
     border-radius: 2px;
-    background: transparent;
-    font-size: 0.95rem;
+    background-color: #FAF9F5;
     color: #1A1B3A;
+    font-size: 0.95rem;
     transition: border-color 0.2s ease;
 
     outline: none;
     box-shadow: none;
     -webkit-appearance: none;
+    color-scheme: light;
 }
 
 .field-input::placeholder {
@@ -399,6 +379,18 @@ onMounted(() => {
     top: -0.6rem;
     font-size: 0.6rem;
     color: #C9A227;
+}
+
+/* Override autofill Chrome/Edge yang suka maksa background gelap saat OS dark mode */
+.field-input:-webkit-autofill,
+.field-input:-webkit-autofill:hover,
+.field-input:-webkit-autofill:focus,
+.field-input:-webkit-autofill:active {
+    -webkit-text-fill-color: #1A1B3A !important;
+    -webkit-box-shadow: 0 0 0px 1000px #FAF9F5 inset !important;
+    box-shadow: 0 0 0px 1000px #FAF9F5 inset !important;
+    caret-color: #1A1B3A;
+    transition: background-color 9999s ease-in-out 0s;
 }
 
 .password-toggle {
@@ -437,10 +429,14 @@ input::-webkit-credentials-auto-fill-button {
     right: 0;
 }
 
+/* Checkbox "Remember Me" - paksa tampilan light, termasuk saat OS dark mode */
 .remember-checkbox {
     accent-color: #C9A227;
     width: 1rem;
     height: 1rem;
+    color-scheme: light;
+    background-color: #FAF9F5;
+    border: 1px solid #E2E0DA;
 }
 
 .text-link {
@@ -455,7 +451,7 @@ input::-webkit-credentials-auto-fill-button {
 }
 
 /* ── Buttons ── */
-.btn-primary {
+.btn-primer {
     width: 100%;
     display: flex;
     align-items: center;
@@ -463,7 +459,7 @@ input::-webkit-credentials-auto-fill-button {
     gap: 0.5rem;
     padding: 0.8rem 1rem;
     border-radius: 0.6rem;
-    background: #1A1B3A;
+    background-color: #1A1B3A;
     color: #FAF9F5;
     font-weight: 600;
     font-size: 0.9rem;
@@ -473,12 +469,12 @@ input::-webkit-credentials-auto-fill-button {
     transition: background 0.2s ease, transform 0.15s ease;
 }
 
-.btn-primary:hover:not(:disabled) {
-    background: #2E2A6E;
+.btn-primer:hover:not(:disabled) {
+    background-color: #2E2A6E;
     transform: translateY(-1px);
 }
 
-.btn-primary:disabled {
+.btn-primer:disabled {
     opacity: 0.7;
     cursor: not-allowed;
 }
@@ -502,6 +498,6 @@ input::-webkit-credentials-auto-fill-button {
 
 .btn-outline:hover {
     border-color: #C9A227;
-    background: #FAF7EE;
+    background-color: #FAF7EE;
 }
 </style>

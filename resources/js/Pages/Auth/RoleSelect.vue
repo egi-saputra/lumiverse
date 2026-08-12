@@ -44,12 +44,7 @@ const logout = () => router.post(route('logout'))
         class="min-h-screen flex items-center justify-center px-4 py-10 bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
         <div class="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/60 p-8">
             <div class="flex items-start justify-between mb-1">
-                <h1 class="text-2xl font-bold text-gray-900">Kamu berperan sebagai apa?</h1>
-                <!-- <button type="button" @click="logout"
-                    class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors mt-1 shrink-0">
-                    <ArrowLeftOnRectangleIcon class="w-4 h-4" />
-                    <span class="hidden sm:inline">Keluar</span>
-                </button> -->
+                <h1 class="text-2xl font-bold text-gray-900">Kamu berperan sebagai siapa?</h1>
             </div>
             <p class="text-sm text-gray-500 mb-6">Pilih salah satu, lalu klik Lanjutkan.</p>
 
@@ -77,7 +72,7 @@ const logout = () => router.post(route('logout'))
                        text-gray-500 hover:text-red-500 border border-gray-200 hover:border-red-200
                        transition-colors">
                 <ArrowLeftOnRectangleIcon class="w-4 h-4" />
-                Keluar dari Akun
+                Kembali ke halaman login
             </button>
         </div>
     </div>
