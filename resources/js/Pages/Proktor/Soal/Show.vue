@@ -379,7 +379,7 @@ async function confirmDeleteAll() {
                             Kunci Jawaban
                         </p>
                         <p class="text-sm text-green-800 dark:text-green-300">
-                            {{ jawabанLabel(item) }}
+                            {{ jawabanLabel(item) }}
                         </p>
                     </div>
                 </div>
