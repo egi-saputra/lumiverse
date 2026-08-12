@@ -75,8 +75,8 @@ class RekapNilaiController extends Controller
             ->join('users', 'users.id', '=', 'ru.user_id')
             ->join('siswa', 'siswa.user_id', '=', 'users.id')
             ->leftJoin('kelas', function ($join) {
-                $join->whereRaw('kelas.id = CAST(siswa.kelas_id AS UNSIGNED)');
-            })
+                    $join->whereRaw('kelas.id = CAST(siswa.kelas_id AS INTEGER)');
+                })
             ->where('soal.user_id', $guruId)
             ->select(
                 'ru.user_id',
@@ -85,7 +85,7 @@ class RekapNilaiController extends Controller
                 'kelas.kelas       as nama_kelas',
                 'mapel.mapel       as nama_mapel',
                 'soal.title        as nama_soal',
-                DB::raw('SUM(ru.benar)       as total_benar'),
+                DB::raw('SUM(CASE WHEN ru.benar THEN 1 ELSE 0 END) AS total_benar'),
                 DB::raw('SUM(ru.nilai)       as total_nilai'),
                 DB::raw('COUNT(ru.quest_id)  as dijawab'),   // ← soal yang dijawab
                 DB::raw('MAX(ru.status)      as status')

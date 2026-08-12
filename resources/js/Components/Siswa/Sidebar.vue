@@ -11,6 +11,7 @@ import {
     ChevronDownIcon,
     AcademicCapIcon,
     ChartBarIcon,
+    AdjustmentsHorizontalIcon,
 } from '@heroicons/vue/24/outline';
 
 const page = usePage();
@@ -31,6 +32,14 @@ const menuItems = [
     { name: 'Assignment Rooms', routeName: 'siswa.assignment.index', icon: CheckBadgeIcon },
     { name: 'Exam Rooms / Test', routeName: 'siswa.ujian.token', icon: AcademicCapIcon },
 
+    {
+        name: 'Additional Features',
+        icon: AdjustmentsHorizontalIcon,
+        children: [
+            // { name: 'Inbox Messages', routeName: 'pesan.index' },
+            { name: 'Announcements', routeName: 'pengumuman.index' },
+        ],
+    },
     // Kalau nanti mau dropdown tinggal aktifkan
     // {
     //     name: 'Rekap Penilaian',

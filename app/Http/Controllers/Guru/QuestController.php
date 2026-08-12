@@ -23,7 +23,6 @@ class QuestController extends Controller
     // ─── Recalculate riwayat_ujian setelah jawaban_benar atau nilai berubah ───
     private function recalculateRiwayat(BankSoal $bankSoal): void
     {
-        // Essay tidak punya logika benar/salah otomatis
         if ($bankSoal->tipe_soal === 'Essay' || is_null($bankSoal->jawaban_benar)) {
             return;
         }
@@ -36,12 +35,16 @@ class QuestController extends Controller
             return;
         }
 
+        $driver = DB::connection()->getDriverName();
+        $benarTrue  = $driver === 'pgsql' ? 'TRUE'  : '1';
+        $benarFalse = $driver === 'pgsql' ? 'FALSE' : '0';
+
         // jawaban_benar = 'opsi_b', jawaban siswa = 'B'
         // CONCAT('opsi_', LOWER(jawaban)) untuk menyamakan format
         DB::statement("
             UPDATE riwayat_ujian
             SET
-                benar = CASE WHEN CONCAT('opsi_', LOWER(jawaban)) = ? THEN 1 ELSE 0 END,
+                benar = CASE WHEN CONCAT('opsi_', LOWER(jawaban)) = ? THEN {$benarTrue} ELSE {$benarFalse} END,
                 nilai = CASE WHEN CONCAT('opsi_', LOWER(jawaban)) = ? THEN ? ELSE 0 END
             WHERE quest_id = ?
         ", [

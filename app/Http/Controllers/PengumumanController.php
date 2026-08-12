@@ -38,7 +38,7 @@ class PengumumanController extends Controller
         $validated = $request->validate([
             'judul'      => 'required|string|max:255',
             'pengumuman' => 'required|string|max:100000',
-            'file'       => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360', // 15 MB
+            'file'       => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360',
             'video_url'  => 'nullable|url|max:500',
         ]);
 
@@ -56,6 +56,7 @@ class PengumumanController extends Controller
             'user_id'    => Auth::id(),
             'file_path'  => $filePath,
             'video_url'  => $validated['video_url'] ?? null,
+            'penerima'   => 'semua',   // ← selalu tampil ke semua role
         ]);
 
         return redirect()->route('pengumuman.index')
@@ -108,6 +109,7 @@ class PengumumanController extends Controller
             'pengumuman' => $validated['pengumuman'],
             'file_path'  => $filePath,
             'video_url'  => $validated['video_url'] ?? null,
+            'penerima'   => 'semua',
         ]);
 
         return redirect()->route('pengumuman.show', $pengumuman)

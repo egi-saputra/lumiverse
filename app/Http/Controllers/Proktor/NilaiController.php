@@ -94,7 +94,7 @@ class NilaiController extends Controller
                 'mapel.mapel as nama_mapel',
 
                 // Agregat
-                DB::raw('SUM(ru.benar)         AS total_benar'),
+                DB::raw('SUM(CASE WHEN ru.benar THEN 1 ELSE 0 END) AS total_benar'),
                 DB::raw('SUM(ru.nilai)          AS total_nilai'),
                 DB::raw('COUNT(ru.quest_id)     AS dijawab'),
                 DB::raw('MAX(ru.status)         AS status'),

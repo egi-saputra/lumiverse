@@ -57,7 +57,19 @@ const persistRead = () => {
 }
 
 // Ambil daftar pengumuman dari shared prop (diisi HandleInertiaRequests)
-const pengumumanList = computed(() => page.props.pesan ?? [])
+const pengumumanList = computed(() => {
+    const role = page.props.auth?.role ?? ''
+    if (!role) return []
+
+    return (page.props.announcements ?? []).filter(item => {
+        if (item.penerima === 'semua') return true
+        if (item.penerima === role) return true
+        if (role === 'siswa' && item.kelas_id) {
+            return Number(item.kelas_id) === Number(page.props.kelasId)
+        }
+        return false
+    })
+})
 
 // 10 pengumuman terbaru untuk dropdown
 const recentPengumuman = computed(() =>
@@ -299,7 +311,7 @@ const logout = () => router.post(route('logout'))
                                                     {{ p.judul }}
                                                 </p>
                                                 <p class="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5"
-                                                    v-html="p.isi" />
+                                                    v-html="p.pengumuman" />
                                             </div>
 
                                             <ChevronRightIcon

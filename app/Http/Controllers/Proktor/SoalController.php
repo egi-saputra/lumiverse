@@ -217,8 +217,8 @@ class SoalController extends Controller
                     UPDATE riwayat_ujian AS ru
                     SET
                         benar = CASE
-                            WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN 1
-                            ELSE 0
+                            WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN TRUE
+                            ELSE FALSE
                         END,
                         nilai = CASE
                             WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN ?
