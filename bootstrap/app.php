@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SetRouteDomainDefault::class,
         ]);
 
+	$middleware->trustProxies(at: '*');
+
         $middleware->validateCsrfTokens(except: [
             'subscription/webhook',
             'api/owner/auth/*',
