@@ -29,7 +29,7 @@ import { Head } from '@inertiajs/vue3';
             <p><em>Thank you for using our services.</em></p>
 
             <p class="footer">
-                <em>KreatiCraft Indonesia</em>
+                <em>PT Lumi Platforms Indonesia</em>
             </p>
         </div>
     </div>

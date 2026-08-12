@@ -209,23 +209,43 @@ class SoalController extends Controller
             BankSoal::where('soal_id', $soal->id)
                 ->update(['nilai' => $request->nilai]);
 
-            // 2. Re-evaluate benar + nilai sekaligus
-            //    Pakai JOIN ke bank_soal untuk ambil jawaban_benar per quest_id
-            DB::statement("
-                UPDATE riwayat_ujian ru
-                JOIN bank_soal bs ON bs.id = ru.quest_id
-                SET
-                    ru.benar = CASE
-                        WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN 1
-                        ELSE 0
-                    END,
-                    ru.nilai = CASE
-                        WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN ?
-                        ELSE 0
-                    END
-                WHERE ru.soal_id = ?
-                AND ru.jawaban IS NOT NULL
-            ", [$request->nilai, $soal->id]);
+            // 2. Re-evaluate benar + nilai sekaligus (portable MySQL/PostgreSQL)
+            $driver = DB::connection()->getDriverName();
+
+            if ($driver === 'pgsql') {
+                DB::statement("
+                    UPDATE riwayat_ujian AS ru
+                    SET
+                        benar = CASE
+                            WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN 1
+                            ELSE 0
+                        END,
+                        nilai = CASE
+                            WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN ?
+                            ELSE 0
+                        END
+                    FROM bank_soal AS bs
+                    WHERE bs.id = ru.quest_id
+                    AND ru.soal_id = ?
+                    AND ru.jawaban IS NOT NULL
+                ", [$request->nilai, $soal->id]);
+            } else {
+                DB::statement("
+                    UPDATE riwayat_ujian ru
+                    JOIN bank_soal bs ON bs.id = ru.quest_id
+                    SET
+                        ru.benar = CASE
+                            WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN 1
+                            ELSE 0
+                        END,
+                        ru.nilai = CASE
+                            WHEN CONCAT('opsi_', LOWER(ru.jawaban)) = bs.jawaban_benar THEN ?
+                            ELSE 0
+                        END
+                    WHERE ru.soal_id = ?
+                    AND ru.jawaban IS NOT NULL
+                ", [$request->nilai, $soal->id]);
+            }
 
             DB::commit();
 

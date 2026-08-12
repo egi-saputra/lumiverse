@@ -56,4 +56,8 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->toResponse($request)
                 ->setStatusCode(404);
         });
+
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, Request $request) {
+            return redirect()->back()->with('error', 'Sesi telah berakhir, silakan coba lagi.');
+        });
     })->create();
