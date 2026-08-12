@@ -95,15 +95,6 @@ const menuItems = computed(() => [
         border: 'border-purple-100 dark:border-purple-800/30',
     },
     {
-        title: 'Messages',
-        icon: EnvelopeIcon,
-        route: route('pesan.index'),
-        gradient: 'from-emerald-500 to-teal-500',
-        glow: 'shadow-emerald-400/30',
-        bg: 'bg-emerald-50 dark:bg-emerald-950/40',
-        border: 'border-emerald-100 dark:border-emerald-800/30',
-    },
-    {
         title: 'Announcements',
         icon: MegaphoneIcon,
         route: route('pengumuman.index'),
