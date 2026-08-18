@@ -13,6 +13,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->string('plan_key')->nullable();
             $table->string('source')->default('material');
+            // $table->unsignedInteger('cost')->default(1);
             $table->string('status')->default('generated');
             $table->timestamps();
 
