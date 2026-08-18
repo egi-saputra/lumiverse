@@ -12,6 +12,7 @@ class AiInvoice extends Model
     protected $table = 'ai_invoices';
 
     protected $fillable = [
+        'tenant_id',
         'user_id',
         'external_id',
         'invoice_id',

@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('ai_invoices', function (Blueprint $table) {
             $table->id();
+            $table->string('tenant_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->string('external_id')->unique();
             $table->string('invoice_id')->nullable(); // ID dari Xendit
@@ -22,6 +23,7 @@ return new class extends Migration
             $table->json('meta')->nullable(); // buat nyimpen payload webhook mentah kalau perlu
             $table->timestamps();
 
+            $table->index(['tenant_id', 'user_id', 'status', 'created_at']);
             $table->index(['user_id', 'status', 'created_at']);
             $table->index(['external_id']);
 

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Ai;
 
 use App\Http\Controllers\Controller;
+use App\Models\AiInvoice;
+use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Ai\AiPlanPricingService;
 use Carbon\Carbon;
@@ -10,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use App\Models\AiInvoice;
 use Inertia\Inertia;
 use Xendit\Configuration;
 use Xendit\Invoice\CreateInvoiceRequest;
@@ -19,6 +20,31 @@ use Xendit\XenditSdkException;
 
 class AiBillingController extends Controller
 {
+    public static function resolveTenantIdFromPayload(array $payload): ?string
+    {
+        $data = $payload['data'] ?? $payload;
+
+        $tenantId = $data['tenant_id'] ?? $payload['tenant_id'] ?? null;
+        if (is_scalar($tenantId) && trim((string) $tenantId) !== '') {
+            return (string) $tenantId;
+        }
+
+        $metadata = $data['metadata'] ?? $payload['metadata'] ?? [];
+        if (is_array($metadata)) {
+            $tenantId = $metadata['tenant_id'] ?? null;
+            if (is_scalar($tenantId) && trim((string) $tenantId) !== '') {
+                return (string) $tenantId;
+            }
+        }
+
+        $externalId = $payload['external_id'] ?? $data['external_id'] ?? null;
+        if (is_string($externalId) && preg_match('/^AI-(\d+)-\d+/', $externalId, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
     protected function aiInvoiceTableExists(): bool
     {
         $tableExists = Schema::hasTable('ai_invoices');
@@ -79,6 +105,7 @@ class AiBillingController extends Controller
 
         if ($amount <= 0) {
         Log::warning('AI checkout: amount is 0 for paid plan, activating without payment', [
+            'tenant_id' => tenant()?->id,
             'user_id' => $user->id,
             'plan_key' => $planKey,
             'billing_cycle' => $request->billing_cycle,
@@ -95,13 +122,18 @@ class AiBillingController extends Controller
 
         // Catat juga di ai_invoices supaya muncul di riwayat pembayaran & bisa diaudit
         AiInvoice::create([
+            'tenant_id' => tenant()?->id,
             'user_id' => $user->id,
-            'external_id' => 'AI-FREE-' . $user->id . '-' . time(),
+            'external_id' => 'AI-' . (tenant()?->id ?? 'central') . '-' . $user->id . '-' . time(),
             'plan_key' => $planKey,
             'amount' => 0,
             'status' => 'paid',
             'paid_at' => now(),
-            'meta' => ['billing_cycle' => $request->billing_cycle, 'note' => 'zero_amount_activation'],
+            'meta' => [
+                'billing_cycle' => $request->billing_cycle,
+                'note' => 'zero_amount_activation',
+                'tenant_id' => tenant()?->id,
+            ],
         ]);
 
         return response()->json([
@@ -119,10 +151,12 @@ class AiBillingController extends Controller
      */
     protected function createXenditInvoice(User $user, string $planKey, string $billingCycle, int $amount)
     {
-        $externalId = 'AI-' . $user->id . '-' . time();
+        $tenantId = tenant()?->id ?? (isset($user->tenant_id) ? $user->tenant_id : null);
+        $externalId = 'AI-' . ($tenantId ?? 'central') . '-' . $user->id . '-' . time();
         $invoiceDuration = (int) config('xendit.invoice_duration', 86400);
 
         $aiInvoice = AiInvoice::create([
+            'tenant_id' => $tenantId,
             'user_id' => $user->id,
             'external_id' => $externalId,
             'invoice_id' => null,
@@ -130,7 +164,11 @@ class AiBillingController extends Controller
             'amount' => $amount,
             'status' => 'pending',
             'expired_at' => now()->addSeconds($invoiceDuration),
-            'meta' => ['billing_cycle' => $billingCycle],
+            'meta' => [
+                'billing_cycle' => $billingCycle,
+                'tenant_id' => $tenantId,
+                'user_id' => $user->id,
+            ],
         ]);
 
         $user->update([
@@ -151,6 +189,7 @@ class AiBillingController extends Controller
                 'invoice_duration' => $invoiceDuration,
                 'currency' => 'IDR',
                 'metadata' => [
+                    'tenant_id' => $tenantId,
                     'user_id' => $user->id,
                     'plan_key' => $planKey,
                     'billing_cycle' => $billingCycle,
@@ -249,7 +288,17 @@ class AiBillingController extends Controller
             return response()->json(['message' => 'Ignored'], 200);
         }
 
-        // Sumber kebenaran sekarang ai_invoices, bukan kolom users
+        $tenantId = self::resolveTenantIdFromPayload($payload);
+        $tenant = $tenantId ? Tenant::find($tenantId) : null;
+
+        if ($tenant) {
+            Log::info('AI Webhook: tenant resolved from payload', ['tenant_id' => $tenantId, 'external_id' => $externalId]);
+            return $tenant->run(function () use ($payload, $data, $externalId, $status, $tenantId) {
+                return $this->processTenantWebhook($payload, $data, $externalId, $status, $tenantId);
+            });
+        }
+
+        // Fallback: look up existing invoice and use its user_id; this still works when tenant context is already active.
         $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
 
         if (! $aiInvoice) {
@@ -261,14 +310,30 @@ class AiBillingController extends Controller
             return response()->json(['message' => 'Invoice not found'], 200);
         }
 
+        return $this->processTenantWebhook($payload, $data, $externalId, $status, $aiInvoice->user_id ? (string) $aiInvoice->user_id : null);
+    }
+
+    protected function processTenantWebhook(array $payload, array $data, ?string $externalId, mixed $status, ?string $tenantId): \Illuminate\Http\JsonResponse
+    {
+        $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
+
+        if (! $aiInvoice) {
+            Log::warning('Xendit AI webhook: ai_invoice not found in tenant context', [
+                'external_id' => $externalId,
+                'tenant_id' => $tenantId,
+            ]);
+
+            return response()->json(['message' => 'Invoice not found'], 200);
+        }
+
         $user = $aiInvoice->user ?? User::find($aiInvoice->user_id);
 
         if (! $user) {
-            Log::warning('Xendit AI webhook: user not found', ['external_id' => $externalId]);
+            Log::warning('Xendit AI webhook: user not found', ['external_id' => $externalId, 'tenant_id' => $tenantId]);
             return response()->json(['message' => 'User not found'], 200);
         }
 
-        Log::info('AI Webhook: invoice found', ['user_id' => $user->id, 'external_id' => $externalId]);
+        Log::info('AI Webhook: invoice found', ['user_id' => $user->id, 'external_id' => $externalId, 'tenant_id' => $tenantId]);
 
         $metadata = $data['metadata'] ?? $payload['metadata'] ?? [];
         $planKey = (string) ($metadata['plan_key'] ?? $aiInvoice->plan_key);
@@ -276,48 +341,47 @@ class AiBillingController extends Controller
         $statusUpper = strtoupper((string) $status);
 
         if (in_array($statusUpper, ['PAID', 'SETTLED'], true)) {
-        // Guard idempotency: kalau invoice ini sudah pernah diproses sebagai paid,
-        // jangan extend ulang masa aktif plan (Xendit bisa kirim webhook duplikat).
-        if ($aiInvoice->status === 'paid') {
-            Log::info('AI Webhook: invoice already paid, skipping duplicate processing', [
-                'external_id' => $externalId,
+            if ($aiInvoice->status === 'paid') {
+                Log::info('AI Webhook: invoice already paid, skipping duplicate processing', [
+                    'external_id' => $externalId,
+                    'user_id' => $user->id,
+                ]);
+
+                return response()->json(['message' => 'Invoice already processed']);
+            }
+
+            $expiresAt = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
+
+            Log::info('AI Webhook: activating plan', [
                 'user_id' => $user->id,
+                'tenant_id' => $tenantId,
+                'plan' => $planKey,
+                'expires_at' => $expiresAt,
             ]);
 
-            return response()->json(['message' => 'Invoice already processed']);
+            $aiInvoice->update([
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
+
+            $user->update([
+                'ai_plan' => $planKey,
+                'ai_plan_status' => 'active',
+                'ai_plan_started_at' => now(),
+                'ai_plan_expires_at' => $expiresAt,
+                'ai_pending_plan' => null,
+                'ai_last_invoice_status' => 'paid',
+            ]);
+
+            Log::info('AI Webhook: plan activated successfully', ['user_id' => $user->id, 'tenant_id' => $tenantId]);
+
+            return response()->json(['message' => 'AI plan activated']);
         }
 
-        $expiresAt = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
-
-        Log::info('AI Webhook: activating plan', [
-            'user_id' => $user->id,
-            'plan' => $planKey,
-            'expires_at' => $expiresAt,
-        ]);
-
-        $aiInvoice->update([
-            'status' => 'paid',
-            'paid_at' => now(),
-        ]);
-
-        $user->update([
-            'ai_plan' => $planKey,
-            'ai_plan_status' => 'active',
-            'ai_plan_started_at' => now(),
-            'ai_plan_expires_at' => $expiresAt,
-            'ai_pending_plan' => null,
-            'ai_last_invoice_status' => 'paid',
-        ]);
-
-        Log::info('AI Webhook: plan activated successfully', ['user_id' => $user->id]);
-
-        return response()->json(['message' => 'AI plan activated']);
-    }
-
-        Log::info('AI Webhook: payment not successful', ['status' => $status, 'user_id' => $user->id]);
+        Log::info('AI Webhook: payment not successful', ['status' => $status, 'user_id' => $user->id, 'tenant_id' => $tenantId]);
 
         if ($statusUpper === 'EXPIRED') {
-            Log::info('AI Webhook: invoice expired', ['external_id' => $externalId, 'user_id' => $user->id]);
+            Log::info('AI Webhook: invoice expired', ['external_id' => $externalId, 'user_id' => $user->id, 'tenant_id' => $tenantId]);
 
             $aiInvoice->update(['status' => 'expired']);
 
@@ -327,9 +391,8 @@ class AiBillingController extends Controller
             ]);
 
             return response()->json(['message' => 'AI invoice marked expired']);
-            }
+        }
 
-        // fallback existing kalian buat status lain (failed, dll)
         $newStatus = strtolower((string) $status ?: 'failed');
 
         $aiInvoice->update(['status' => $newStatus]);
