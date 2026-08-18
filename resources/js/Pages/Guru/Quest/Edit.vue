@@ -5,7 +5,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { CheckIcon, ArrowLeftIcon, PlusIcon, PencilSquareIcon } from '@heroicons/vue/24/solid';
 import Swal from 'sweetalert2';
 import { ToastAlert } from '@/Composables/ToastAlert.js';
-import { Inertia } from '@inertiajs/inertia';
+import { router } from '@inertiajs/vue3'
 import axios from 'axios';
 import MateriContent from '@/Components/MateriContent.vue';
 
