@@ -199,10 +199,10 @@ const logout = () => router.post(route('logout'))
 <template>
     <div id="theme-transition-layer" />
 
-    <div class="h-screen bg-gray-100 dark:bg-[#063970] flex flex-col overflow-hidden">
+    <div class="layout-shell h-screen bg-gray-100 dark:bg-[#063970] flex flex-col overflow-hidden">
 
         <!-- ══════════ NAVBAR ══════════ -->
-        <nav class="bg-white dark:bg-[#041C32] sm:dark:bg-[#0F172A]
+        <nav class="no-print bg-white dark:bg-[#041C32] sm:dark:bg-[#0F172A]
                     border-b border-gray-300 dark:sm:border-gray-700 dark:border-[#1e1b4b]
                     sticky top-0 z-50">
             <div class="mx-auto sm:px-6 px-2">
@@ -451,13 +451,17 @@ const logout = () => router.post(route('logout'))
         <!-- ══════════ END NAVBAR ══════════ -->
 
         <!-- Main area: Sidebar + Content -->
-        <div class="flex flex-1 min-h-0">
-            <component :is="SidebarComponent" :isKejuruanGuru="page.props.isKejuruanGuru" :isWalas="page.props.isWalas"
-                class="hidden md:block bg-white dark:bg-[#0F172A]
+        <div class="layout-main flex flex-1 min-h-0">
+            <!-- <component :is="SidebarComponent" :isKejuruanGuru="page.props.isKejuruanGuru" :isWalas="page.props.isWalas"
+                class="no-print hidden md:block bg-white dark:bg-[#0F172A]
                               border-r dark:border-gray-600 border-gray-300
-                              pt-4 overflow-y-auto overflow-x-hidden" />
+                              pt-4 overflow-y-auto overflow-x-hidden" /> -->
+            <component :is="SidebarComponent" :isKejuruanGuru="page.props.isKejuruanGuru" :isWalas="page.props.isWalas"
+                class="no-print hidden md:flex bg-white dark:bg-[#0F172A]
+                  border-r dark:border-gray-600 border-gray-300
+                  pt-4" />
 
-            <div class="flex-1 px-4 sm:px-8 py-6 pb-20
+            <div class="layout-content flex-1 px-4 sm:px-8 py-6 pb-20
                         bg-gray-100 dark:bg-[#020617] overflow-auto">
                 <slot />
             </div>
@@ -474,5 +478,20 @@ const logout = () => router.post(route('logout'))
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
+}
+
+@media print {
+    #theme-transition-layer {
+        display: none !important;
+    }
+
+    body::before {
+        display: none !important;
+    }
+
+    html,
+    body {
+        background: #ffffff !important;
+    }
 }
 </style>

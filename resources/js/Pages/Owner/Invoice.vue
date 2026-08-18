@@ -135,7 +135,7 @@ function print() {
                 </div>
                 <div class="inv-meta">
                     <div class="inv-meta-title">#INVOICE</div>
-                    <div class="inv-meta-row"><span>No.</span><span>{{ order.order_id }}</span></div>
+                    <div class="inv-meta-row"><span>No.</span><span>{{ order.order_id?.toUpperCase() }}</span></div>
                     <div class="inv-meta-row"><span>Order Date</span><span>{{ formatDate(order.created_at) }}</span>
                     </div>
                 </div>

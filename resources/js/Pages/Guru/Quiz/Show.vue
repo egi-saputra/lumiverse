@@ -4,9 +4,8 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { ArrowLeftIcon, PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/solid';
 import axios from 'axios';
-import { ToastAlert } from '@/Composables/ToastAlert.js';
-
-const { success, error, confirm } = ToastAlert();
+import Swal from 'sweetalert2';
+import MateriContent from '@/Components/MateriContent.vue';
 
 const props = defineProps({
     soal: Object,
@@ -14,34 +13,6 @@ const props = defineProps({
 
 const deletingId = ref(null);
 const isDeletingAll = ref(false);
-const isExporting = ref(false);
-
-// ─── Export soal ──────────────────────────────────────────────────────────────
-async function exportSoal() {
-    if (!props.soal.bank_soal?.length) return;
-    isExporting.value = true;
-    try {
-        const response = await axios.get(
-            `/guru/bank-soal/soal/${props.soal.id}/export`,
-            { responseType: 'blob' }
-        );
-        const disposition = response.headers['content-disposition'] ?? '';
-        const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-        const filename = match ? match[1].replace(/['"]/g, '') : `soal_${props.soal.token}.xlsx`;
-        const url = URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', filename);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        URL.revokeObjectURL(url);
-    } catch (err) {
-        error('Failed to export questions. Please try again.');
-    } finally {
-        isExporting.value = false;
-    }
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const opsiLabel = { opsi_a: 'A', opsi_b: 'B', opsi_c: 'C', opsi_d: 'D', opsi_e: 'E' };
@@ -64,21 +35,42 @@ const formatFormat = (f) =>
 
 // ─── Delete single ────────────────────────────────────────────────────────────
 async function confirmDeleteItem(id) {
-    const result = await confirm({
+    const result = await Swal.fire({
         title: 'Delete this question?',
         text: 'This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
         confirmButtonText: 'Yes, delete',
+        cancelButtonText: 'Cancel',
     });
+
     if (!result.isConfirmed) return;
 
     deletingId.value = id;
+
     try {
         const res = await axios.delete(`/guru/bank-soal/${id}`);
+
+        // Optimistic UI — tidak reload halaman
         const idx = props.soal.bank_soal.findIndex(s => s.id === id);
         if (idx !== -1) props.soal.bank_soal.splice(idx, 1);
-        success(res.data.success || 'Question successfully deleted.');
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: res.data.success || 'Question successfully deleted.',
+            timer: 1800,
+            showConfirmButton: false,
+        });
     } catch (err) {
-        error(err.response?.data?.message || 'Failed to delete question.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: err.response?.data?.message || 'Failed to delete question.',
+            confirmButtonColor: '#ef4444',
+        });
     } finally {
         deletingId.value = null;
     }
@@ -86,20 +78,40 @@ async function confirmDeleteItem(id) {
 
 // ─── Delete all ───────────────────────────────────────────────────────────────
 async function confirmDeleteAll() {
-    const result = await confirm({
+    const result = await Swal.fire({
         title: 'Delete all questions?',
         text: 'All questions in this quiz will be permanently deleted.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
         confirmButtonText: 'Yes, delete all',
+        cancelButtonText: 'Cancel',
     });
+
     if (!result.isConfirmed) return;
 
     isDeletingAll.value = true;
+
     try {
         const res = await axios.delete(`/guru/bank-soal/soal/${props.soal.id}/delete-all`);
+
         props.soal.bank_soal.splice(0);
-        success(res.data.success || 'All questions successfully deleted.');
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Deleted!',
+            text: res.data.success || 'All questions successfully deleted.',
+            timer: 1800,
+            showConfirmButton: false,
+        });
     } catch (err) {
-        error(err.response?.data?.message || 'Failed to delete all questions.');
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: err.response?.data?.message || 'Failed to delete all questions.',
+            confirmButtonColor: '#ef4444',
+        });
     } finally {
         isDeletingAll.value = false;
     }
@@ -188,26 +200,17 @@ async function confirmDeleteAll() {
             </div>
 
             <div class="flex gap-2 w-full sm:w-auto">
+                <Link :href="`/guru/bank-soal/create-ai?soal_id=${soal.id}`"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 active:scale-[0.98] transition-all shadow-sm">
+                    ✨ Buat dengan AI
+                </Link>
+
                 <Link :href="`/guru/bank-soal/create?soal_id=${soal.id}`" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5
-                           rounded-lg px-4 py-2 text-sm font-semibold text-white
-                           bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm">
+                            rounded-lg px-4 py-2 text-sm font-semibold text-white
+                            bg-blue-600 hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm">
                     <PlusIcon class="w-4 h-4" />
                     Add Question
                 </Link>
-
-                <!-- Export -->
-                <button @click="exportSoal" :disabled="isExporting || !soal.bank_soal?.length" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5
-                           rounded-lg px-4 py-2 text-sm font-semibold text-white
-                           bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98]
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           transition-all shadow-sm">
-                    <svg v-if="isExporting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                    </svg>
-                    <ArrowDownTrayIcon v-else class="w-4 h-4" />
-                    Export
-                </button>
 
                 <button @click="confirmDeleteAll" :disabled="isDeletingAll || !soal.bank_soal?.length" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5
                            rounded-lg px-4 py-2 text-sm font-semibold text-white
@@ -270,14 +273,14 @@ async function confirmDeleteAll() {
                                   text-gray-400 dark:text-slate-500 mb-1">
                             Question
                         </p>
-                        <div v-html="item.soal" class="prose prose-sm max-w-none text-gray-800 dark:text-slate-200
-                                   dark:prose-invert announcement-content line-clamp-4" />
+                        <MateriContent :content="item.soal" clamp :show-toggle="false"
+                            class="text-sm question-materi" />
                     </div>
 
                     <!-- Gambar lampiran -->
-                    <div v-if="item.link_lampiran_url">
-                        <img :src="item.link_lampiran_url" alt="Question attachment" class="rounded-lg border border-gray-200 dark:border-slate-700
-                               max-h-40 object-cover w-full" />
+                    <div v-if="item.link_lampiran">
+                        <img :src="`/${item.link_lampiran}`" alt="Question attachment" class="rounded-lg border border-gray-200 dark:border-slate-700
+                                   max-h-40 object-cover w-full" />
                     </div>
 
                     <!-- Opsi PG -->
@@ -299,20 +302,9 @@ async function confirmDeleteAll() {
                                         : 'bg-white border-gray-200 text-gray-500 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-400'">
                                     {{ key.toUpperCase() }}
                                 </span>
-
-                                <!-- <div class="flex-1"> -->
-                                <span :class="item.jawaban_benar === 'opsi_' + key
+                                <MateriContent :content="item['opsi_' + key]" class="opsi-materi flex-1 min-w-0" :class="item.jawaban_benar === 'opsi_' + key
                                     ? 'font-semibold text-green-700 dark:text-green-400'
-                                    : 'text-gray-700 dark:text-slate-300'">
-                                    {{ item['opsi_' + key] }}
-                                </span>
-
-                                <!-- Gambar preview opsi jawaban -->
-                                <!-- <img v-if="item['opsi_' + key + '_lampiran_url']"
-                                        :src="item['opsi_' + key + '_lampiran_url']" alt="Option attachment"
-                                        class="mt-1.5 rounded-lg border border-gray-200 dark:border-slate-700 max-h-24 object-cover" />
-                                </div> -->
-
+                                    : 'text-gray-700 dark:text-slate-300'" />
                                 <span v-if="item.jawaban_benar === 'opsi_' + key" class="ml-auto text-xs font-semibold text-green-600 dark:text-green-400
                                            shrink-0 flex items-center gap-1">
                                     <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
@@ -349,10 +341,10 @@ async function confirmDeleteAll() {
                             : 'text-gray-400 dark:text-slate-500'">
                             Correct Answer
                         </p>
-                        <p class="text-sm" :class="getCorrectAnswerText(item)
-                            ? 'text-green-800 dark:text-green-300'
-                            : 'text-gray-400 dark:text-slate-500 italic'">
-                            {{ getCorrectAnswerText(item) || 'No correct answer defined.' }}
+                        <MateriContent v-if="getCorrectAnswerText(item)" :content="getCorrectAnswerText(item)"
+                            class="answer-materi text-sm text-green-800 dark:text-green-300" />
+                        <p v-else class="text-sm text-gray-400 dark:text-slate-500 italic">
+                            No correct answer defined.
                         </p>
                     </div>
                 </div>
@@ -388,3 +380,29 @@ async function confirmDeleteAll() {
 
     </MenuLayout>
 </template>
+
+<style scoped>
+/* MateriContent membungkus konten dalam <p> dengan margin-bottom .75em -
+   bagus untuk halaman materi penuh, tapi kebesaran untuk baris opsi/jawaban
+   singkat di card soal ini. Timpa jaraknya via :deep() supaya tetap ringkas
+   tanpa perlu duplikasi seluruh CSS KaTeX/code milik MateriContent. */
+:deep(.opsi-materi .materi-content),
+:deep(.answer-materi .materi-content) {
+    line-height: 1.5;
+}
+
+:deep(.opsi-materi .materi-content p),
+:deep(.answer-materi .materi-content p) {
+    margin-bottom: 0;
+}
+
+:deep(.opsi-materi .materi-content p:not(:last-child)),
+:deep(.answer-materi .materi-content p:not(:last-child)) {
+    margin-bottom: 0.4em;
+}
+
+/* Soal (pertanyaan) boleh sedikit lebih lega karena bisa berisi paragraf/kode/rumus */
+:deep(.question-materi .materi-content) {
+    line-height: 1.6;
+}
+</style>

@@ -2,19 +2,27 @@
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { Link, usePage, Head } from '@inertiajs/vue3';
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
-import { PencilIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline';
+import { PencilIcon, TrashIcon, ArrowDownTrayIcon, LockClosedIcon } from '@heroicons/vue/24/outline';
 import axios from 'axios';
-import { ToastAlert } from '@/Composables/ToastAlert.js';
+import Swal from 'sweetalert2';
+import { route } from 'ziggy-js'
 
 const props = defineProps({
     soal: Object,
+    current_plan: { type: String, default: 'free' },
 });
+
+const isPremiumPlan = computed(() => ['pro', 'max'].includes(props.current_plan));
 
 const page = usePage();
 const exportingId = ref(null);
-const { success, error, confirm } = ToastAlert();
 
+// Flash success
+const flash = computed(() => page.props.flash?.success);
+watch(flash, (val) => { if (val) Swal.fire({ icon: 'success', title: val, timer: 1800, showConfirmButton: false }); });
 onMounted(() => {
+    if (flash.value) Swal.fire({ icon: 'success', title: flash.value, timer: 1800, showConfirmButton: false });
+
     allSoal.value = props.soal?.data ?? [];
 
     const totalFromProps = props.soal?.total ?? 0;
@@ -102,27 +110,55 @@ const hasFilteredData = computed(() => filteredSoal.value.length > 0);
 // ─── Delete ───────────────────────────────────────────────────────────────────
 async function confirmDeleteItem(id, event) {
     event?.stopPropagation();
-    const result = await confirm({
+    const result = await Swal.fire({
         title: 'Hapus quiz ini?',
         text: 'Tindakan ini tidak bisa dibatalkan.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
         confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal',
     });
     if (!result.isConfirmed) return;
     try {
         const res = await axios.delete(`/guru/soal/${id}`);
         allSoal.value = allSoal.value.filter(s => s.id !== id);
-        success(res.data.success || 'Quiz berhasil dihapus.');
+        Swal.fire({ icon: 'success', title: res.data.success || 'Quiz berhasil dihapus.', timer: 1800, showConfirmButton: false });
     } catch (err) {
-        error(err.response?.data?.message || 'Gagal menghapus quiz.');
+        Swal.fire({ icon: 'error', title: 'Gagal', text: err.response?.data?.message || 'Gagal menghapus quiz.', confirmButtonColor: '#ef4444' });
     }
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 async function exportSoal(item, event) {
     event?.stopPropagation();
+
     if (!item.bank_soal?.length) {
-        return error('This quiz has no questions to export.');
+        return Swal.fire({ icon: 'warning', title: 'No questions', text: 'This quiz has no questions to export.', confirmButtonColor: '#3b82f6' });
     }
+
+    if (!isPremiumPlan.value) {
+        const result = await Swal.fire({
+            icon: 'info',
+            title: 'Fitur Premium',
+            text: 'Fitur download soal hanya tersedia untuk paket Pro atau Max. Upgrade paket kamu untuk membuka fitur ini.',
+            showCancelButton: true,
+            confirmButtonText: 'Upgrade Sekarang',
+            cancelButtonText: 'Nanti saja',
+            confirmButtonColor: '#7c3aed',
+        });
+        if (result.isConfirmed) {
+            try {
+                window.location.href = route('guru.ai-billing.pricing');
+            } catch (e) {
+                console.error('Route upgrade tidak ditemukan:', e);
+                Swal.fire({ icon: 'error', title: 'Gagal membuka halaman upgrade', text: 'Silakan hubungi admin atau coba lagi nanti.', confirmButtonColor: '#ef4444' });
+            }
+        }
+        return;
+    }
+
     exportingId.value = item.id;
     try {
         const response = await axios.get(`/guru/bank-soal/soal/${item.id}/export`, { responseType: 'blob' });
@@ -137,8 +173,9 @@ async function exportSoal(item, event) {
         link.click();
         link.remove();
         URL.revokeObjectURL(url);
-    } catch {
-        error('Failed to export questions.');
+    } catch (err) {
+        // 403 dari backend (plan/kredit) juga lewat sini kalau guard di atas ke-lewat (mis. plan berubah di tab lain)
+        Swal.fire({ icon: 'error', title: 'Export Gagal', text: err.response?.data?.message || 'Failed to export questions.', confirmButtonColor: '#ef4444' });
     } finally {
         exportingId.value = null;
     }
@@ -209,7 +246,7 @@ async function exportSoal(item, event) {
             <!-- Info hasil filter -->
             <div v-if="hasData && isFiltering" class="mb-4 text-xs text-gray-400 dark:text-gray-500">
                 Menampilkan <span class="font-semibold text-gray-600 dark:text-gray-300">{{ filteredSoal.length
-                }}</span>
+                    }}</span>
                 dari <span class="font-semibold text-gray-600 dark:text-gray-300">{{ allSoal.length }}</span> quiz
             </div>
 
@@ -351,7 +388,10 @@ async function exportSoal(item, event) {
 
                             <button @click="exportSoal(item, $event)"
                                 :disabled="exportingId === item.id || !item.bank_soal?.length"
-                                class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-emerald-600 dark:bg-slate-700 dark:hover:bg-emerald-600 text-slate-600 hover:text-white dark:text-slate-300 dark:hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-100 dark:disabled:hover:bg-slate-700 disabled:hover:text-slate-600 dark:disabled:hover:text-slate-300 transition-all duration-150">
+                                class="relative flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                                :class="isPremiumPlan
+                                    ? 'bg-slate-100 hover:bg-emerald-600 dark:bg-slate-700 dark:hover:bg-emerald-600 text-slate-600 hover:text-white dark:text-slate-300 dark:hover:text-white disabled:hover:bg-slate-100 dark:disabled:hover:bg-slate-700 disabled:hover:text-slate-600 dark:disabled:hover:text-slate-300'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-400 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-600'">
                                 <svg v-if="exportingId === item.id" class="w-3.5 h-3.5 animate-spin" fill="none"
                                     viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
@@ -359,8 +399,14 @@ async function exportSoal(item, event) {
                                     <path class="opacity-75" fill="currentColor"
                                         d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                                 </svg>
+                                <LockClosedIcon v-else-if="!isPremiumPlan" class="w-3.5 h-3.5" />
                                 <ArrowDownTrayIcon v-else class="w-3.5 h-3.5" />
                                 {{ exportingId === item.id ? 'Downloading...' : 'Download' }}
+
+                                <span v-if="!isPremiumPlan"
+                                    class="absolute -top-1.5 -right-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-600 text-white shadow">
+                                    Premium
+                                </span>
                             </button>
 
                             <button @click="confirmDeleteItem(item.id, $event)"

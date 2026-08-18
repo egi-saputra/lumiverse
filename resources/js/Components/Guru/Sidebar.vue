@@ -17,6 +17,7 @@ import {
     UserGroupIcon,
     ArrowTopRightOnSquareIcon,
     ArrowRightOnRectangleIcon,
+    SparklesIcon,
 } from '@heroicons/vue/24/outline'
 
 // ── Props ─────────────────────────────────────────────────────
@@ -69,7 +70,6 @@ const menuItems = computed(() => {
             icon: AcademicCapIcon,
             children: [
                 { name: 'Exam Quiz List', routeName: 'guru.soal.index' },
-                // { name: 'Daily Quiz', routeName: 'guru.soal.index' },
                 { name: 'Assessment', routeName: 'guru.NilaiUjian.index' },
             ],
         },
@@ -77,7 +77,7 @@ const menuItems = computed(() => {
             name: 'Additional Features',
             icon: AdjustmentsHorizontalIcon,
             children: [
-                // { name: 'Inbox Messages', routeName: 'pesan.index' },
+                { name: 'Lumi Assistant', routeName: 'guru.ai-agent.dashboard' },
                 { name: 'Announcements', routeName: 'pengumuman.index' },
             ],
         },
@@ -203,7 +203,8 @@ const leaveDropdown = (el) => {
         </div>
 
         <!-- ── Navigation items ────────────────────────────── -->
-        <div class="flex-1 overflow-y-auto px-3 py-3 space-y-0.5">
+        <!-- <div class="flex-1 overflow-y-auto px-3 py-3 space-y-0.5"> -->
+        <div class="flex-1 min-h-0 overflow-y-auto px-3 py-3 space-y-0.5">
 
             <template v-for="item in resolvedItems" :key="item.name">
 
@@ -311,3 +312,45 @@ const leaveDropdown = (el) => {
 
     </nav>
 </template>
+
+<style scoped>
+/* Chrome, Edge, Safari */
+nav ::-webkit-scrollbar {
+    width: 3px !important;
+}
+
+nav ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+nav ::-webkit-scrollbar-thumb {
+    background-color: #2563eb;
+    /* blue-600, sama kayak warna active menu */
+    border-radius: 9999px;
+}
+
+nav ::-webkit-scrollbar-thumb:hover {
+    background-color: #1d4ed8;
+    /* blue-700, sedikit lebih gelap pas hover */
+}
+
+/* Firefox */
+nav {
+    scrollbar-width: thin;
+    scrollbar-color: #2563eb transparent;
+}
+
+.dark nav ::-webkit-scrollbar-thumb {
+    background-color: #60a5fa;
+    /* blue-400, biar kontras di dark mode */
+}
+
+.dark nav ::-webkit-scrollbar-thumb:hover {
+    background-color: #3b82f6;
+    /* blue-500 */
+}
+
+.dark nav {
+    scrollbar-color: #60a5fa transparent;
+}
+</style>

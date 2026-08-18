@@ -16,7 +16,7 @@
                             Title : {{ materi.judul }}
                         </h2>
 
-                        <p class="dark:text-gray-200 font-semibold text-sm mb-2">{{ materi.deskripsi }}</p>
+                        <MateriContent :content="materi.deskripsi" clamp :show-toggle="false" class="text-sm mb-2" />
 
                         <!-- File preview -->
                         <div class="flex flex-col space-y-2">
@@ -106,6 +106,7 @@
 import MenuLayout from '@/Layouts/MenuLayout.vue'
 import { format } from 'date-fns'
 import { Link, router } from '@inertiajs/vue3'
+import MateriContent from '@/Components/MateriContent.vue'
 
 const props = defineProps({ materials: Array })
 const formatDate = (date) => format(new Date(date), 'dd MMM yyyy, HH:mm')

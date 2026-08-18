@@ -50,16 +50,20 @@ class MaterialController extends Controller
             'deskripsi' => 'nullable|string',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,xls,xlsx,doc,docx,zip|max:10240',
             'link' => 'nullable|url',
+            'ai_document_path' => 'nullable|string', // ← tambahkan ini
         ]);
 
         if (tenant()->hasReachedFreeLimitForUser(Materi::class, 3)) {
-            return back()->with('error', 'Plan Free hanya dapat membuat maksimal 2 materi per akun. Silakan upgrade plan untuk menambah materi lebih banyak.');
+            return back()->with('error', 'Plan Free hanya dapat membuat maksimal 3 materi per akun. Silakan upgrade plan untuk menambah materi lebih banyak.');
         }
 
         $filePath = null;
 
         if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('materials', 'r2');   // ← ganti dari 'public'
+            $filePath = $request->file('file')->store('materials', 'r2');
+        } elseif ($request->filled('ai_document_path')) {
+            // PDF sudah ada di R2 dari proses generateAi, tinggal pakai path-nya
+            $filePath = $request->ai_document_path;
         }
 
         Materi::create([

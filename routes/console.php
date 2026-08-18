@@ -9,7 +9,9 @@ Schedule::command('subscriptions:generate-renewal-invoices')->dailyAt('08:00');
 Schedule::command('subscriptions:apply-pending-downgrades')->hourly();
 Schedule::command('subscriptions:revert-expired-to-free')->hourly();
 Schedule::command('subscriptions:cleanup-excess-users')->dailyAt('02:00');
+Schedule::command('ai-invoices:expire-stale')->everyFifteenMinutes();
 Schedule::command('sitemap:generate')->daily();
+schedule::command('ai-invoices:expire-stale')->everyFifteenMinutes();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());

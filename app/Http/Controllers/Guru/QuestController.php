@@ -17,12 +17,22 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 use Throwable;
+use App\Services\Ai\AiGenerationQuotaService;
+use Illuminate\Support\Facades\Auth;
 
 class QuestController extends Controller
 {
+    protected AiGenerationQuotaService $quotaService;
+
+    public function __construct(AiGenerationQuotaService $quotaService)
+    {
+        $this->quotaService = $quotaService;
+    }
+
     // ─── Recalculate riwayat_ujian setelah jawaban_benar atau nilai berubah ───
     private function recalculateRiwayat(BankSoal $bankSoal): void
     {
+        // Essay tidak punya logika benar/salah otomatis
         if ($bankSoal->tipe_soal === 'Essay' || is_null($bankSoal->jawaban_benar)) {
             return;
         }
@@ -35,16 +45,12 @@ class QuestController extends Controller
             return;
         }
 
-        $driver = DB::connection()->getDriverName();
-        $benarTrue  = $driver === 'pgsql' ? 'TRUE'  : '1';
-        $benarFalse = $driver === 'pgsql' ? 'FALSE' : '0';
-
         // jawaban_benar = 'opsi_b', jawaban siswa = 'B'
         // CONCAT('opsi_', LOWER(jawaban)) untuk menyamakan format
         DB::statement("
             UPDATE riwayat_ujian
             SET
-                benar = CASE WHEN CONCAT('opsi_', LOWER(jawaban)) = ? THEN {$benarTrue} ELSE {$benarFalse} END,
+                benar = CASE WHEN CONCAT('opsi_', LOWER(jawaban)) = ? THEN 1 ELSE 0 END,
                 nilai = CASE WHEN CONCAT('opsi_', LOWER(jawaban)) = ? THEN ? ELSE 0 END
             WHERE quest_id = ?
         ", [
@@ -58,22 +64,17 @@ class QuestController extends Controller
     // ─── Cache flush helper ───────────────────────────────────────────────────
     private function flushSoalCache(int $soalId): void
     {
-        try {
-            Cache::forget("soal:{$soalId}:jumlah");
-            Cache::forget("soal:{$soalId}:base");
-            Cache::forget("soal:{$soalId}:detail");
+        Cache::forget("soal:{$soalId}:jumlah");
+        Cache::forget("soal:{$soalId}:base");
+        Cache::forget("soal:{$soalId}:detail");
 
-            UjianSiswa::where('soal_id', $soalId)
-                ->where('status', '!=', 'Sedang Dikerjakan')
-                ->pluck('user_id')
-                ->each(function ($userId) use ($soalId) {
-                    Cache::forget("ujian:{$soalId}:u:{$userId}:urutan");
-                    Cache::forget("ujian:{$soalId}:u:{$userId}:answered");
-                });
-        } catch (Throwable $e) {
-            // Jangan biarkan kegagalan cache menggagalkan operasi utama
-            Log::warning("flushSoalCache failed for soal_id {$soalId}: " . $e->getMessage());
-        }
+        UjianSiswa::where('soal_id', $soalId)
+            ->where('status', '!=', 'Sedang Dikerjakan')
+            ->pluck('user_id')
+            ->each(function ($userId) use ($soalId) {
+                Cache::forget("ujian:{$soalId}:u:{$userId}:urutan");
+                Cache::forget("ujian:{$soalId}:u:{$userId}:answered");
+            });
     }
 
     // ─── Simpan file lampiran ─────────────────────────────────────────────────
@@ -86,8 +87,9 @@ class QuestController extends Controller
 
         $file     = $request->file('lampiran_file');
         $filename = time() . '_' . $file->getClientOriginalName();
+        $file->storeAs('public/bank_soal', $filename);
 
-        return $file->storeAs('bank_soal', $filename, 'r2'); // ← ganti dari 'public'
+        return 'storage/bank_soal/' . $filename;
     }
 
     // ─── Hapus file lampiran lama ─────────────────────────────────────────────
@@ -96,8 +98,9 @@ class QuestController extends Controller
     {
         if (!$path) return;
 
-        if (Storage::disk('r2')->exists($path)) {   // ← ganti dari 'public'
-            Storage::disk('r2')->delete($path);
+        $storagePath = str_replace('storage/', 'public/', $path);
+        if (Storage::exists($storagePath)) {
+            Storage::delete($storagePath);
         }
     }
 
@@ -106,15 +109,13 @@ class QuestController extends Controller
     private function storeOpsiLampiran(Request $request, string $key): ?string
     {
         $field = "opsi_{$key}_file";
-
-        if (!$request->hasFile($field)) {
-            return null;
-        }
+        if (!$request->hasFile($field)) return null;
 
         $file     = $request->file($field);
         $filename = time() . '_' . $key . '_' . $file->getClientOriginalName();
+        $file->storeAs('public/bank_soal', $filename);
 
-        return $file->storeAs('bank_soal', $filename, 'r2'); // ← ganti dari 'public'
+        return 'storage/bank_soal/' . $filename;
     }
 
     private function deleteAllOpsiLampiran(BankSoal $bankSoal): void
@@ -402,8 +403,7 @@ class QuestController extends Controller
         }
     }
 
-    // ─── Export soal berisi data ──────────────────────────────────────────────
-
+     // ─── Export soal berisi data ──────────────────────────────────────────────
     public function exportSoal(int $soal_id)
     {
         $soal = Soal::with('mapel')->findOrFail($soal_id);
@@ -414,10 +414,48 @@ class QuestController extends Controller
             ], 422);
         }
 
+        $user    = Auth::user();
+        $planKey = $this->quotaService->currentUserAiPlanKey();
+
+        // Download soal cuma fitur paket Pro & Max
+        if (! in_array($planKey, ['pro', 'max'], true)) {
+            return response()->json([
+                'message' => 'Fitur download soal hanya tersedia untuk paket Pro atau Max. Upgrade paket AI Anda untuk membuka fitur ini.',
+            ], 403);
+        }
+
+        $cost      = 2;
+        $remaining = $this->quotaService->remainingForCurrentMonth($planKey, $user->id);
+
+        if ($remaining < $cost) {
+            return response()->json([
+                'message' => "Sisa kredit token Anda tidak mencukupi untuk download soal ini (butuh {$cost} token, kredit tersisa {$remaining}). Tunggu reset bulanan atau upgrade paket.",
+            ], 403);
+        }
+
+        $reservation = $this->quotaService->reserveGeneration($planKey, $user, 'soal_download', $cost);
+
+        if (! $reservation) {
+            return response()->json([
+                'message' => "Kredit token AI Anda tidak cukup untuk download soal ini (butuh {$cost} token).",
+            ], 403);
+        }
+
         $mapel    = str($soal->mapel?->mapel ?? 'Mapel')->slug(' ')->title();
         $kelas    = str($soal->kelas ?? 'Kelas')->slug(' ')->upper();
         $filename = "Soal {$mapel} {$kelas}.xlsx";
 
-        return Excel::download(new BankSoalWithDataExport($soal_id), $filename);
+        try {
+            // Export sinkron, kalau sampai sini artinya file berhasil dibentuk
+            $reservation->update(['status' => 'completed']);
+
+            return Excel::download(new BankSoalWithDataExport($soal_id), $filename);
+        } catch (Throwable $e) {
+            // Rollback kredit kalau ternyata gagal di tengah proses
+            $reservation->update(['status' => 'failed']);
+            Log::error('Quest exportSoal error: ' . $e->getMessage());
+
+            return response()->json(['message' => 'Failed to export questions.'], 500);
+        }
     }
 }

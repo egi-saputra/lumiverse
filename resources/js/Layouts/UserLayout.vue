@@ -407,10 +407,15 @@ const logout = () => router.post(route('logout'))
         <!-- Main area: Sidebar + Content -->
         <div class="flex flex-1 min-h-0">
 
-            <component :is="SidebarComponent" :isKejuruanGuru="page.props.isKejuruanGuru" :isWalas="page.props.isWalas"
+            <!-- <component :is="SidebarComponent" :isKejuruanGuru="page.props.isKejuruanGuru" :isWalas="page.props.isWalas"
                 class="hidden md:block bg-white dark:bg-[#0F172A]
                        border-r dark:border-gray-600 border-gray-300
-                       pt-4 overflow-y-auto overflow-x-hidden" />
+                       pt-4 overflow-y-auto overflow-x-hidden" /> -->
+
+            <component :is="SidebarComponent" :isKejuruanGuru="page.props.isKejuruanGuru" :isWalas="page.props.isWalas"
+                class="no-print hidden md:flex bg-white dark:bg-[#0F172A]
+                  border-r dark:border-gray-600 border-gray-300
+                  pt-4" />
 
             <div class="flex-1 px-4 sm:px-8 py-6
                         bg-gray-100 dark:bg-[#020617] overflow-auto">

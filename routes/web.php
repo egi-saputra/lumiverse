@@ -270,7 +270,13 @@ Route::domain('{centralHost}')
                 // Route::get('/referral', [ReferralController::class, 'index'])->name('owner.referral.index');
             });
 
-            Route::post('/subscription/webhook', [SubscriptionController::class, 'webhook'])->name('subscription.webhook');
+            Route::post('/webhooks/xendit', [\App\Http\Controllers\Webhooks\XenditWebhookController::class, 'handle'])
+                ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+                ->name('webhooks.xendit');
+
+            Route::post('/subscription/webhook', [\App\Http\Controllers\Webhooks\XenditWebhookController::class, 'handle'])
+                ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+                ->name('subscription.webhook');
         });
 
         Route::get('/registration', [TenantRegistrationController::class, 'create'])

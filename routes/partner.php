@@ -115,8 +115,5 @@ Route::domain('{partnerHost}')
                 Route::post('/payout', [PayoutController::class, 'store'])->name('payout.store');
             });
 
-            Route::post('/webhooks/xendit/payout', [XenditPayoutWebhookController::class, 'handle'])
-                ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
-                ->name('webhooks.xendit.payout');
         });
     });

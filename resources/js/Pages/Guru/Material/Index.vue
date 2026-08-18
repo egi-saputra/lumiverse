@@ -5,10 +5,16 @@
             <!-- Header Desktop -->
             <div class="flex justify-between items-center mb-6">
                 <h1 class="sm:text-3xl text-2xl font-bold text-gray-900 dark:text-white">Learning Material List</h1>
-                <Link :href="route('guru.material.create')" prefetch preserve-scroll
-                    class="hidden sm:inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white font-semibold rounded-lg shadow transition">
-                    + New Create
-                </Link>
+                <div class="hidden sm:flex gap-3">
+                    <Link :href="route('guru.material.createAi')" prefetch preserve-scroll
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white font-semibold rounded-lg shadow transition">
+                        ✨ Buat dengan AI
+                    </Link>
+                    <Link :href="route('guru.material.create')" prefetch preserve-scroll
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 hover:to-blue-600 text-white font-semibold rounded-lg shadow transition">
+                        + New Create
+                    </Link>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 gap-6">
@@ -24,7 +30,7 @@
 
                     <div>
                         <h2 class="text-xl font-semibold dark:text-white mb-2">{{ material.judul }}</h2>
-                        <p class="dark:text-gray-200 text-sm mb-2">{{ material.deskripsi }}</p>
+                        <MateriContent :content="material.deskripsi" clamp class="text-sm mb-2" />
                         <div class="flex gap-4">
                             <p class="dark:text-gray-300 text-xs mb-2">Subject: {{ material.mapel.mapel }}</p>
                             <p class="dark:text-gray-300 text-xs mb-2">Recipient: {{ material.kelas.kelas }}</p>
@@ -99,15 +105,22 @@
                     </div>
                     <p class="text-base font-semibold text-gray-700 dark:text-gray-300">No learning materials submitted
                         yet</p>
-                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Learning material submitted will appear here.</p>
+                    <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Learning material submitted will appear
+                        here.</p>
                 </div>
             </div>
 
             <!-- Floating button Mobile -->
-            <Link :href="route('guru.material.create')" prefetch preserve-scroll
-                class="sm:hidden fixed bottom-6 sm:right-3 right-6 bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 text-sm sm:text-base hover:to-blue-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
-                + Add New
-            </Link>
+            <div class="sm:hidden fixed bottom-6 right-6 flex flex-col items-end gap-3">
+                <Link :href="route('guru.material.createAi')" prefetch preserve-scroll
+                    class="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 text-sm hover:to-purple-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
+                    ✨ Buat dengan AI
+                </Link>
+                <Link :href="route('guru.material.create')" prefetch preserve-scroll
+                    class="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 text-sm hover:to-blue-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
+                    + Add New
+                </Link>
+            </div>
 
         </div>
     </MenuLayout>
@@ -119,6 +132,7 @@ import { format } from 'date-fns'
 import { Link, router } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import { ToastAlert } from '@/Composables/ToastAlert.js';
+import MateriContent from '@/Components/MateriContent.vue'
 
 const { success, error, confirm } = ToastAlert();
 

@@ -101,7 +101,7 @@
             </div>
 
             <p class="mb-2 font-semibold sm:text-lg dark:text-gray-200">Pembahasan Materi :</p>
-            <p class="mb-6 dark:text-gray-400 sm:text-base text-sm">{{ material.deskripsi }}</p>
+            <MateriContent :content="material.deskripsi" class="mb-6" />
 
             <div class="w-full border-t border-gray-400 dark:border-gray-700 mb-2"></div>
 
@@ -123,6 +123,7 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue'
 import { format } from 'date-fns'
+import MateriContent from '@/Components/MateriContent.vue'
 
 const props = defineProps({ material: Object })
 const formatDate = (date) => format(new Date(date), 'dd MMM yyyy, HH:mm')

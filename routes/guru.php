@@ -1,16 +1,20 @@
 <?php
 
 use Inertia\Inertia;
+use App\Http\Controllers\Ai\AiBillingController;
+use App\Http\Controllers\Ai\AiAgentController;
 use App\Http\Controllers\Guru\{
     QuizController,
     QuestController,
     RekapNilaiController,
-    // ExamRoomController,
+    ExamRoomController,
     AssignController,
     MaterialController,
+    MaterialAiController,
     JournalController,
     WalasController,
     PresensiController,
+    QuestAiController,
     // AbsensiAnalyticsController
 };
 
@@ -43,30 +47,38 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('guru')->name('guru
     /** Bank Soal / Quest ─────────────────────────────────────────────────────────
      *
      * URUTAN ROUTE INI SANGAT PENTING:
-     * Route statis (template, import, export, delete-all) HARUS didefinisikan
-     * SEBELUM Route::resource() agar tidak tertangkap sebagai {bank_soal} parameter.
-     *
+     * Route statis (create-ai, generate-ai, template, import, export, delete-all)
+     * HARUS didefinisikan SEBELUM Route::resource() agar tidak tertangkap sebagai
+     * {bank_soal} parameter.
      */
-    
-    // 1. Template download (GET statis)
+
+    // Generate soal via AI
+    Route::get('/bank-soal/create-ai', [QuestAiController::class, 'createAi'])
+        ->name('bank-soal.createAi');
+    Route::post('/bank-soal/generate-ai', [QuestAiController::class, 'generateAi'])
+        ->name('bank-soal.generateAi');
+    Route::post('/bank-soal/generate-ai-status/{generationId}', [QuestAiController::class, 'generateAiStatus'])
+        ->name('bank-soal.generateAiStatus');
+
+    // Template download (GET statis)
     Route::get('/bank-soal/template', [QuestController::class, 'downloadTemplate'])
         ->name('bank-soal.template');
-    
-    // 2. Import (POST statis)
+
+    // Import (POST statis)
     Route::post('/bank-soal/import', [QuestController::class, 'import'])
         ->name('bank-soal.import');
-    
-    // 3. Delete all (DELETE dengan sub-path)
+
+    // Delete all (DELETE dengan sub-path)
     Route::delete('/bank-soal/soal/{soal}/delete-all', [QuestController::class, 'destroyAll'])
         ->name('bank-soal.destroyAll');
-    
-    // 4. Export soal berisi data (GET dengan sub-path)
-    //    WAJIB sebelum resource agar /bank-soal/soal/{id}/export
-    //    tidak terbaca sebagai resource show dengan bank_soal = "soal"
+
+    // Export soal berisi data (GET dengan sub-path)
+    // WAJIB sebelum resource agar /bank-soal/soal/{id}/export
+    // tidak terbaca sebagai resource show dengan bank_soal = "soal"
     Route::get('/bank-soal/soal/{soal_id}/export', [QuestController::class, 'exportSoal'])
         ->name('bank-soal.export');
-    
-    // 5. Resource (terakhir — menangkap /bank-soal/{bank_soal}/...)
+
+    // Resource (terakhir — menangkap /bank-soal/{bank_soal}/...)
     Route::resource('bank-soal', QuestController::class);
 
     /** Rekap Nilai Ujian Siswa */
@@ -80,16 +92,16 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('guru')->name('guru
     Route::post('/rekap-filtered', [RekapNilaiController::class, 'rekapFiltered']);
 
     /** Ruang Ujian - daftar peserta */
-    // Route::get('/ruang-ujian', [ExamRoomController::class, 'index'])
-    //     ->name('ruangUjian.index');
+    Route::get('/ruang-ujian', [ExamRoomController::class, 'index'])
+        ->name('ruangUjian.index');
 
     /** Ambil data token terbaru */
-    // Route::get('/ruang-ujian/peserta/{peserta}/refresh-token', [ExamRoomController::class, 'refreshToken'])
-    //     ->name('ruangUjian.refreshToken');
+    Route::get('/ruang-ujian/peserta/{peserta}/refresh-token', [ExamRoomController::class, 'refreshToken'])
+        ->name('ruangUjian.refreshToken');
 
     /** Delete peserta AJAX */
-    // Route::delete('/ruang-ujian/peserta/{peserta}', [ExamRoomController::class, 'destroyPeserta'])
-    //     ->name('ruangUjian.destroyPeserta');
+    Route::delete('/ruang-ujian/peserta/{peserta}', [ExamRoomController::class, 'destroyPeserta'])
+        ->name('ruangUjian.destroyPeserta');
 
     Route::get('/assignment', [AssignController::class, 'index'])->name('assignment.index');
 
@@ -98,10 +110,33 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('guru')->name('guru
     Route::get('/assignment/{assignment}', [AssignController::class, 'show'])->name('assignment.show');
 
     Route::prefix('material')->group(function () {
-            Route::get('/', [MaterialController::class, 'index'])->name('material.index');
-            Route::get('/create', [MaterialController::class, 'create'])->name('material.create');
-            Route::post('/store', [MaterialController::class, 'store'])->name('material.store');
-            Route::delete('/{material}', [MaterialController::class, 'destroy'])->name('material.destroy');
-        });
+        Route::get('/', [MaterialController::class, 'index'])->name('material.index');
+        Route::get('/create', [MaterialController::class, 'create'])->name('material.create');
+        Route::get('/create-ai', [MaterialAiController::class, 'createAi'])->name('material.createAi');
+        Route::post('/generate-ai', [MaterialAiController::class, 'generateAi'])
+            ->name('material.generateAi')
+            ->middleware('throttle:10,1');
+        Route::post('/generate-ai/status/{generationId}', [MaterialAiController::class, 'generateAiStatus'])
+            ->name('material.generateAiStatus');
+        Route::get('/ai-document-preview/{filename}', [MaterialAiController::class, 'previewDocument'])
+            ->name('material.aiDocumentPreview');
+        Route::post('/store', [MaterialController::class, 'store'])->name('material.store');
+        Route::delete('/{material}', [MaterialController::class, 'destroy'])->name('material.destroy');
+    });
+
+    /** AI Billing — pricing, checkout, retry (AiBillingController) */
+    Route::prefix('ai-billing')->name('ai-billing.')->group(function () {
+        Route::get('/pricing', [AiBillingController::class, 'pricing'])->name('pricing');
+        Route::post('/checkout', [AiBillingController::class, 'checkout'])->name('checkout');
+        Route::post('/retry/{aiInvoice}', [AiBillingController::class, 'retryCheckout'])->name('retry');
+    });
+
+    /** AI Agent — dashboard, invoice, payment redirect (AiAgentController) */
+    Route::prefix('ai-agent')->name('ai-agent.')->group(function () {
+        Route::get('/dashboard', [AiAgentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/invoice/{externalId}', [AiAgentController::class, 'invoice'])->name('invoice');
+        Route::get('/payment-success/{external_id}', [AiAgentController::class, 'paymentSuccess'])->name('payment-success');
+        Route::get('/payment-failed/{external_id}', [AiAgentController::class, 'paymentFailed'])->name('payment-failed');
+    });
 
 });

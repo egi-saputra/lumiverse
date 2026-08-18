@@ -3,6 +3,7 @@ import { PaperAirplaneIcon } from '@heroicons/vue/24/outline'
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { router, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
+import MateriContent from '@/Components/MateriContent.vue'
 
 /* ================= PROPS ================= */
 const props = defineProps({
@@ -19,8 +20,12 @@ const props = defineProps({
 
 /* ================= TYPE & LINK ================= */
 const directLampiranLink = computed(() => {
-    if (props.quest?.jenis_lampiran !== 'Gambar') return null
-    return props.quest?.link_lampiran_url ?? null
+    const url = props.quest?.link_lampiran
+    if (!url) return null
+    if (props.quest.jenis_lampiran === 'Gambar') {
+        return `/storage/bank_soal/${url.split('/').pop()}`
+    }
+    return null
 })
 
 const isEssay = computed(() => props.quest?.tipe_soal === 'Essay')
@@ -471,15 +476,11 @@ const showFullscreenGate = ref(true)
                         class="w-full max-w-sm max-h-24 sm:max-h-32 object-contain object-left" />
                 </div>
 
-                <!-- <div v-html="quest.soal" :key="quest.id"
-                    class="announcement-content prose prose-sm max-w-none dark:prose-invert mb-6 text-gray-800 dark:text-gray-100 leading-relaxed">
-                </div> -->
-
-                <!-- Konten soal -->
-                <div v-html="quest.soal" :key="quest.id" class="announcement-content prose prose-sm max-w-none dark:prose-invert mb-6 
-           text-gray-800 dark:text-gray-100 leading-relaxed
-           select-none pointer-events-none">
-                </div>
+                <!-- Konten soal: Markdown + LaTeX + kode (sama seperti render materi/soal di sisi guru),
+                     tetap select-none & pointer-events-none untuk anti-cheat (kedua property ini
+                     inherited di CSS jadi otomatis diwariskan ke semua elemen di dalam MateriContent). -->
+                <MateriContent :content="quest.soal" :key="quest.id"
+                    class="question-materi mb-6 text-gray-800 dark:text-gray-100 leading-relaxed select-none pointer-events-none" />
 
                 <!-- JAWABAN -->
                 <!-- PILIHAN GANDA -->
@@ -503,21 +504,19 @@ const showFullscreenGate = ref(true)
                                 {{ opsi }}
                             </span>
 
-                            <!-- Konten opsi: teks + gambar (bisa keduanya, salah satu, atau hanya gambar) -->
+                            <!-- Konten opsi: teks (Markdown+LaTeX+kode) + gambar (bisa keduanya, salah satu, atau hanya gambar) -->
                             <span class="flex-1 flex flex-col gap-2 min-w-0">
 
                                 <!-- Teks opsi (hanya render jika ada) -->
-                                <span v-if="quest['opsi_' + opsi.toLowerCase()]"
-                                    v-html="quest['opsi_' + opsi.toLowerCase()]"
-                                    class="text-sm leading-relaxed pointer-events-none select-none transition-colors duration-200"
-                                    :class="jawaban === opsi
-                                        ? 'text-blue-900 dark:text-blue-100 font-medium'
-                                        : 'text-gray-700 dark:text-gray-300'">
-                                </span>
+                                <MateriContent v-if="quest['opsi_' + opsi.toLowerCase()]"
+                                    :content="quest['opsi_' + opsi.toLowerCase()]" :class="['opsi-materi text-sm leading-relaxed pointer-events-none select-none transition-colors duration-200',
+                                        jawaban === opsi
+                                            ? 'text-blue-900 dark:text-blue-100 font-medium'
+                                            : 'text-gray-700 dark:text-gray-300']" />
 
                                 <!-- Gambar opsi (hanya render jika ada) -->
                                 <img v-if="quest['opsi_' + opsi.toLowerCase() + '_lampiran']"
-                                    :src="quest['opsi_' + opsi.toLowerCase() + '_lampiran_url']"
+                                    :src="`/${quest['opsi_' + opsi.toLowerCase() + '_lampiran']}`"
                                     :alt="`Gambar opsi ${opsi}`"
                                     class="max-h-40 max-w-xs rounded-lg object-contain border pointer-events-none select-none"
                                     :class="jawaban === opsi
@@ -755,3 +754,25 @@ const showFullscreenGate = ref(true)
 
     </div>
 </template>
+
+<style scoped>
+/* MateriContent membungkus konten dalam <p> dengan margin-bottom .75em -
+   pas untuk soal (paragraf panjang), tapi kebesaran untuk teks opsi jawaban
+   yang biasanya 1 baris pendek di dalam baris opsi PG. Timpa via :deep()
+   supaya tetap ringkas tanpa duplikasi CSS KaTeX/code milik MateriContent. */
+:deep(.opsi-materi .materi-content) {
+    line-height: 1.5;
+}
+
+:deep(.opsi-materi .materi-content p) {
+    margin-bottom: 0;
+}
+
+:deep(.opsi-materi .materi-content p:not(:last-child)) {
+    margin-bottom: 0.4em;
+}
+
+:deep(.question-materi .materi-content) {
+    line-height: 1.7;
+}
+</style>

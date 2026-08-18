@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
+use App\Services\Ai\AiGenerationQuotaService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Models\Soal;
@@ -14,6 +15,13 @@ use Illuminate\Support\Facades\Storage;
 
 class QuizController extends Controller
 {
+    protected AiGenerationQuotaService $quotaService;
+
+    public function __construct(AiGenerationQuotaService $quotaService)
+    {
+        $this->quotaService = $quotaService;
+    }
+
     // Generate token 6 digit unik
     private function generateToken()
     {
@@ -35,6 +43,7 @@ class QuizController extends Controller
             'soal' => $soal,
             'mapel' => Mapel::select('id', 'mapel')->orderBy('mapel')->get(),
             'title' => 'Quiz List',
+            'current_plan' => $this->quotaService->currentUserAiPlanKey(),
         ]);
     }
 
@@ -61,13 +70,6 @@ class QuizController extends Controller
             'waktu' => 'required|integer|min:1',
         ]);
 
-        // ── Cek limit untuk plan Free tier ──────────────────────
-        if (tenant()->hasReachedFreeLimitForUser(Soal::class, 1)) {
-            return back()->withErrors([
-                        'title' => 'Plan Free hanya dapat membuat maksimal 1 quiz untuk satu akun. Silakan upgrade plan untuk menambah kuis.',
-                    ]);
-        }
-
         Soal::create([
             'user_id'   => Auth::id(),
             'title'     => $request->title,
@@ -80,7 +82,7 @@ class QuizController extends Controller
         ]);
 
         return redirect()->route('guru.soal.index')
-                        ->with('success', 'Questions have been successfully created!');
+                         ->with('success', 'Questions have been successfully created!');
     }
 
     public function edit(Soal $soal)
@@ -135,23 +137,27 @@ class QuizController extends Controller
     public function destroy(Soal $soal)
     {
         foreach ($soal->bank_soal as $bankSoal) {
+            // Hapus lampiran soal utama
             if ($bankSoal->link_lampiran) {
-                if (Storage::disk('r2')->exists($bankSoal->link_lampiran)) {
-                    Storage::disk('r2')->delete($bankSoal->link_lampiran);
-                }
+                $path = str_replace('storage/', 'public/', $bankSoal->link_lampiran);
+                if (Storage::exists($path)) Storage::delete($path);
             }
 
+            // Hapus lampiran gambar opsi jawaban
             foreach (['a', 'b', 'c', 'd', 'e'] as $key) {
                 $opsiLampiran = $bankSoal->{"opsi_{$key}_lampiran"};
-                if ($opsiLampiran && Storage::disk('r2')->exists($opsiLampiran)) {
-                    Storage::disk('r2')->delete($opsiLampiran);
+                if ($opsiLampiran) {
+                    $path = str_replace('storage/', 'public/', $opsiLampiran);
+                    if (Storage::exists($path)) Storage::delete($path);
                 }
             }
         }
 
         $soal->delete();
 
-        return response()->json(['success' => 'Quiz has been successfully deleted!']);
+        return response()->json([
+            'success' => 'Quiz has been successfully deleted!',
+        ]);
     }
 
     // Show detail

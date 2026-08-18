@@ -25,6 +25,14 @@ class User extends Authenticatable
         'avatar',
         'password',
         'role',
+        'ai_plan',
+        'ai_plan_status',
+        'ai_plan_started_at',
+        'ai_plan_expires_at',
+        'ai_pending_plan',
+        'ai_external_id',
+        'ai_invoice_id',
+        'ai_last_invoice_status',
     ];
 
     /**
@@ -45,6 +53,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'ai_plan_started_at' => 'datetime',
+        'ai_plan_expires_at' => 'datetime',
     ];
 
     // ✅ Flexible role check
@@ -76,6 +86,13 @@ class User extends Authenticatable
     public function soal()
     {
         return $this->hasMany(Soal::class);
+    }
+
+    public function aiPlanKey(): string
+    {
+        $plan = strtolower((string) ($this->ai_plan ?? 'free'));
+
+        return in_array($plan, ['trial', 'free'], true) ? 'free' : $plan;
     }
 
 }
