@@ -11,11 +11,8 @@ import {
     ArrowDownTrayIcon,
 } from '@heroicons/vue/24/solid';
 import axios from 'axios';
-import { ToastAlert } from '@/Composables/ToastAlert.js';
-import { QuillEditor } from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
-
-const { success, error } = ToastAlert();
+import Swal from 'sweetalert2';
+import MateriContent from '@/Components/MateriContent.vue';
 
 const props = defineProps({ soal_id: [Number, String] });
 
@@ -42,6 +39,9 @@ const opsiState = ref(['a']);
 const fileInputRef = ref(null);
 const opsiFiles = ref({});
 const opsiPreviews = ref({});
+
+// Tab Edit/Preview untuk field pertanyaan (Markdown + LaTeX + kode)
+const soalTab = ref('edit'); // 'edit' | 'preview'
 
 // ─── Opsi helpers ─────────────────────────────────────────────────────────────
 function addOpsi() {
@@ -77,7 +77,12 @@ function handleOpsiFile(event, key) {
 // ─── Submit soal manual ───────────────────────────────────────────────────────
 async function submitManual() {
     if (form.value.jenis_lampiran === 'Gambar' && !form.value.lampiran_file) {
-        return error('Please upload an image file first!');
+        return Swal.fire({
+            icon: 'warning',
+            title: 'No image selected',
+            text: 'Please upload an image file first!',
+            confirmButtonColor: '#3b82f6',
+        });
     }
 
     const data = new FormData();
@@ -89,6 +94,7 @@ async function submitManual() {
         }
     });
 
+    // Lampirkan gambar opsi
     Object.entries(opsiFiles.value).forEach(([key, file]) => {
         data.append(`opsi_${key}_file`, file);
     });
@@ -96,16 +102,17 @@ async function submitManual() {
     isSubmitting.value = true;
     try {
         const res = await axios.post('/guru/bank-soal', data);
-        success(res.data.success || 'Question successfully added.');
-        router.visit(res.data.redirect || `/guru/soal/${props.soal_id}`, {
-            only: ['soal'],
-            preserveScroll: true,
+        await Swal.fire({
+            icon: 'success', title: 'Success!',
+            text: res.data.success || 'Question successfully added.',
+            confirmButtonText: 'OK', confirmButtonColor: '#3b82f6',
         });
+        router.visit(res.data.redirect || `/guru/soal/${props.soal_id}`);
     } catch (err) {
         const msg = err.response?.data?.errors
             ? Object.values(err.response.data.errors).flat().join('\n')
             : err.response?.data?.message || 'An error occurred while saving the question.';
-        error(msg);
+        Swal.fire({ icon: 'error', title: 'Failed', text: msg, confirmButtonColor: '#ef4444' });
     } finally {
         isSubmitting.value = false;
     }
@@ -127,14 +134,24 @@ async function submitExcel() {
 
     try {
         const res = await axios.post('/guru/bank-soal/import', data);
-        success(res.data.success);
-        router.visit(res.data.redirect || `/guru/soal/${props.soal_id}`, {
-            only: ['soal'],
-            preserveScroll: true,
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: res.data.success,
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3b82f6',
         });
+
+        router.visit(res.data.redirect || `/guru/soal/${props.soal_id}`);
     } catch (err) {
         const msg = err.response?.data?.message || 'An error occurred while importing.';
-        error(msg);
+        Swal.fire({
+            icon: 'error',
+            title: 'Import Failed',
+            text: msg,
+            confirmButtonColor: '#ef4444',
+        });
     } finally {
         isImporting.value = false;
     }
@@ -296,29 +313,49 @@ const isManualDisabled = computed(() => !!form.value.excel);
                             </p>
                         </div>
 
-                        <!-- Question -->
+                        <!-- Question (Markdown + LaTeX + kode, dengan tab Edit/Preview) -->
                         <div class="space-y-1.5">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
-                                Question <span class="text-red-500">*</span>
-                            </label>
-                            <div class="rounded-xl overflow-hidden border border-gray-300
-                                            dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-                                <QuillEditor v-model:content="form.soal" placeholder="Type the question here..."
-                                    content-type="html" theme="snow" class="announcement-editor" :toolbar="[
-                                        ['bold', 'italic', 'underline'],
-                                        [{ list: 'ordered' }, { list: 'bullet' }],
-                                        [{ align: [] }],
-                                        ['clean'],
-                                    ]" />
-                                <div class="flex justify-end border-t border-gray-200 dark:border-slate-700">
-                                    <span class="px-3 py-2 text-xs text-gray-400 dark:text-slate-500">
-                                        Powered by
-                                        <strong class="pl-1 tracking-widest text-gray-600 dark:text-slate-300">
-                                            Lumiverse
-                                        </strong>
-                                    </span>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="font-medium text-gray-700 dark:text-slate-300">
+                                    Question <span class="text-red-500">*</span>
+                                </label>
+
+                                <div
+                                    class="inline-flex rounded-lg border border-gray-300 dark:border-slate-600 p-0.5 bg-gray-50 dark:bg-slate-900">
+                                    <button type="button" @click="soalTab = 'edit'" :class="[
+                                        'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
+                                        soalTab === 'edit'
+                                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    ]">
+                                        ✏️ Edit
+                                    </button>
+                                    <button type="button" @click="soalTab = 'preview'" :class="[
+                                        'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
+                                        soalTab === 'preview'
+                                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    ]">
+                                        👁️ Preview
+                                    </button>
                                 </div>
                             </div>
+
+                            <textarea v-show="soalTab === 'edit'" v-model="form.soal" required rows="5" class="w-full rounded-lg border border-gray-300 font-mono
+                                       dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
+                                       px-3 py-2.5 text-sm resize-y
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                placeholder="Tulis pertanyaan di sini. Mendukung Markdown, LaTeX ($x^2$ atau $$...$$), dan blok kode (```python ... ```)."></textarea>
+
+                            <div v-show="soalTab === 'preview'"
+                                class="w-full min-h-[120px] border border-gray-300 dark:border-slate-700 rounded-lg px-4 py-3 bg-white dark:bg-slate-800">
+                                <MateriContent v-if="form.soal" :content="form.soal" />
+                                <p v-else class="text-sm text-gray-400 italic">Belum ada konten untuk di-preview.</p>
+                            </div>
+
+                            <p class="text-xs text-gray-500 dark:text-slate-400">
+                                Mendukung Markdown dasar, LaTeX untuk rumus matematika, dan blok kode.
+                            </p>
                         </div>
 
                         <!-- Answer Options (PG) -->

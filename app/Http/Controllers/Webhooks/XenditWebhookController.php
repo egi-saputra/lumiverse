@@ -22,7 +22,12 @@ class XenditWebhookController extends Controller
         $payload = $request->all();
 
         $orderId = $payload['external_id'] ?? null;
+        $orderId = $payload['external_id'] ?? null;
         if ($orderId) {
+            if (is_string($orderId) && str_starts_with($orderId, 'SMKN-AI-')) {
+                return $this->forwardToSmknusantara($payload);
+            }
+
             if (is_string($orderId) && str_starts_with($orderId, 'AI-')) {
                 $controller = app(\App\Http\Controllers\Ai\AiBillingController::class);
                 return $controller->handleWebhook($payload);
@@ -46,10 +51,14 @@ class XenditWebhookController extends Controller
 
         $data = $payload['data'] ?? [];
         $nextExternalId = $data['external_id'] ?? null;
+        if (is_string($nextExternalId) && str_starts_with($nextExternalId, 'SMKN-AI-')) {
+            return $this->forwardToSmknusantara($payload);
+        }
         if (is_string($nextExternalId) && str_starts_with($nextExternalId, 'AI-')) {
             $controller = app(\App\Http\Controllers\Ai\AiBillingController::class);
             return $controller->handleWebhook($payload);
         }
+        
         $referenceId = $data['reference_id'] ?? null;
         $xenditId = $data['id'] ?? null;
 
@@ -68,5 +77,32 @@ class XenditWebhookController extends Controller
         Log::info('Xendit webhook: event ignored', ['payload' => $payload]);
 
         return response()->json(['message' => 'OK']);
+    }
+
+    protected function forwardToSmknusantara(array $payload)
+    {
+        $secret = config('services.xendit_forward.secret', '');
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'x-internal-forward-secret' => $secret,
+            ])->timeout(10)->post('https://smknusantara.id/api/internal/xendit-webhook-forward', $payload);
+
+            Log::info('Xendit webhook: forwarded to smknusantara', [
+                'status' => $response->status(),
+                'external_id' => $payload['external_id'] ?? null,
+            ]);
+
+            return response()->json(['message' => 'Forwarded']);
+        } catch (\Throwable $e) {
+            Log::error('Xendit webhook: failed forwarding to smknusantara', [
+                'message' => $e->getMessage(),
+                'external_id' => $payload['external_id'] ?? null,
+            ]);
+
+            return response()->json(['message' => 'Forward failed but acknowledged'], 200);
+            // tetap return 200 ke Xendit supaya tidak retry terus-menerus;
+            // failure sudah tercatat di log untuk investigasi manual
+        }
     }
 }

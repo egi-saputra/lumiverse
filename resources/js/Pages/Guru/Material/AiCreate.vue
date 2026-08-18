@@ -16,7 +16,7 @@ const props = defineProps({
 const { success, error } = useAlert();
 
 const goToUpgrade = () => {
-    router.visit(route('guru.material.aiPricing'))
+    router.visit(route('guru.aiPricing'))
 }
 
 // --- Plan / badge logic ---

@@ -1,12 +1,13 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { ref, watch } from 'vue';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { CheckIcon, ArrowLeftIcon, PlusIcon, PencilSquareIcon } from '@heroicons/vue/24/solid';
+import Swal from 'sweetalert2';
 import { ToastAlert } from '@/Composables/ToastAlert.js';
+import { Inertia } from '@inertiajs/inertia';
 import axios from 'axios';
-import { QuillEditor } from '@vueup/vue-quill'
-import '@vueup/vue-quill/dist/vue-quill.snow.css'
+import MateriContent from '@/Components/MateriContent.vue';
 
 const page = usePage();
 const { success, error, confirm } = ToastAlert();
@@ -41,6 +42,9 @@ const existingFile = ref(props.bankSoal.link_lampiran || '');
 const opsiFiles = ref({});
 const opsiPreviews = ref({});
 const removeFlags = ref({});
+
+// Tab Edit/Preview untuk field pertanyaan (Markdown + LaTeX + kode)
+const soalTab = ref('edit'); // 'edit' | 'preview'
 
 // State opsi jawaban dinamis
 const opsiState = ref([]);
@@ -101,28 +105,32 @@ function submit() {
     if (form.value.lampiran_file) data.append('lampiran_file', form.value.lampiran_file);
     if (existingFile.value) data.append('existing_file', existingFile.value);
 
+    // Gambar opsi baru
     Object.entries(opsiFiles.value).forEach(([key, file]) => {
         data.append(`opsi_${key}_file`, file);
     });
 
+    // Flag hapus gambar opsi lama
     Object.keys(removeFlags.value).forEach(key => {
         data.append(`remove_opsi_${key}_lampiran`, '1');
     });
 
     axios.post(`/guru/bank-soal/${props.bankSoal.id}?_method=PUT`, data)
         .then(res => {
-            success(res.data.success || 'Question item has been successfully updated!');
-            router.visit(`/guru/soal/${props.bankSoal.soal_id}`, {
-                only: ['soal'],
-                preserveScroll: true,
+            Swal.fire({
+                icon: 'success', title: 'Success!',
+                text: res.data.success || 'Question item has been successfully updated!',
+                confirmButtonText: 'OK', confirmButtonColor: '#3b82f6',
+            }).then(result => {
+                if (result.isConfirmed) Inertia.visit(`/guru/soal/${props.bankSoal.soal_id}`);
             });
         })
         .catch(err => {
             const errors = err.response?.data?.errors;
             if (errors) {
-                Object.values(errors).forEach(e => error(e[0]));
+                Object.values(errors).forEach(e => Swal.fire('Error', e[0], 'error'));
             } else {
-                error('An error occurred while updating the question.');
+                Swal.fire('Error', 'An error occurred while updating the question.', 'error');
             }
         })
         .finally(() => { form.value.processing = false; });
@@ -183,42 +191,54 @@ function submit() {
                         <label class="form-label">Upload Image</label>
                         <input type="file" @change="handleFile" class="form-input dark:text-gray-400" />
 
+                        <!-- tampilkan nama file baru atau file lama -->
                         <p v-if="form.lampiran_file" class="text-green-500 text-sm mt-2">
                             {{ form.lampiran_file.name }}
                         </p>
-                        <div v-else-if="existingFile" class="mt-2">
-                            <p class="text-gray-500 text-sm mb-1">Current file: {{ existingFile.split('/').pop() }}</p>
-                            <img v-if="props.bankSoal.link_lampiran_url" :src="props.bankSoal.link_lampiran_url"
-                                class="h-24 rounded-lg object-cover border border-gray-200 dark:border-slate-700" />
-                        </div>
+                        <p v-else-if="existingFile" class="text-gray-500 text-sm mt-2">
+                            Current file: {{ existingFile.split('/').pop() }}
+                        </p>
                     </section>
 
-                    <!-- SECTION : Question -->
+                    <!-- SECTION : Question (Markdown + LaTeX + kode, dengan tab Edit/Preview) -->
                     <section>
-                        <div>
-                            <label class="font-semibold mb-1 block text-gray-700 dark:text-gray-300">Question</label>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-semibold block text-gray-700 dark:text-gray-300">Question</label>
+
                             <div
-                                class="relative rounded-xl overflow-hidden border border-gray-300 dark:border-white/10 bg-white dark:bg-[#0F172A] shadow-sm">
-
-                                <QuillEditor v-model:content="form.soal" placeholder="Type the question here..."
-                                    content-type="html" theme="snow" class="announcement-editor" :toolbar="[
-                                        ['bold', 'italic', 'underline'],
-                                        [{ list: 'ordered' }, { list: 'bullet' }],
-                                        [{ align: [] }],
-                                        ['clean']
-                                    ]" />
-
-                                <!-- BRAND -->
-                                <div class="flex w-full border-t border-gray-300 dark:border-gray-800 justify-end">
-                                    <span
-                                        class="flex justify-end px-3 text-xs py-2 editor-brand w-full text-gray-500 dark:text-gray-400">
-                                        Powered by<strong
-                                            class="text-gray-700 pl-1 tracking-widest dark:text-gray-200 font-bold">
-                                            Lumiverse</strong>
-                                    </span>
-                                </div>
+                                class="inline-flex rounded-lg border border-gray-300 dark:border-white/10 p-0.5 bg-gray-50 dark:bg-white/5">
+                                <button type="button" @click="soalTab = 'edit'" :class="[
+                                    'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
+                                    soalTab === 'edit'
+                                        ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                ]">
+                                    ✏️ Edit
+                                </button>
+                                <button type="button" @click="soalTab = 'preview'" :class="[
+                                    'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
+                                    soalTab === 'preview'
+                                        ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                ]">
+                                    👁️ Preview
+                                </button>
                             </div>
                         </div>
+
+                        <textarea v-show="soalTab === 'edit'" v-model="form.soal" required rows="6"
+                            class="form-input dark:text-gray-400 w-full font-mono resize-y"
+                            placeholder="Tulis pertanyaan di sini. Mendukung Markdown, LaTeX ($x^2$ atau $$...$$), dan blok kode (```python ... ```)."></textarea>
+
+                        <div v-show="soalTab === 'preview'"
+                            class="w-full min-h-[140px] rounded-xl border border-gray-300 dark:border-white/10 bg-white dark:bg-[#0F172A] px-4 py-3">
+                            <MateriContent v-if="form.soal" :content="form.soal" />
+                            <p v-else class="text-sm text-gray-400 italic">Belum ada konten untuk di-preview.</p>
+                        </div>
+
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Mendukung Markdown dasar, LaTeX untuk rumus matematika, dan blok kode.
+                        </p>
                     </section>
 
                     <!-- SECTION : Options -->
@@ -241,8 +261,9 @@ function submit() {
                                 <input v-model="form['opsi_' + key]" class="form-input dark:text-gray-400 w-full" />
 
                                 <!-- Gambar lama -->
-                                <div v-if="props.bankSoal['opsi_' + key + '_lampiran_url'] && !removeFlags[key]">
-                                    <img :src="props.bankSoal['opsi_' + key + '_lampiran_url']"
+                                <div v-if="form['opsi_' + key + '_lampiran'] && !removeFlags[key]"
+                                    class="flex items-center gap-3">
+                                    <img :src="`/${form['opsi_' + key + '_lampiran']}`"
                                         class="h-16 rounded-lg object-cover border border-gray-200 dark:border-slate-700" />
                                     <button type="button" @click="requestRemoveOpsiImg(key)"
                                         class="text-xs text-red-500 hover:text-red-700 font-medium transition">
