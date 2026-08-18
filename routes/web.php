@@ -277,6 +277,11 @@ Route::domain('{centralHost}')
             Route::post('/subscription/webhook', [\App\Http\Controllers\Webhooks\XenditWebhookController::class, 'handle'])
                 ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
                 ->name('subscription.webhook');
+
+            // Debug endpoint — capture raw Xendit webhooks for troubleshooting
+            Route::post('/api/xendit/webhook-debug', [\App\Http\Controllers\Webhooks\XenditWebhookDebugController::class, 'captureRawWebhook'])
+                ->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class])
+                ->name('xendit.webhook.debug');
         });
 
         Route::get('/registration', [TenantRegistrationController::class, 'create'])

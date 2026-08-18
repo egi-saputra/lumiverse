@@ -10,6 +10,7 @@ use App\Services\Ai\AiPlanPricingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Inertia;
@@ -280,7 +281,7 @@ class AiBillingController extends Controller
         Log::info('AI Webhook received', [
             'external_id' => $externalId,
             'status' => $status,
-            'payload' => $payload,
+            'payload_keys' => array_keys($payload),
         ]);
 
         if (! is_string($externalId) || ! str_starts_with($externalId, 'AI-')) {
@@ -288,39 +289,106 @@ class AiBillingController extends Controller
             return response()->json(['message' => 'Ignored'], 200);
         }
 
-        $tenantId = self::resolveTenantIdFromPayload($payload);
-        $tenant = $tenantId ? Tenant::find($tenantId) : null;
-
-        if ($tenant) {
-            Log::info('AI Webhook: tenant resolved from payload', ['tenant_id' => $tenantId, 'external_id' => $externalId]);
-            return $tenant->run(function () use ($payload, $data, $externalId, $status, $tenantId) {
-                return $this->processTenantWebhook($payload, $data, $externalId, $status, $tenantId);
-            });
-        }
-
-        // Fallback: look up existing invoice and use its user_id; this still works when tenant context is already active.
+        // Strategy 1: Try to find invoice directly (if tenant context already active or invoice in current DB)
         $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
 
-        if (! $aiInvoice) {
-            Log::warning('Xendit AI webhook: ai_invoice not found for external id', [
+        if ($aiInvoice) {
+            Log::info('AI Webhook: invoice found directly', [
                 'external_id' => $externalId,
-                'payload' => $payload,
+                'tenant_id' => $aiInvoice->tenant_id,
+                'user_id' => $aiInvoice->user_id,
             ]);
 
-            return response()->json(['message' => 'Invoice not found'], 200);
+            if ($aiInvoice->tenant_id) {
+                $tenant = Tenant::find($aiInvoice->tenant_id);
+                if ($tenant) {
+                    return $tenant->run(function () use ($payload, $data, $externalId, $status, $aiInvoice) {
+                        return $this->processTenantWebhook($payload, $data, $externalId, $status, $aiInvoice->tenant_id, $aiInvoice);
+                    });
+                }
+            }
+
+            return $this->processTenantWebhook($payload, $data, $externalId, $status, $aiInvoice->tenant_id, $aiInvoice);
         }
 
-        return $this->processTenantWebhook($payload, $data, $externalId, $status, $aiInvoice->user_id ? (string) $aiInvoice->user_id : null);
-    }
-
-    protected function processTenantWebhook(array $payload, array $data, ?string $externalId, mixed $status, ?string $tenantId): \Illuminate\Http\JsonResponse
-    {
-        $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
-
-        if (! $aiInvoice) {
-            Log::warning('Xendit AI webhook: ai_invoice not found in tenant context', [
+        // Strategy 2: Try to resolve tenant from payload
+        $tenantId = self::resolveTenantIdFromPayload($payload);
+        if ($tenantId) {
+            Log::info('AI Webhook: trying to find invoice in tenant context', [
                 'external_id' => $externalId,
                 'tenant_id' => $tenantId,
+            ]);
+
+            $tenant = Tenant::find($tenantId);
+            if ($tenant) {
+                return $tenant->run(function () use ($payload, $data, $externalId, $status, $tenantId) {
+                    $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
+
+                    if (! $aiInvoice) {
+                        Log::warning('AI Webhook: invoice not found in tenant DB', [
+                            'external_id' => $externalId,
+                            'tenant_id' => $tenantId,
+                        ]);
+
+                        return response()->json(['message' => 'Invoice not found in tenant'], 200);
+                    }
+
+                    return $this->processTenantWebhook($payload, $data, $externalId, $status, $tenantId, $aiInvoice);
+                });
+            }
+        }
+
+        // Strategy 3: Fallback — try all tenants (brute force, last resort)
+        Log::warning('AI Webhook: invoice not found, trying all tenant contexts', [
+            'external_id' => $externalId,
+        ]);
+
+        $tenants = Tenant::query()->limit(50)->get();
+        foreach ($tenants as $tenant) {
+            $result = $tenant->run(function () use ($externalId, $payload, $data, $status) {
+                $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
+
+                if ($aiInvoice) {
+                    Log::info('AI Webhook: invoice found in tenant', [
+                        'external_id' => $externalId,
+                        'tenant_id' => $aiInvoice->tenant_id ?? 'unknown',
+                    ]);
+
+                    return $this->processTenantWebhook($payload, $data, $externalId, $status, $aiInvoice->tenant_id, $aiInvoice);
+                }
+
+                return null;
+            });
+
+            if ($result !== null) {
+                return $result;
+            }
+        }
+
+        // Invoice truly not found anywhere
+        Log::error('AI Webhook: invoice not found in any tenant or central DB', [
+            'external_id' => $externalId,
+            'status' => $status,
+            'payload' => $payload,
+        ]);
+
+        return response()->json(['message' => 'Invoice not found'], 200);
+    }
+
+    protected function processTenantWebhook(array $payload, array $data, ?string $externalId, mixed $status, ?string $tenantId, ?AiInvoice $aiInvoice = null): \Illuminate\Http\JsonResponse
+    {
+        // If invoice not passed, try to fetch it
+        if (! $aiInvoice && $externalId) {
+            $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
+        }
+
+        if (! $aiInvoice) {
+            Log::error('Xendit AI webhook: ai_invoice not found in tenant context', [
+                'external_id' => $externalId,
+                'tenant_id' => $tenantId,
+                'tables_info' => [
+                    'ai_invoices_exists' => Schema::hasTable('ai_invoices'),
+                ],
             ]);
 
             return response()->json(['message' => 'Invoice not found'], 200);
