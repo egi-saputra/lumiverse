@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AiInvoice;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Ai\AiGenerationQuotaService;
 use App\Services\Ai\AiPlanPricingService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -148,10 +149,13 @@ class AiBillingController extends Controller
         $amount = (int) $pricing['amount'];
 
         if ($amount <= 0) {
+        $oldPlan = $user->ai_plan ?? 'free';
+        
         Log::warning('AI checkout: amount is 0 for paid plan, activating without payment', [
             'tenant_id' => tenant()?->id,
             'user_id' => $user->id,
             'plan_key' => $planKey,
+            'from_plan' => $oldPlan,
             'billing_cycle' => $request->billing_cycle,
         ]);
 
@@ -163,6 +167,18 @@ class AiBillingController extends Controller
             'ai_pending_plan' => null,
             'ai_last_invoice_status' => 'active',
         ]);
+
+        // Handle token carryover only for true upgrades to a higher plan.
+        // Downgrades and free-to-paid transitions start fresh.
+        $quotaService = app(AiGenerationQuotaService::class);
+        if ($quotaService->shouldCarryOverTokens($oldPlan, $planKey)) {
+            $quotaService->handlePlanUpgrade($user, $oldPlan, $planKey);
+        } else {
+            $user->update([
+                'ai_token_balance' => 0,
+                'ai_token_last_reset_at' => now(),
+            ]);
+        }
 
         // Catat juga di ai_invoices supaya muncul di riwayat pembayaran & bisa diaudit
         AiInvoice::create([
@@ -490,11 +506,13 @@ class AiBillingController extends Controller
             }
 
             $expiresAt = $billingCycle === 'yearly' ? now()->addYear() : now()->addMonth();
+            $oldPlan = $user->ai_plan ?? 'free';
 
             Log::info('AI Webhook: activating plan', [
                 'user_id' => $user->id,
                 'tenant_id' => $tenantId,
                 'plan' => $planKey,
+                'from_plan' => $oldPlan,
                 'expires_at' => $expiresAt,
             ]);
 
@@ -511,6 +529,18 @@ class AiBillingController extends Controller
                 'ai_pending_plan' => null,
                 'ai_last_invoice_status' => 'paid',
             ]);
+
+            // Handle token carryover only for true upgrades to a higher plan.
+            // Downgrades and free-to-paid transitions start fresh.
+            $quotaService = app(AiGenerationQuotaService::class);
+            if ($quotaService->shouldCarryOverTokens($oldPlan, $planKey)) {
+                $quotaService->handlePlanUpgrade($user, $oldPlan, $planKey);
+            } else {
+                $user->update([
+                    'ai_token_balance' => 0,
+                    'ai_token_last_reset_at' => now(),
+                ]);
+            }
 
             Log::info('AI Webhook: plan activated successfully', ['user_id' => $user->id, 'tenant_id' => $tenantId]);
 

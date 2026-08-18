@@ -33,6 +33,8 @@ class User extends Authenticatable
         'ai_external_id',
         'ai_invoice_id',
         'ai_last_invoice_status',
+        'ai_token_balance',
+        'ai_token_last_reset_at',
     ];
 
     /**
@@ -55,6 +57,8 @@ class User extends Authenticatable
         'password' => 'hashed',
         'ai_plan_started_at' => 'datetime',
         'ai_plan_expires_at' => 'datetime',
+        'ai_token_last_reset_at' => 'datetime',
+        'ai_token_balance' => 'integer',
     ];
 
     // ✅ Flexible role check

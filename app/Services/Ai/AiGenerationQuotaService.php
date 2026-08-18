@@ -48,29 +48,63 @@ class AiGenerationQuotaService
     }
 
     /**
+     * Get reset frequency for a plan (monthly | semester).
+     */
+    public function resetFrequency(?string $planKey): string
+    {
+        return $this->planConfig($planKey)['reset_frequency'] ?? 'monthly';
+    }
+
+    /**
      * Tentukan rentang periode kuota saat ini.
-     * - Plan berbayar aktif: rolling monthly dari ai_plan_started_at (anniversary date)
-     * - Plan free / gak aktif: kalender bulan berjalan (tanggal 1 - akhir bulan)
+     * - Plan free: reset setiap 6 bulan (semester) dari ai_token_last_reset_at
+     * - Plan berbayar aktif (pro/max): rolling monthly dari ai_plan_started_at (anniversary date)
+     * - Plan free inactive: kalender bulan berjalan (tanggal 1 - akhir bulan)
      */
     public function currentPeriod(?User $user = null): array
     {
         $user ??= Auth::user();
 
-        if (! $user || $user->ai_plan_status !== 'active' || ! $user->ai_plan_started_at) {
+        if (! $user) {
             return [now()->startOfMonth(), now()->copy()->endOfMonth()];
         }
 
-        $anchor = $user->ai_plan_started_at->copy();
-        $start = $anchor->copy();
+        // For free plan: 6-month semester reset
+        if ($user->ai_plan === 'free') {
+            if ($user->ai_token_last_reset_at) {
+                // User sudah pernah punya plan berbayar sebelumnya, gunakan anniversary date
+                $anchor = $user->ai_token_last_reset_at->copy();
+                $start = $anchor->copy();
 
-        // gulirkan start ke periode bulanan terdekat yang mencakup waktu sekarang
-        while ($start->copy()->addMonthNoOverflow()->lte(now())) {
-            $start = $start->addMonthNoOverflow();
+                // Gulirkan ke semester terdekat yang mencakup waktu sekarang
+                while ($start->copy()->addMonths(6)->lte(now())) {
+                    $start = $start->addMonths(6);
+                }
+
+                $end = $start->copy()->addMonths(6)->subSecond();
+                return [$start, $end];
+            } else {
+                // Pertama kali pakai free plan, gunakan kalender bulan
+                return [now()->startOfMonth(), now()->copy()->endOfMonth()];
+            }
         }
 
-        $end = $start->copy()->addMonthNoOverflow()->subSecond();
+        // For paid active plans (pro/max): rolling monthly
+        if ($user->ai_plan_status === 'active' && $user->ai_plan_started_at) {
+            $anchor = $user->ai_plan_started_at->copy();
+            $start = $anchor->copy();
 
-        return [$start, $end];
+            // Gulirkan start ke periode bulanan terdekat yang mencakup waktu sekarang
+            while ($start->copy()->addMonthNoOverflow()->lte(now())) {
+                $start = $start->addMonthNoOverflow();
+            }
+
+            $end = $start->copy()->addMonthNoOverflow()->subSecond();
+            return [$start, $end];
+        }
+
+        // Default: kalender bulan berjalan
+        return [now()->startOfMonth(), now()->copy()->endOfMonth()];
     }
 
     /**
@@ -141,8 +175,87 @@ class AiGenerationQuotaService
         $planKey ??= $this->currentUserAiPlanKey();
         $limit = $this->resolveLimitForPlan($planKey);
         $used = $this->usageForCurrentMonth($userId);
+        
+        // Add token balance from previous period (carryover tokens)
+        $user = $userId === Auth::id() ? Auth::user() : ($userId ? User::find($userId) : null);
+        $carryover = $user ? (int) $user->ai_token_balance : 0;
 
-        return max(0, $limit - $used);
+        return max(0, $limit + $carryover - $used);
+    }
+
+    /**
+     * Hitung sisa token dari plan lama dan siapkan carryover ke plan baru.
+     * Dipanggil saat user upgrade plan.
+     * 
+     * @return int sisa token yang akan di-carry over ke plan baru
+     */
+    public function shouldCarryOverTokens(?string $oldPlanKey, ?string $newPlanKey): bool
+    {
+        $oldPlan = strtolower((string) ($oldPlanKey ?? 'free'));
+        $newPlan = strtolower((string) ($newPlanKey ?? 'free'));
+
+        if (! in_array($oldPlan, ['free', 'pro', 'max'], true)) {
+            return false;
+        }
+
+        if (! in_array($newPlan, ['free', 'pro', 'max'], true)) {
+            return false;
+        }
+
+        if ($oldPlan === 'free' || $oldPlan === $newPlan) {
+            return false;
+        }
+
+        return $this->resolveLimitForPlan($newPlan) > $this->resolveLimitForPlan($oldPlan);
+    }
+
+    public function calculateCarryoverTokens(User $user, string $oldPlanKey): int
+    {
+        // Hitung sisa token dari plan lama untuk periode saat ini
+        $remaining = $this->remainingForCurrentMonth($oldPlanKey, $user->id);
+
+        // Carryover hanya sisa token yang belum terpakai
+        // Jika ada token leftover, simpan untuk plan baru
+        return max(0, $remaining);
+    }
+
+    /**
+     * Saat user upgrade plan, set token balance untuk carryover.
+     * Dipanggil di webhook atau plan activation logic.
+     */
+    public function handlePlanUpgrade(User $user, string $oldPlanKey, string $newPlanKey): void
+    {
+        if (! $this->shouldCarryOverTokens($oldPlanKey, $newPlanKey)) {
+            $user->update([
+                'ai_token_balance' => 0,
+                'ai_token_last_reset_at' => now(),
+            ]);
+
+            return;
+        }
+
+        // Hitung carryover tokens dari plan lama
+        $carryoverTokens = $this->calculateCarryoverTokens($user, $oldPlanKey);
+
+        if ($carryoverTokens > 0) {
+            $user->update([
+                'ai_token_balance' => $carryoverTokens,
+                'ai_token_last_reset_at' => now(),
+            ]);
+
+            \Illuminate\Support\Facades\Log::info('AI upgrade: tokens carried over', [
+                'user_id' => $user->id,
+                'from_plan' => $oldPlanKey,
+                'to_plan' => $newPlanKey,
+                'carryover_tokens' => $carryoverTokens,
+            ]);
+        } else {
+            // Reset token balance jika tidak ada carryover
+            $user->update([
+                'ai_token_balance' => 0,
+                'ai_token_last_reset_at' => now(),
+            ]);
+        }
     }
 
     public function hasReachedLimit(?string $planKey = null, ?int $userId = null): bool
