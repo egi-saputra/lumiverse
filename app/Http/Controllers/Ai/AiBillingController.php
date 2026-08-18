@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use App\Models\AiInvoice;
 use Inertia\Inertia;
 use Xendit\Configuration;
@@ -18,6 +19,19 @@ use Xendit\XenditSdkException;
 
 class AiBillingController extends Controller
 {
+    protected function aiInvoiceTableExists(): bool
+    {
+        $tableExists = Schema::hasTable('ai_invoices');
+
+        if (! $tableExists) {
+            Log::warning('AI billing: ai_invoices table missing on current connection', [
+                'connection' => config('database.default'),
+            ]);
+        }
+
+        return $tableExists;
+    }
+
     public function pricing()
     {
         $user = Auth::user();
@@ -42,6 +56,12 @@ class AiBillingController extends Controller
 
     public function checkout(Request $request)
     {
+        if (! $this->aiInvoiceTableExists()) {
+            return response()->json([
+                'message' => 'AI billing is not configured on this server yet. Please contact support.',
+            ], 503);
+        }
+
         $request->validate([
             'plan_key' => ['required', 'in:pro,max'],
             'billing_cycle' => ['required', 'in:monthly,yearly'],
@@ -208,6 +228,12 @@ class AiBillingController extends Controller
 
     public function handleWebhook(array $payload): \Illuminate\Http\JsonResponse
     {
+        if (! $this->aiInvoiceTableExists()) {
+            Log::warning('AI webhook ignored: ai_invoices table is not available', ['external_id' => $payload['external_id'] ?? null]);
+
+            return response()->json(['message' => 'AI billing table missing'], 200);
+        }
+
         $data = $payload['data'] ?? $payload;
         $externalId = $payload['external_id'] ?? $data['external_id'] ?? null;
         $status = $payload['status'] ?? $data['status'] ?? null;
