@@ -11,7 +11,7 @@ return [
         'pro' => [
             'label' => 'Pro',
             'limit' => 75,
-            'monthly_price' => 39499,
+            'monthly_price' => 19499,
             'yearly_price' => 429375,
         ],
         'max' => [
