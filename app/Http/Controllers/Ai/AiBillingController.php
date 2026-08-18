@@ -101,6 +101,34 @@ class AiBillingController extends Controller
         }
 
         $planKey = strtolower($request->plan_key);
+
+        // PREVENT DUPLICATE: Check if user already has active/pending invoice
+        // If yes, return existing invoice instead of creating new one
+        $existingPendingInvoice = AiInvoice::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'paid'])
+            ->where('expired_at', '>', now())
+            ->latest('created_at')
+            ->first();
+
+        if ($existingPendingInvoice && ! is_null($existingPendingInvoice->invoice_url)) {
+            Log::info('AI checkout: returning existing pending invoice', [
+                'user_id' => $user->id,
+                'invoice_id' => $existingPendingInvoice->id,
+                'external_id' => $existingPendingInvoice->external_id,
+                'status' => $existingPendingInvoice->status,
+            ]);
+
+            return response()->json([
+                'action' => 'pay',
+                'invoice_url' => $existingPendingInvoice->invoice_url,
+                'external_id' => $existingPendingInvoice->external_id,
+                'amount' => $existingPendingInvoice->amount,
+                'plan_key' => $existingPendingInvoice->plan_key,
+                'billing_cycle' => $existingPendingInvoice->meta['billing_cycle'] ?? 'monthly',
+                'is_existing' => true,
+            ]);
+        }
+
         $pricing = app(AiPlanPricingService::class)->forPlan($planKey, $request->billing_cycle);
         $amount = (int) $pricing['amount'];
 
@@ -152,9 +180,35 @@ class AiBillingController extends Controller
      */
     protected function createXenditInvoice(User $user, string $planKey, string $billingCycle, int $amount)
     {
+        // Lock user row to prevent race condition (double checkout)
+        $user = User::lockForUpdate()->find($user->id);
+
         $tenantId = tenant()?->id ?? (isset($user->tenant_id) ? $user->tenant_id : null);
         $externalId = 'AI-' . ($tenantId ?? 'central') . '-' . $user->id . '-' . time();
         $invoiceDuration = (int) config('xendit.invoice_duration', 86400);
+
+        // Clean up any old pending invoices for this user before creating new one
+        AiInvoice::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('expired_at', '<', now())
+            ->delete();
+
+        // Double-check: no active pending invoice exists
+        $existingPending = AiInvoice::where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->where('expired_at', '>', now())
+            ->count();
+
+        if ($existingPending > 0) {
+            Log::warning('AI createXenditInvoice: found existing pending invoice, aborting', [
+                'user_id' => $user->id,
+                'count' => $existingPending,
+            ]);
+
+            return response()->json([
+                'message' => 'Anda masih memiliki invoice yang belum dibayar. Harap selesaikan pembayaran terlebih dahulu.',
+            ], 409);
+        }
 
         $aiInvoice = AiInvoice::create([
             'tenant_id' => $tenantId,
