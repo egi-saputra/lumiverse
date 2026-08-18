@@ -102,20 +102,22 @@ class AiBillingController extends Controller
 
         $planKey = strtolower($request->plan_key);
 
-        // PREVENT DUPLICATE: Check if user already has active/pending invoice
-        // If yes, return existing invoice instead of creating new one
+        // PREVENT DUPLICATE: Check if user already has UNPAID (pending) invoice for the SAME plan
+        // Only return existing invoice if it's for the same plan and still pending
+        // If user wants to upgrade (different plan), allow new invoice
         $existingPendingInvoice = AiInvoice::where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'paid'])
+            ->where('status', 'pending') // Only PENDING, not PAID
+            ->where('plan_key', $planKey) // Only for the SAME plan
             ->where('expired_at', '>', now())
             ->latest('created_at')
             ->first();
 
         if ($existingPendingInvoice && ! is_null($existingPendingInvoice->invoice_url)) {
-            Log::info('AI checkout: returning existing pending invoice', [
+            Log::info('AI checkout: returning existing pending invoice for same plan', [
                 'user_id' => $user->id,
                 'invoice_id' => $existingPendingInvoice->id,
                 'external_id' => $existingPendingInvoice->external_id,
-                'status' => $existingPendingInvoice->status,
+                'plan_key' => $planKey,
             ]);
 
             return response()->json([
@@ -127,6 +129,19 @@ class AiBillingController extends Controller
                 'billing_cycle' => $existingPendingInvoice->meta['billing_cycle'] ?? 'monthly',
                 'is_existing' => true,
             ]);
+        }
+
+        // Check if user is trying to upgrade/renew same plan they already have active
+        if ($user->ai_plan === $planKey && $user->ai_plan_status === 'active' && $user->ai_plan_expires_at && $user->ai_plan_expires_at > now()) {
+            Log::info('AI checkout: user already has active plan', [
+                'user_id' => $user->id,
+                'plan_key' => $planKey,
+                'expires_at' => $user->ai_plan_expires_at,
+            ]);
+
+            return response()->json([
+                'message' => 'Anda sudah memiliki paket ' . ucfirst($planKey) . ' yang masih aktif hingga ' . $user->ai_plan_expires_at->format('d M Y') . '. Silakan tunggu sampai masa berakhir untuk upgrade ulang.',
+            ], 409);
         }
 
         $pricing = app(AiPlanPricingService::class)->forPlan($planKey, $request->billing_cycle);
@@ -193,20 +208,22 @@ class AiBillingController extends Controller
             ->where('expired_at', '<', now())
             ->delete();
 
-        // Double-check: no active pending invoice exists
-        $existingPending = AiInvoice::where('user_id', $user->id)
+        // Only block if there's a pending invoice for the SAME plan
+        // If user wants to upgrade (different plan), allow it
+        $existingPendingSamePlan = AiInvoice::where('user_id', $user->id)
             ->where('status', 'pending')
+            ->where('plan_key', $planKey)
             ->where('expired_at', '>', now())
             ->count();
 
-        if ($existingPending > 0) {
-            Log::warning('AI createXenditInvoice: found existing pending invoice, aborting', [
+        if ($existingPendingSamePlan > 0) {
+            Log::warning('AI createXenditInvoice: found existing pending invoice for same plan, aborting', [
                 'user_id' => $user->id,
-                'count' => $existingPending,
+                'plan_key' => $planKey,
             ]);
 
             return response()->json([
-                'message' => 'Anda masih memiliki invoice yang belum dibayar. Harap selesaikan pembayaran terlebih dahulu.',
+                'message' => 'Anda masih memiliki invoice yang belum dibayar untuk paket ini. Harap selesaikan pembayaran terlebih dahulu.',
             ], 409);
         }
 
