@@ -1,4 +1,8 @@
 npm install markdown-it dompurify
+npm install markdown-it markdown-it-texmath markdown-it-highlightjs katex highlight.js
+
+npm install markdown-it-texmath markdown-it-highlightjs katex highlight.js
+
 npm install markdown-it markdown-it-texmath katex markdown-it-highlightjs highlight.js
 
 composer require xendit/xendit-php

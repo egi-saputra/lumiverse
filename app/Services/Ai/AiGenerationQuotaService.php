@@ -59,7 +59,7 @@ class AiGenerationQuotaService
      * Tentukan rentang periode kuota saat ini.
      * - Plan free: reset setiap 6 bulan (semester) dari ai_token_last_reset_at
      * - Plan berbayar aktif (pro/max): rolling monthly dari ai_plan_started_at (anniversary date)
-     * - Plan free inactive: kalender bulan berjalan (tanggal 1 - akhir bulan)
+    * - Plan free: rolling semester dari anchor reset/aktivasi user
      */
     public function currentPeriod(?User $user = null): array
     {
@@ -69,24 +69,21 @@ class AiGenerationQuotaService
             return [now()->startOfMonth(), now()->copy()->endOfMonth()];
         }
 
-        // For free plan: 6-month semester reset
-        if ($user->ai_plan === 'free') {
-            if ($user->ai_token_last_reset_at) {
-                // User sudah pernah punya plan berbayar sebelumnya, gunakan anniversary date
-                $anchor = $user->ai_token_last_reset_at->copy();
-                $start = $anchor->copy();
+        // For free plan: stable 6-month rolling reset.
+        if ($user->aiPlanKey() === 'free') {
+            $anchor = ($user->ai_token_last_reset_at
+                ?? $user->ai_plan_started_at
+                ?? $user->created_at
+                ?? now())->copy();
+            $start = $anchor;
 
-                // Gulirkan ke semester terdekat yang mencakup waktu sekarang
-                while ($start->copy()->addMonths(6)->lte(now())) {
-                    $start = $start->addMonths(6);
-                }
-
-                $end = $start->copy()->addMonths(6)->subSecond();
-                return [$start, $end];
-            } else {
-                // Pertama kali pakai free plan, gunakan kalender bulan
-                return [now()->startOfMonth(), now()->copy()->endOfMonth()];
+            // Gulirkan start ke periode semester yang mencakup waktu sekarang.
+            while ($start->copy()->addMonths(6)->lte(now())) {
+                $start = $start->addMonths(6);
             }
+
+            $end = $start->copy()->addMonths(6)->subSecond();
+            return [$start, $end];
         }
 
         // For paid active plans (pro/max): rolling monthly

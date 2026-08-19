@@ -53,11 +53,11 @@ class QuestAiController extends Controller
             'soal' => $soal->only(['id', 'title', 'mapel_id', 'kelas']),
             'materiList' => $materiList,
             'aiPlan' => $aiPlan,
-            // Ditampilkan di UI supaya user tahu skema biaya sebelum generate.
             'creditRules' => [
                 'with_materi' => 3,
                 'without_materi' => 6,
             ],
+            'maxSoalPerGenerate' => $planKey === 'free' ? 20 : null, // null = tidak dibatasi
         ]);
     }
 
@@ -95,6 +95,14 @@ class QuestAiController extends Controller
 
         $user = Auth::user();
 
+        $planKey = $this->quotaService->currentUserAiPlanKey();
+
+        if ($planKey === 'free' && $totalSoal > 20) {
+            return response()->json([
+                'message' => "Paket Free maksimal 20 soal per generate (Anda meminta {$totalSoal} soal). Kurangi jumlah soal atau upgrade paket untuk generate lebih banyak sekaligus.",
+            ], 403);
+        }
+
         $soal = Soal::where('id', $request->soal_id)
             ->where('user_id', $user->id)
             ->firstOrFail();
@@ -125,7 +133,6 @@ class QuestAiController extends Controller
         $materiCukup = MateriAdequacyChecker::cukup($materis, $totalSoal);
         $cost = $materiCukup ? 3 : 6;
 
-        $planKey = $this->quotaService->currentUserAiPlanKey();
         $remaining = $this->quotaService->remainingForCurrentMonth($planKey, $user->id);
 
         if ($remaining < $cost) {

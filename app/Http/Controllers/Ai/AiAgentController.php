@@ -25,6 +25,8 @@ class AiAgentController extends Controller
         $currentLimit = $this->quotaService->resolveLimitForPlan($user->ai_plan ?? 'free');
         $remaining = $this->quotaService->remainingForCurrentMonth(null, $user->id);
         $nextResetAt = $this->quotaService->nextResetAt($user);
+        $planKey = $user->aiPlanKey();
+        $resetFrequency = $this->quotaService->resetFrequency($planKey);
 
         $planInfo = [
             'current_plan' => $user->ai_plan ?? 'free',
@@ -35,7 +37,8 @@ class AiAgentController extends Controller
             'used' => $currentUsage,
             'remaining' => $remaining,
             'percentage_used' => $currentLimit > 0 ? min(100, round(($currentUsage / $currentLimit) * 100)) : 0,
-            'reset_at' => $nextResetAt->toIso8601String(), // ← baru
+            'reset_at' => $nextResetAt->toIso8601String(),
+            'reset_frequency' => $resetFrequency,
         ];
 
         // Get all pricing plans for upgrade section

@@ -177,7 +177,7 @@ const isLoadingPlan = (planKey, cycle) => {
 
 const quotaLabel = (plan) => {
     return plan.key === 'free'
-        ? `${plan.limit} token kredit / 3 bulan`
+        ? `${plan.limit} token kredit / semester`
         : `${plan.limit} token kredit / bulan`
 }
 

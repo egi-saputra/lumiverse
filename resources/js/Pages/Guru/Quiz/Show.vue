@@ -1,7 +1,7 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { ArrowLeftIcon, PlusIcon, TrashIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/solid';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -9,10 +9,12 @@ import MateriContent from '@/Components/MateriContent.vue';
 
 const props = defineProps({
     soal: Object,
+    currentPlan: { type: String, default: 'free' }, // 'free' | 'pro' | 'max'
 });
 
 const deletingId = ref(null);
 const isDeletingAll = ref(false);
+const isFreePlan = computed(() => props.currentPlan === 'free');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const opsiLabel = { opsi_a: 'A', opsi_b: 'B', opsi_c: 'C', opsi_d: 'D', opsi_e: 'E' };
@@ -212,11 +214,12 @@ async function confirmDeleteAll() {
                     Add Question
                 </Link>
 
-                <button @click="confirmDeleteAll" :disabled="isDeletingAll || !soal.bank_soal?.length" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5
-                           rounded-lg px-4 py-2 text-sm font-semibold text-white
-                           bg-red-600 hover:bg-red-700 active:scale-[0.98]
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           transition-all shadow-sm">
+                <button v-if="!isFreePlan" @click="confirmDeleteAll"
+                    :disabled="isDeletingAll || !soal.bank_soal?.length" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5
+           rounded-lg px-4 py-2 text-sm font-semibold text-white
+           bg-red-600 hover:bg-red-700 active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-all shadow-sm">
                     <svg v-if="isDeletingAll" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />

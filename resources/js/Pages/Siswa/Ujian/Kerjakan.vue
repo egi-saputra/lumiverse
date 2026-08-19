@@ -37,7 +37,14 @@ const currentPage = ref(1)
 const token = ref(props.ujianSiswa.token)
 const jawaban = ref(props.riwayat?.jawaban ?? null)
 const jawabanAwal = ref(props.riwayat?.jawaban ?? null)
-const timer = ref(props.sisaDetik)
+const timer = ref(Math.max(0, Math.floor(Number(props.sisaDetik) || 0)))
+const formattedTimer = computed(() => {
+    const totalSeconds = Math.max(0, Math.floor(Number(timer.value) || 0))
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+})
 let interval = null
 const answeredLocal = ref([...props.answered])
 
@@ -464,7 +471,7 @@ const showFullscreenGate = ref(true)
                             Timer :
                         </span>
                         <span class="font-bold text-red-600 dark:text-red-500 mt-0.5 text-sm">
-                            {{ Math.floor(timer / 60) }}:{{ String(timer % 60).padStart(2, '0') }}
+                            {{ formattedTimer }}
                         </span>
                     </div>
 

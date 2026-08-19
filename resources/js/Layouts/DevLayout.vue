@@ -11,6 +11,7 @@ const navItems = [
     { label: 'Dashboard', route: 'developer.dashboard' },
     { label: 'Tenant', route: 'developer.tenants.index' },
     { label: 'Paket / Plan', route: 'developer.plans.index' },
+    { label: 'Transaksi AI', route: 'developer.ai-invoices.index' },
 ]
 </script>
 

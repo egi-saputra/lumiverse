@@ -192,7 +192,9 @@
                             </div>
 
                             <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
-                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">Kuota Per Bulan</div>
+                                <div class="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                    Kuota Per {{ planInfo.reset_frequency === 'semester' ? 'Semester' : 'Bulan' }}
+                                </div>
                                 <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ planInfo.limit }}
                                     Kredit Token</div>
                             </div>
@@ -203,7 +205,7 @@
                                         <span
                                             class="text-sm font-medium text-gray-700 dark:text-gray-300">Digunakan</span>
                                         <span class="text-sm font-bold text-gray-900 dark:text-white">{{ planInfo.used
-                                            }} / {{ planInfo.limit }}</span>
+                                        }} / {{ planInfo.limit }}</span>
                                     </div>
                                     <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
                                         <div class="bg-gradient-to-r from-green-500 to-blue-500 h-2.5 rounded-full transition-all duration-300"
@@ -324,7 +326,7 @@
                                     </td>
                                     <td class="px-6 py-4 text-sm font-semibold text-gray-900 dark:text-white">
                                         <span v-if="payment.amount > 0">Rp {{ payment.amount.toLocaleString('id-ID')
-                                        }}</span>
+                                            }}</span>
                                         <span v-else class="text-gray-600 dark:text-gray-400">Gratis</span>
                                     </td>
                                     <td class="px-6 py-4 text-sm">
@@ -401,7 +403,7 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue'
 import { router } from '@inertiajs/vue3'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import axios from 'axios'
 import { route } from 'ziggy-js'
 
@@ -416,12 +418,6 @@ const formatDate = (date) => {
     const d = new Date(date)
     return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
 }
-
-const nextResetLabel = computed(() => {
-    const now = new Date()
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    return nextMonth.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-})
 
 const goToUpgrade = () => {
     router.visit(route('guru.ai-billing.pricing'))

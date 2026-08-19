@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ai_invoices', function (Blueprint $table) {
+        Schema::connection('central')->create('ai_invoices', function (Blueprint $table) {
             $table->id();
+            $table->string('tenant_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('external_id')->unique();
             $table->string('invoice_id')->nullable();
@@ -25,6 +26,7 @@ return new class extends Migration
             $table->json('meta')->nullable();
             $table->timestamps();
 
+            $table->index(['tenant_id', 'user_id', 'status', 'created_at']);
             $table->index(['user_id', 'status', 'created_at']);
             $table->index('external_id');
         });
@@ -35,6 +37,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ai_invoices');
+        Schema::connection('central')->dropIfExists('ai_invoices');
     }
 };

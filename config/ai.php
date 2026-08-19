@@ -12,7 +12,7 @@ return [
         'pro' => [
             'label' => 'Pro',
             'limit' => 75,
-            'monthly_price' => 19499,
+            'monthly_price' => 39499,
             'yearly_price' => 429375,
             'reset_frequency' => 'monthly', // Reset setiap bulan
         ],

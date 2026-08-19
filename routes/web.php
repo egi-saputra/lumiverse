@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Developer\AuthController;
+use App\Http\Controllers\Developer\AiInvoiceController;
 use App\Http\Controllers\Developer\PlanController;
 use App\Http\Controllers\Developer\TenantController;
 use App\Http\Controllers\TenantRegistrationController;
@@ -225,6 +226,8 @@ Route::domain('{centralHost}')
                 Route::post('/plans/reorder', [PlanController::class, 'reorder'])->name('plans.reorder');
                 Route::put('/plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
                 Route::delete('/plans/{plan}', [PlanController::class, 'destroy'])->name('plans.destroy');
+
+                Route::get('/ai-invoices', [AiInvoiceController::class, 'index'])->name('ai-invoices.index');
             });
 
             Route::post('/tenants/{tenant}/domains', [TenantController::class, 'storeDomain'])->name('tenants.domains.store');

@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 use Inertia\Inertia;
 use Xendit\Configuration;
 use Xendit\Invoice\CreateInvoiceRequest;
@@ -58,6 +59,48 @@ class AiBillingController extends Controller
         }
 
         return $tableExists;
+    }
+
+    protected function centralAiInvoiceTableExists(): bool
+    {
+        return Schema::connection('central')->hasTable('ai_invoices');
+    }
+
+    protected function createCentralInvoiceCopy(array $attributes): void
+    {
+        if (! $this->centralAiInvoiceTableExists()) {
+            return;
+        }
+
+        try {
+            AiInvoice::on('central')->updateOrCreate(
+                ['external_id' => $attributes['external_id']],
+                $attributes
+            );
+        } catch (Throwable $e) {
+            Log::error('AI billing: failed to create central invoice copy', [
+                'external_id' => $attributes['external_id'] ?? null,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    protected function syncCentralInvoice(?string $externalId, array $attributes): void
+    {
+        if (! $externalId || ! $this->centralAiInvoiceTableExists()) {
+            return;
+        }
+
+        try {
+            AiInvoice::on('central')
+                ->where('external_id', $externalId)
+                ->update($attributes);
+        } catch (Throwable $e) {
+            Log::error('AI billing: failed to sync central invoice copy', [
+                'external_id' => $externalId,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function pricing()
@@ -181,10 +224,11 @@ class AiBillingController extends Controller
         }
 
         // Catat juga di ai_invoices supaya muncul di riwayat pembayaran & bisa diaudit
+        $externalId = 'AI-' . (tenant()?->id ?? 'central') . '-' . $user->id . '-' . time();
         AiInvoice::create([
             'tenant_id' => tenant()?->id,
             'user_id' => $user->id,
-            'external_id' => 'AI-' . (tenant()?->id ?? 'central') . '-' . $user->id . '-' . time(),
+            'external_id' => $externalId,
             'plan_key' => $planKey,
             'amount' => 0,
             'status' => 'paid',
@@ -193,6 +237,24 @@ class AiBillingController extends Controller
                 'billing_cycle' => $request->billing_cycle,
                 'note' => 'zero_amount_activation',
                 'tenant_id' => tenant()?->id,
+            ],
+        ]);
+
+        $this->createCentralInvoiceCopy([
+            'tenant_id' => tenant()?->id,
+            'user_id' => $user->id,
+            'external_id' => $externalId,
+            'invoice_id' => null,
+            'invoice_url' => null,
+            'plan_key' => $planKey,
+            'amount' => 0,
+            'status' => 'paid',
+            'paid_at' => now(),
+            'meta' => [
+                'billing_cycle' => $request->billing_cycle,
+                'tenant_id' => tenant()?->id,
+                'user_id' => $user->id,
+                'source' => 'tenant_checkout',
             ],
         ]);
 
@@ -259,6 +321,24 @@ class AiBillingController extends Controller
             ],
         ]);
 
+        $this->createCentralInvoiceCopy([
+            'tenant_id' => $tenantId,
+            'user_id' => $user->id,
+            'external_id' => $externalId,
+            'invoice_id' => null,
+            'invoice_url' => null,
+            'plan_key' => $planKey,
+            'amount' => $amount,
+            'status' => 'pending',
+            'expired_at' => now()->addSeconds($invoiceDuration),
+            'meta' => [
+                'billing_cycle' => $billingCycle,
+                'tenant_id' => $tenantId,
+                'user_id' => $user->id,
+                'source' => 'tenant_checkout',
+            ],
+        ]);
+
         $user->update([
             'ai_pending_plan' => $planKey,
             'ai_external_id' => $externalId,
@@ -303,6 +383,11 @@ class AiBillingController extends Controller
                 'invoice_url' => $invoice->getInvoiceUrl(),
             ]);
 
+            $this->syncCentralInvoice($externalId, [
+                'invoice_id' => $invoice->getId(),
+                'invoice_url' => $invoice->getInvoiceUrl(),
+            ]);
+
             $user->update([
                 'ai_invoice_id' => $invoice->getId(),
                 'ai_last_invoice_status' => 'pending',
@@ -325,6 +410,7 @@ class AiBillingController extends Controller
             ]);
 
             $aiInvoice->update(['status' => 'failed']);
+            $this->syncCentralInvoice($externalId, ['status' => 'failed']);
 
             $user->update([
                 'ai_pending_plan' => null,
@@ -464,6 +550,13 @@ class AiBillingController extends Controller
 
     protected function processTenantWebhook(array $payload, array $data, ?string $externalId, mixed $status, ?string $tenantId, ?AiInvoice $aiInvoice = null): \Illuminate\Http\JsonResponse
     {
+        if ($aiInvoice && $aiInvoice->getConnectionName() === 'central' && $externalId) {
+            $tenantInvoice = AiInvoice::where('external_id', $externalId)->first();
+            if ($tenantInvoice) {
+                $aiInvoice = $tenantInvoice;
+            }
+        }
+
         // If invoice not passed, try to fetch it
         if (! $aiInvoice && $externalId) {
             $aiInvoice = AiInvoice::where('external_id', $externalId)->first();
@@ -481,7 +574,9 @@ class AiBillingController extends Controller
             return response()->json(['message' => 'Invoice not found'], 200);
         }
 
-        $user = $aiInvoice->user ?? User::find($aiInvoice->user_id);
+        // A central monitoring copy has no tenant-side User relation.
+        // Always resolve the user on the active tenant connection.
+        $user = User::find($aiInvoice->user_id);
 
         if (! $user) {
             Log::warning('Xendit AI webhook: user not found', ['external_id' => $externalId, 'tenant_id' => $tenantId]);
@@ -520,6 +615,10 @@ class AiBillingController extends Controller
                 'status' => 'paid',
                 'paid_at' => now(),
             ]);
+            $this->syncCentralInvoice($externalId, [
+                'status' => 'paid',
+                'paid_at' => now(),
+            ]);
 
             $user->update([
                 'ai_plan' => $planKey,
@@ -553,6 +652,10 @@ class AiBillingController extends Controller
             Log::info('AI Webhook: invoice expired', ['external_id' => $externalId, 'user_id' => $user->id, 'tenant_id' => $tenantId]);
 
             $aiInvoice->update(['status' => 'expired']);
+            $this->syncCentralInvoice($externalId, [
+                'status' => 'expired',
+                'expired_at' => now(),
+            ]);
 
             $user->update([
                 'ai_pending_plan' => null,
@@ -565,6 +668,7 @@ class AiBillingController extends Controller
         $newStatus = strtolower((string) $status ?: 'failed');
 
         $aiInvoice->update(['status' => $newStatus]);
+        $this->syncCentralInvoice($externalId, ['status' => $newStatus]);
 
         $user->update([
             'ai_pending_plan' => null,

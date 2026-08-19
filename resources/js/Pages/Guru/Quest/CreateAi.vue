@@ -11,6 +11,7 @@ const props = defineProps({
     materiList: Array,
     aiPlan: Object,
     creditRules: Object,
+    maxSoalPerGenerate: { type: Number, default: null },
     jumlah_opsi_pg: 4,
 });
 
@@ -34,6 +35,10 @@ const generating = ref(false);
 const showMateriModal = ref(false);
 const selectedMateriIds = ref([]); // array of number
 const draftSelectedIds = ref([]);  // buffer di dalam modal, di-commit saat "Terapkan"
+
+const exceedsPlanLimit = computed(() =>
+    props.maxSoalPerGenerate !== null && totalSoal.value > props.maxSoalPerGenerate
+);
 
 const selectedMateris = computed(() =>
     props.materiList.filter(m => selectedMateriIds.value.includes(m.id))
@@ -81,8 +86,7 @@ const canGenerate = computed(() => {
     if (generating.value) return false;
     if (totalSoal.value < 1) return false;
     if (selectedMateriIds.value.length === 0 && !form.value.topik.trim()) return false;
-    // notEnoughCredit sengaja TIDAK dicek di sini,
-    // supaya tombol tetap bisa diklik dan memunculkan alert upgrade
+    if (exceedsPlanLimit.value) return false; // tombol nonaktif kalau lebih dari limit plan
     return true;
 });
 
@@ -406,6 +410,11 @@ const generateWithAi = async () => {
 
                     <p v-if="totalSoal < 1" class="text-xs text-amber-600 dark:text-amber-400">
                         Isi minimal 1 soal (PG dan/atau Essay).
+                    </p>
+                    <p v-else-if="exceedsPlanLimit" class="text-xs text-red-600 dark:text-red-400">
+                        Paket Free maksimal {{ maxSoalPerGenerate }} soal per generate (saat ini {{ totalSoal }} soal).
+                        <Link href="/guru/ai-billing/pricing" class="underline font-medium">Upgrade paket</Link> untuk
+                        generate lebih banyak sekaligus.
                     </p>
                     <p v-else-if="notEnoughCredit" class="text-xs text-red-600 dark:text-red-400">
                         Kredit tidak cukup — butuh {{ currentCost }} token, sisa {{ aiPlan.remaining }}.
