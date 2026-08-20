@@ -16,7 +16,7 @@ const props = defineProps({
 const { success, error } = useAlert();
 
 const goToUpgrade = () => {
-    router.visit(route('guru.aiPricing'))
+    router.visit(route('guru.ai-billing.pricing'))
 }
 
 // --- Plan / badge logic ---
@@ -56,7 +56,7 @@ const materiForm = ref(null)
 // hasil pertama muncul, kolom judul (hasil generate, tetap bisa diedit)
 // baru ditampilkan.
 const hasGenerated = ref(false)
-const descTab = ref('edit') // 'edit' | 'preview'
+const descTab = ref('preview') // 'edit' | 'preview'
 
 const canGenerate = computed(() =>
     form.kelas_id && form.mapel_id && form.topik
@@ -186,12 +186,14 @@ const submitMateri = () => {
 <template>
     <MenuLayout>
         <div class="min-h-screen sm:p-6 flex justify-center items-start">
-            <div class="w-full max-w-7xl rounded-xl shadow-lg p-6 bg-white dark:bg-gray-800">
+            <div class="w-full sm:max-w-7xl sm:rounded-xl sm:shadow-lg sm:p-6 sm:bg-white sm:dark:bg-gray-800">
 
                 <!-- Header with Title and Upgrade Button -->
-                <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Buat Materi dengan Ai</h1>
+                <div
+                    class="flex w-full sm:flex-row flex-col sm:items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex sm:mb-0 mb-4 items-center gap-2">
+                        <h1 class="sm:text-3xl text-xl font-bold text-gray-900 dark:text-white">Buat Materi dengan Ai
+                        </h1>
 
                         <!-- Badge: Beta (free) atau Premium (pro/max) dengan shimmer -->
                         <span :class="[
@@ -203,7 +205,7 @@ const submitMateri = () => {
                             {{ planLabel }}
                         </span>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex sm:w-auto w-full justify-start items-center gap-3">
                         <!-- Upgrade Button: hanya muncul kalau kredit sudah habis -->
                         <button v-if="showUpgradeButton" @click="goToUpgrade"
                             class="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg whitespace-nowrap">
@@ -223,7 +225,7 @@ const submitMateri = () => {
                         <div>
                             <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Recipient</label>
                             <select v-model="form.kelas_id" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-600">
                                 <option value="" disabled>Select Class</option>
                                 <option v-for="k in kelas" :key="k.id" :value="k.id">{{ k.kelas }}</option>
                             </select>
@@ -232,7 +234,7 @@ const submitMateri = () => {
                         <div>
                             <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">Subject</label>
                             <select v-model="form.mapel_id" required
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-600">
                                 <option value="" disabled>Select subject</option>
                                 <option v-for="s in subjects" :key="s.id" :value="s.id">{{ s.mapel }}</option>
                             </select>
@@ -244,8 +246,8 @@ const submitMateri = () => {
                         <label class="block mb-1 font-medium text-gray-700 dark:text-gray-200">
                             Prompting ( Instruksi untuk Ai )
                         </label>
-                        <textarea v-model="form.topik" rows="3"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                        <textarea v-model="form.topik" rows="5"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-900 dark:text-white dark:border-gray-600"
                             placeholder="e.g., Jelaskan proses fotosintesis secara sederhana untuk siswa, sertakan tahapannya. Bisa juga sebutkan referensi spesifik, mis. 'sesuai buku Biologi Campbell edisi 9'"></textarea>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             Pilih kelas & mapel dulu di atas, lalu tuliskan topik. AI akan mencari referensi
@@ -297,7 +299,7 @@ const submitMateri = () => {
 
                     <!-- Description (hasil AI, tetap bisa diedit manual, dengan preview rapi) -->
                     <div>
-                        <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center justify-between mb-2">
                             <label class="font-medium text-gray-700 dark:text-gray-200">Description</label>
 
                             <!-- Toggle Edit / Preview -->
@@ -311,27 +313,30 @@ const submitMateri = () => {
                                 ]">
                                     ✏️ Edit
                                 </button>
+
                                 <button type="button" @click="descTab = 'preview'" :class="[
                                     'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
                                     descTab === 'preview'
                                         ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
                                         : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                                 ]">
-                                    👁️ Preview
+                                    Preview
                                 </button>
                             </div>
                         </div>
 
                         <!-- Mode Edit: textarea raw markdown, tetap yang divalidasi form -->
                         <textarea v-show="descTab === 'edit'" v-model="form.deskripsi" required rows="14"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white dark:border-gray-600"
-                            placeholder="Hasil generate AI akan muncul di sini, dan bisa kamu edit sebelum disimpan..."></textarea>
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-900 dark:text-white dark:border-gray-600"
+                            placeholder="Belum ada konten materi."></textarea>
 
                         <!-- Mode Preview: render rapi pakai komponen yang sama dengan yang dilihat siswa -->
                         <div v-show="descTab === 'preview'"
-                            class="w-full min-h-[280px] border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-3 bg-white dark:bg-gray-800">
+                            class="w-full min-h-[280px] border border-slate-300 dark:border-slate-600 rounded-lg px-4 py-3 bg-white dark:bg-slate-900">
                             <MateriContent v-if="form.deskripsi" :content="form.deskripsi" />
-                            <p v-else class="text-sm text-gray-400 italic">Belum ada konten untuk di-preview.</p>
+                            <p v-else class="text-sm text-gray-400 italic">Hasil generate AI akan muncul di sini, dan
+                                bisa kamu edit sebelum
+                                disimpan...</p>
                         </div>
                     </div>
 

@@ -111,13 +111,13 @@
             </div>
 
             <!-- Floating button Mobile -->
-            <div class="sm:hidden fixed bottom-6 right-6 flex flex-col items-end gap-3">
+            <div class="sm:hidden fixed bottom-6 left-4 right-4 flex flex-row items-center gap-3">
                 <Link :href="route('guru.material.createAi')" prefetch preserve-scroll
-                    class="bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 text-sm hover:to-purple-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
+                    class="flex-1 flex items-center justify-center gap-1.5 bg-white/70 dark:bg-gray-900/60 backdrop-blur-xl border border-white/40 dark:border-white/10 text-purple-600 dark:text-purple-300 text-sm font-semibold px-4 py-3 rounded-full shadow-lg shadow-black/10 active:scale-95 transition">
                     ✨ Buat dengan AI
                 </Link>
                 <Link :href="route('guru.material.create')" prefetch preserve-scroll
-                    class="bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-800 text-sm hover:to-blue-600 text-white font-semibold px-5 py-3 rounded-full shadow-lg">
+                    class="flex-1 flex items-center justify-center gap-1.5 bg-blue-600/90 backdrop-blur-xl text-white text-sm font-semibold px-4 py-3 rounded-full shadow-lg shadow-blue-600/30 active:scale-95 transition">
                     + Add New
                 </Link>
             </div>

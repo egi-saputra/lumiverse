@@ -53,6 +53,7 @@ class QuestAiController extends Controller
             'soal' => $soal->only(['id', 'title', 'mapel_id', 'kelas']),
             'materiList' => $materiList,
             'aiPlan' => $aiPlan,
+            'title' => "Lumi Ai Assistant",
             'creditRules' => [
                 'with_materi' => 3,
                 'without_materi' => 6,

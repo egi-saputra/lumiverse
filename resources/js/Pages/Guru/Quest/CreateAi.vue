@@ -24,9 +24,9 @@ const form = ref({
 });
 
 const opsiPgChoices = [
-    { value: 3, label: '3 Opsi (A–C)' },
-    { value: 4, label: '4 Opsi (A–D)' },
-    { value: 5, label: '5 Opsi (A–E)' },
+    { value: 3, label: '3 Opsi ( A - C )' },
+    { value: 4, label: '4 Opsi ( A - D )' },
+    { value: 5, label: '5 Opsi ( A - E )' },
 ];
 
 const generating = ref(false);
@@ -254,18 +254,19 @@ const generateWithAi = async () => {
 
 <template>
     <MenuLayout>
-        <div class="px-10">
-            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm
-                        dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+        <div class="sm:px-10">
+            <div
+                class="sm:rounded-2xl sm:px-0 px-2 sm:border sm:border-gray-200 sm:bg-white sm:shadow-sm sm:dark:border-slate-800 sm:dark:bg-slate-900 overflow-hidden">
 
                 <!-- Header -->
-                <div class="border-b border-gray-200 dark:border-slate-800 px-6 py-5 flex items-center gap-3">
+                <div
+                    class="border-b border-gray-200 dark:border-slate-800 sm:px-6 sm:py-5 sm:pb-0 pb-5 flex items-center gap-3">
                     <div class="rounded-full bg-purple-50 dark:bg-purple-500/10 p-2.5">
                         <SparklesIcon class="w-5 h-5 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
                         <h1 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
-                            Buat Soal dengan AI
+                            Buat soal dengan Lumi Ai
                         </h1>
                         <p class="text-sm text-gray-500 dark:text-slate-400">
                             {{ soal.title }}
@@ -273,14 +274,13 @@ const generateWithAi = async () => {
                     </div>
                 </div>
 
-                <div class="px-6 py-6 space-y-6">
+                <div class="sm:px-6 py-6 space-y-6">
 
                     <!-- Sisa kredit -->
-                    <div class="rounded-xl border border-purple-200 dark:border-purple-500/20
-                                bg-purple-50 dark:bg-purple-500/10 px-4 py-3 flex items-center justify-between">
+                    <div class="rounded-xl border border-purple-200 dark:border-purple-500/20 bg-purple-50 dark:bg-purple-500/10 px-4 py-3 flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-purple-800 dark:text-purple-300">
-                                Sisa kredit token bulan ini
+                            <p class="text-sm sm:inline-flex hidden font-medium text-purple-800 dark:text-purple-300">
+                                Sisa kredit token
                             </p>
                             <!-- <p class="text-xs text-purple-600 dark:text-purple-400 mt-0.5">
                                 Pakai referensi materi: {{ creditRules.with_materi }} token · Tanpa referensi (AI cari
@@ -291,7 +291,7 @@ const generateWithAi = async () => {
                                 yang lebih relevan dan akurat.
                             </p>
                         </div>
-                        <div class="text-2xl font-bold text-purple-700 dark:text-purple-300 shrink-0">
+                        <div class="text-2xl sm:inline-flex hidden font-bold text-purple-700 dark:text-purple-300 shrink-0">
                             {{ aiPlan.remaining }}
                         </div>
                     </div>
@@ -304,7 +304,7 @@ const generateWithAi = async () => {
                         </label>
 
                         <button type="button" @click="openMateriModal" class="w-full inline-flex items-center justify-center gap-2 rounded-lg
-                                   border border-dashed border-gray-300 dark:border-slate-600
+                                   border border-dashed border-gray-300 dark:border-purple-600
                                    px-3 py-2.5 text-sm font-medium
                                    text-gray-600 dark:text-slate-300
                                    hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
@@ -314,7 +314,7 @@ const generateWithAi = async () => {
 
                         <!-- Chips materi terpilih -->
                         <div v-if="selectedMateris.length" class="flex flex-wrap gap-2 pt-1">
-                            <span v-for="m in selectedMateris" :key="m.id" class="inline-flex items-center gap-1.5 rounded-full
+                            <span v-for="m in selectedMateris" :key="m.id" class="inline-flex items-center gap-1.5 rounded-lg
                                        bg-purple-50 dark:bg-purple-500/10
                                        border border-purple-200 dark:border-purple-500/20
                                        pl-3 pr-1.5 py-1 text-xs font-medium
@@ -327,18 +327,19 @@ const generateWithAi = async () => {
                             </span>
                         </div>
 
-                        <p class="text-xs text-gray-500 dark:text-slate-400">
-                            <!-- <template v-if="selectedMateris.length">
-                                Soal akan dibuat berdasarkan isi {{ selectedMateris.length }} materi yang dipilih sebagai referensi
-                                — biaya {{ creditRules.with_materi }} token.
-                            </template> -->
+                        <p class="text-xs sm:pt-1 pt-2 text-gray-500 dark:text-slate-400">
                             <template v-if="selectedMateris.length">
-                                Soal akan dibuat berdasarkan isi materi yang dipilih sebagai referensi utama.<br>Jika
-                                materi tidak memadai untuk membuat soal dari jumlah soal yang ditentukan, maka Ai akan
-                                mencari sumber lain yang relevan dengan materi tersebut.
+                                Soal akan dibuat berdasarkan isi materi yang dipilih sebagai referensi utama.<br><span class="sm:hidden inline-block"><br>Jika
+                                    materi tidak memadai untuk membuat soal dari jumlah soal yang ditentukan, maka Ai
+                                    akan
+                                    mencari sumber lain yang relevan dengan materi tersebut.</span><span
+                                    class="hidden sm:inline-block">Jika
+                                    materi tidak memadai untuk membuat soal dari jumlah soal yang ditentukan, maka Ai
+                                    akan
+                                    mencari sumber lain yang relevan dengan materi tersebut.</span>
                             </template>
                             <template v-else>
-                                AI akan mencari & riset sumber sendiri dari web berdasarkan topik di bawah — biaya
+                                AI akan mencari & riset sumber sendiri dari web berdasarkan topik di bawah - biaya
                                 {{ creditRules.without_materi }} token (lebih mahal karena butuh browsing).
                             </template>
                         </p>
@@ -351,36 +352,29 @@ const generateWithAi = async () => {
                             <span v-if="!selectedMateris.length" class="text-red-500">*</span>
                             <span v-else class="text-gray-400 font-normal">(opsional)</span>
                         </label>
-                        <textarea v-model="form.topik" rows="3"
+                        <textarea v-model="form.topik" rows="5"
                             :placeholder="selectedMateris.length
                                 ? 'Instruksi tambahan, mis. fokuskan pada sub-bab tertentu (opsional)'
                                 : 'Wajib diisi jika tidak ada materi yang digunakan sebagai referensi. Contoh: Soal tentang siklus air untuk kelas 5 SD'"
-                            class="w-full rounded-lg border border-gray-300
-                                   dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
-                                   px-3 py-2.5 text-sm resize-none
-                                   focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
+                            class="w-full rounded-lg border 
+                                   border-gray-300 dark:border-slate-700 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:bg-slate-900 px-3 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
                     </div>
 
                     <!-- Jumlah soal -->
-                    <div class="grid sm:grid-cols-3 gap-4">
+                    <div class="grid sm:grid-cols-3 grid-cols-1 gap-4">
                         <div class="space-y-1.5">
                             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
                                 Jumlah Pilihan Ganda
                             </label>
                             <input v-model.number="form.jumlah_pg" type="number" min="0" max="100" class="w-full rounded-lg border border-gray-300
-                                       dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
-                                       px-3 py-2.5 text-sm
-                                       focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
+                                       dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
                         </div>
 
                         <div class="space-y-1.5">
                             <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
                                 Jumlah Essay
                             </label>
-                            <input v-model.number="form.jumlah_essay" type="number" min="0" max="100" class="w-full rounded-lg border border-gray-300
-                                       dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
-                                       px-3 py-2.5 text-sm
-                                       focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
+                            <input v-model.number="form.jumlah_essay" type="number" min="0" max="100" class="w-full rounded-lg border border-gray-300 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
                         </div>
 
                         <div class="space-y-1.5">
@@ -388,15 +382,16 @@ const generateWithAi = async () => {
                                 Poin / Butir Soal
                             </label>
                             <input v-model.number="form.nilai_per_soal" type="number" min="0"
-                                class="w-full rounded-lg border border-gray-300  dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
+                                class="w-full rounded-lg border border-gray-300  dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition" />
                         </div>
                     </div>
 
+                    <!-- Jumlah Opsi Jawaban -->
                     <div v-if="form.jumlah_pg > 0" class="space-y-1.5">
                         <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
                             Jumlah Opsi Jawaban PG
                         </label>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid sm:grid-cols-3 gap-2">
                             <button v-for="choice in opsiPgChoices" :key="choice.value" type="button"
                                 @click="form.jumlah_opsi_pg = choice.value"
                                 class="rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors"
@@ -417,7 +412,7 @@ const generateWithAi = async () => {
                         generate lebih banyak sekaligus.
                     </p>
                     <p v-else-if="notEnoughCredit" class="text-xs text-red-600 dark:text-red-400">
-                        Kredit tidak cukup — butuh {{ currentCost }} token, sisa {{ aiPlan.remaining }}.
+                        Kredit tidak mencukupi - membutuhkan {{ currentCost }} token, tersisa {{ aiPlan.remaining }}.
                     </p>
                     <p v-else class="text-xs text-gray-500 dark:text-slate-400">
                         Total {{ totalSoal }} soal akan dibuat, biaya {{ currentCost }} token.

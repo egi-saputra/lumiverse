@@ -173,11 +173,11 @@ const isManualDisabled = computed(() => !!form.value.excel);
     <MenuLayout>
         <div class="min-h-screen bg-gray-50 dark:bg-slate-950">
 
-            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm
-                            dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+            <div
+                class="sm:rounded-2xl sm:border sm:border-gray-200 sm:bg-white sm:shadow-sm sm:dark:border-slate-800 sm:dark:bg-slate-900 overflow-hidden">
 
                 <!-- ── Header card ─────────────────────────────────── -->
-                <div class="border-b border-gray-200 dark:border-slate-800 px-6 py-5">
+                <div class="border-b border-gray-200 dark:border-slate-800 sm:px-6 sm:py-5 sm:pb-0 pb-5">
                     <h1 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
                         Add Quiz Question
                     </h1>
@@ -186,7 +186,7 @@ const isManualDisabled = computed(() => !!form.value.excel);
                     </p>
                 </div>
 
-                <div class="px-6 py-6 space-y-6">
+                <div class="sm:px-6 py-6 space-y-6">
 
                     <!-- ── Import Excel ────────────────────────────── -->
                     <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50

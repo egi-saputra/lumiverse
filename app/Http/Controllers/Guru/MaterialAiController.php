@@ -40,7 +40,7 @@ class MaterialAiController extends Controller
         return Inertia::render('Guru/Material/AiCreate', [
             'kelas' => $kelas,
             'subjects' => $subjects,
-            'title' => 'Buat Materi dengan AI',
+            'title' => 'Lumi Ai Assistant',
             'aiPlan' => $aiPlan,
         ]);
     }

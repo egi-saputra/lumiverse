@@ -50,11 +50,6 @@ const menuItems = computed(() => {
             icon: ChartBarIcon,
         },
         {
-            name: 'Attendance Recap',
-            routeName: 'guru.absensi.index',
-            icon: ClipboardDocumentCheckIcon,
-        },
-        {
             name: 'Learning Materials',
             routeName: 'guru.material.index',
             icon: BookOpenIcon,
@@ -84,11 +79,18 @@ const menuItems = computed(() => {
     ]
 
     if (props.isWalas) {
-        items.splice(1, 0, {
-            name: 'Homeroom Teacher',
-            routeName: 'guru.walas.index',
-            icon: UsersIcon,
-        })
+        items.splice(1, 0,
+            {
+                name: 'Homeroom Teacher',
+                routeName: 'guru.walas.index',
+                icon: UsersIcon,
+            },
+            {
+                name: 'Attendance Recap',
+                routeName: 'guru.absensi.index',
+                icon: ClipboardDocumentCheckIcon,
+            }
+        );
     }
 
     if (props.isKejuruanGuru) {
