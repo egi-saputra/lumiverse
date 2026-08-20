@@ -114,7 +114,7 @@ class GenerateMaterialAiJob implements ShouldQueue
         $riset = $this->truncateForBudget($riset, self::MAX_RESEARCH_CHARS);
         $sumber = $this->truncateForBudget($sumber, 1500);
 
-        // ================= STAGE 2: STRUKTURISASI (llama-3.3-70b-versatile) =================
+        // ================= STAGE 2: STRUKTURISASI =================
         $this->updateStage('parsing', 'Menyusun materi terstruktur & judul...');
 
         $structureSystemPrompt = $this->buildStructurePrompt($kelasNama, $mapelNama);
@@ -398,7 +398,7 @@ class GenerateMaterialAiJob implements ShouldQueue
     }
 
     /**
-     * STAGE 2 - prompt strukturisasi untuk llama-3.3-70b-versatile. Model ini
+     * STAGE 2 - prompt strukturisasi. Model ini
      * tidak browsing - ia HANYA mengolah hasil riset dari tahap 1 (dikirim
      * lewat user prompt di handle()) menjadi materi siap baca siswa,
      * menentukan judul final, dan menyusun footnote.
