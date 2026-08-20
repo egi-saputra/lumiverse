@@ -151,7 +151,8 @@ class AiGenerationQuotaService
                 ->where('status', '!=', 'failed')
                 ->whereBetween('created_at', [$start, $end])
                 ->lockForUpdate()
-                ->sum('cost');
+                ->get(['cost'])       // <-- ambil baris (dengan lock), bukan langsung sum di SQL
+                ->sum('cost');        // <-- jumlahkan di PHP (Collection::sum, bukan query builder)
 
             if ($used + $cost > $limit) {
                 return null;
