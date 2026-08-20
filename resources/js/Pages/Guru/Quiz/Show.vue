@@ -215,17 +215,14 @@ async function confirmDeleteAll() {
                 </Link>
 
                 <button v-if="!isFreePlan" @click="confirmDeleteAll"
-                    :disabled="isDeletingAll || !soal.bank_soal?.length" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5
-           rounded-lg px-4 py-2 text-sm font-semibold text-white
-           bg-red-600 hover:bg-red-700 active:scale-[0.98]
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-all shadow-sm">
+                    :disabled="isDeletingAll || !soal.bank_soal?.length"
+                    class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
                     <svg v-if="isDeletingAll" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
                     <TrashIcon v-else class="w-4 h-4" />
-                    Delete All
+                    <span class="sm:inline-flex hidden">Delete All</span>
                 </button>
             </div>
         </div>

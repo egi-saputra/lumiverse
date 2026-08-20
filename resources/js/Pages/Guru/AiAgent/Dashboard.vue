@@ -5,7 +5,7 @@
 
                 <!-- Hero Section -->
                 <div
-                    class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-gray-50 dark:from-amber-950/30 dark:to-gray-950/30 border-l-4 border-amber-600">
+                    class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 to-gray-50 dark:from-purple-950/30 dark:to-gray-950/30 border border-l-4 dark:border border-amber-600 dark:border-purple-600">
 
                     <!-- Subtle background pattern (grid) -->
                     <svg class="absolute inset-0 w-full h-full text-gray-200 dark:text-gray-800"
@@ -31,8 +31,8 @@
                             <div>
                                 <div class="flex items-center gap-3 mb-3">
                                     <div
-                                        class="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900">
-                                        <svg class="w-7 h-7 text-amber-600 dark:text-amber-400" fill="currentColor"
+                                        class="p-2 rounded-lg bg-amber-50 dark:bg-purple-950/40 bg-amber-400/20 border border-amber-100 dark:border-purple-900">
+                                        <svg class="w-7 h-7 text-amber-600 dark:text-purple-400" fill="currentColor"
                                             viewBox="0 0 24 24">
                                             <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                                         </svg>
@@ -51,7 +51,7 @@
                                 ✓ PREMIUM
                             </span>
                             <span v-else
-                                class="shrink-0 sm:inline-flex hidden items-center gap-1 bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-900 text-yellow-700 dark:text-yellow-400 text-xs font-bold px-4 py-2 rounded-full">
+                                class="shrink-0 sm:inline-flex hidden items-center gap-1 bg-yellow-50 dark:bg-purple-950/40 border border-yellow-200 dark:border-purple-900 text-yellow-700 dark:text-purple-400 text-xs font-bold px-4 py-2 rounded-full">
                                 FREE TRIAL
                             </span>
                         </div>
