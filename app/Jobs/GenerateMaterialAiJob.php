@@ -29,7 +29,7 @@ class GenerateMaterialAiJob implements ShouldQueue
     // format) dipakai untuk merapikan hasil riset compound jadi materi siap
     // baca siswa, sekaligus menentukan JUDUL final & menyusun footnote sumber.
     private const RESEARCH_MODEL = 'groq/compound';
-    private const STRUCTURE_MODEL = 'llama-3.3-70b-versatile';
+    private const STRUCTURE_MODEL = 'openai/gpt-oss-120b';
 
     private const RESEARCH_END_MARKER = '===SELESAI===';
     private const STRUCTURE_END_MARKER = '===SELESAI===';
