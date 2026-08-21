@@ -18,7 +18,8 @@ class GenerateMaterialAiJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 180; // 2 kali call AI berurutan (riset + strukturisasi)
+    // public int $timeout = 180; 
+    public int $timeout = 240;  // 2 kali call AI berurutan (riset + strukturisasi)
     public int $tries = 1;
 
     // STAGE 1 (riset): compound punya browsing beneran -> dipakai untuk cari
@@ -34,12 +35,6 @@ class GenerateMaterialAiJob implements ShouldQueue
     private const RESEARCH_END_MARKER = '===SELESAI===';
     private const STRUCTURE_END_MARKER = '===SELESAI===';
 
-    // Budget token supaya gak nabrak TPM limit Groq (perkiraan kasar: 1 token ≈ 4 karakter).
-    // TPM dihitung dari prompt_tokens + max_tokens yang diminta, jadi dua-duanya harus dijaga.
-    private const MAX_RESEARCH_CHARS = 6000;   // cap hasil riset sebelum dikirim ke tahap 2
-    private const RESEARCH_MAX_TOKENS = 3000;
-    private const STRUCTURE_MAX_TOKENS = 4000;
-
     public function __construct(
         public string $generationId,
         public int $userId,
@@ -50,6 +45,39 @@ class GenerateMaterialAiJob implements ShouldQueue
         public string $topik,
         public int $aiGenerationId,
     ) {}
+
+    /**
+     * Budget token/karakter per tahap, dinaikkan untuk plan Pro/Max supaya
+     * materi yang dihasilkan lebih detail & lengkap. Nilai dijaga tetap jauh
+     * di bawah TPM limit Groq tier on_demand (~12000/request) supaya request
+     * tetap cepat & stabil, tidak mepet limit walau untuk plan tertinggi.
+     */
+    private function researchMaxTokens(): int
+    {
+        return match ($this->planKey) {
+            'max' => 5000,
+            'pro' => 4000,
+            default => 3000, // free
+        };
+    }
+
+    private function structureMaxTokens(): int
+    {
+        return match ($this->planKey) {
+            'max' => 6000,   // ⬅ UBAH dari 7000
+            'pro' => 4800,   // ⬅ UBAH dari 5500
+            default => 3500, // ⬅ UBAH dari 4000
+        };
+    }
+
+    private function maxResearchChars(): int
+    {
+        return match ($this->planKey) {
+            'max' => 7000,   // ⬅ UBAH dari 9000
+            'pro' => 6000,   // ⬅ UBAH dari 7500
+            default => 5000, // ⬅ UBAH dari 6000
+        };
+    }
 
     protected function cacheKey(): string
     {
@@ -92,7 +120,7 @@ class GenerateMaterialAiJob implements ShouldQueue
             self::RESEARCH_MODEL,
             $researchSystemPrompt,
             $researchUserPrompt,
-            self::RESEARCH_MAX_TOKENS,
+            $this->researchMaxTokens(),
             self::RESEARCH_END_MARKER
         );
 
@@ -111,7 +139,7 @@ class GenerateMaterialAiJob implements ShouldQueue
 
         // Potong riset & sumber SEBELUM dipakai di prompt tahap 2, supaya
         // prompt_tokens + max_tokens gak nabrak TPM limit Groq.
-        $riset = $this->truncateForBudget($riset, self::MAX_RESEARCH_CHARS);
+        $riset = $this->truncateForBudget($riset, $this->maxResearchChars());
         $sumber = $this->truncateForBudget($sumber, 1500);
 
         // ================= STAGE 2: STRUKTURISASI =================
@@ -130,9 +158,39 @@ class GenerateMaterialAiJob implements ShouldQueue
             self::STRUCTURE_MODEL,
             $structureSystemPrompt,
             $structureUserPrompt,
-            self::STRUCTURE_MAX_TOKENS,
+            $this->structureMaxTokens(),
             self::STRUCTURE_END_MARKER
         );
+
+        // Kalau kena 413 (prompt+max_tokens kelewat limit TPM Groq), retry sekali
+        // dengan riset dipangkas lebih agresif + max_tokens diturunkan, sebelum
+        // benar-benar gagal. Riset Bahasa Indonesia sering butuh lebih banyak token
+        // per karakter dibanding estimasi kasar, jadi kadang budget default masih
+        // bisa kelewat walau sudah diberi margin.
+        if (! $structureRaw && $structureErr instanceof \Illuminate\Http\Client\Response && $structureErr->status() === 413) {
+            Log::warning('GenerateMaterialAiJob: 413 di strukturisasi, retry dengan budget lebih kecil', [
+                'generation_id' => $this->generationId,
+            ]);
+
+            $risetDipangkas = $this->truncateForBudget($riset, (int) ($this->maxResearchChars() * 0.6));
+            $sumberDipangkas = $this->truncateForBudget($sumber, 800);
+
+            $structureUserPromptRetry = "Judul referensi dari guru (opsional, boleh diabaikan/disempurnakan jika kurang relevan): "
+                . ($this->judulHint ?: '(tidak ada, buatkan sendiri berdasarkan isi riset)') . "\n\n"
+                . "Topik/permintaan guru: {$this->topik}\n\n"
+                . "=== HASIL RISET (mentah, dari tahap pencarian) ===\n{$risetDipangkas}\n\n"
+                . "=== SUMBER YANG DITEMUKAN (mentah) ===\n" . ($sumberDipangkas ?: '(tidak ada sumber eksplisit ditemukan)') . "\n\n"
+                . "Susun materi final sesuai format yang diminta, berdasarkan hasil riset di atas.";
+
+            [$structureRaw, $structureErr] = $this->callGroq(
+                $apiKeys,
+                self::STRUCTURE_MODEL,
+                $structureSystemPrompt,
+                $structureUserPromptRetry,
+                (int) ($this->structureMaxTokens() * 0.7),
+                self::STRUCTURE_END_MARKER
+            );
+        }
 
         if (! $structureRaw) {
             $this->failFromError($structureErr, 'strukturisasi');
@@ -361,6 +419,14 @@ class GenerateMaterialAiJob implements ShouldQueue
      */
     private function buildResearchPrompt(string $kelasNama, string $mapelNama): string
     {
+        $depthNote = match ($this->planKey) {
+            'max', 'pro' => "Karena guru menggunakan paket premium, kamu boleh menggali riset lebih "
+                . "MENDALAM dan LENGKAP dari biasanya — sertakan lebih banyak contoh, detail konsep, "
+                . "dan variasi kasus, selama tetap akurat dan berdasarkan sumber nyata.",
+            default => "Kumpulkan konsep, definisi, contoh, langkah-langkah, dan rumus/angka (jika relevan) "
+                . "selengkap dan seakurat mungkin, tapi RINGKAS — fokus pada poin inti, jangan bertele-tele.",
+        };
+
         return <<<PROMPT
         Kamu adalah asisten riset dengan akses browsing web nyata. Tugasmu HANYA mencari &
         mengumpulkan informasi yang akurat dan tepercaya tentang topik yang diminta guru,
@@ -375,9 +441,7 @@ class GenerateMaterialAiJob implements ShouldQueue
         - Jika guru menyebutkan referensi spesifik di topik/prompting (mis. nama buku, penulis,
         kurikulum, modul tertentu), JADIKAN itu basis utama pencarianmu - konfirmasi isi/konsep
         dari referensi tersebut lewat browsing, jangan mengarang isinya.
-        - Kumpulkan konsep, definisi, contoh, langkah-langkah, dan rumus/angka (jika relevan)
-        selengkap dan seakurat mungkin, tapi RINGKAS - fokus pada poin inti, jangan bertele-tele,
-        karena hasil ini akan diringkas ulang di tahap berikutnya dengan budget token terbatas.
+        - {$depthNote}
         Jangan mengarang fakta, angka, rumus, atau sumber. Kalau ragu terhadap suatu detail,
         catat konsep umum yang pasti benar saja.
         - Catat SEMUA sumber yang benar-benar kamu gunakan: nama sumber dan URL asli hasil
@@ -387,8 +451,8 @@ class GenerateMaterialAiJob implements ShouldQueue
         tanpa teks pembuka apa pun, dan JANGAN bungkus jawabanmu dalam code fence (```):
 
         ===RISET===
-        (catatan riset ringkas dan padat - konsep, definisi, contoh, langkah, rumus/angka jika
-        ada. Boleh belum rapi/terformat, karena akan dirapikan di tahap berikutnya.)
+        (catatan riset - konsep, definisi, contoh, langkah, rumus/angka jika ada. Boleh belum
+        rapi/terformat, karena akan dirapikan di tahap berikutnya.)
         ===SUMBER===
         [1] Nama sumber - URL
         [2] Nama sumber - URL
@@ -405,99 +469,26 @@ class GenerateMaterialAiJob implements ShouldQueue
      */
     private function buildStructurePrompt(string $kelasNama, string $mapelNama): string
     {
+        $depthNote = match ($this->planKey) {
+            'max', 'pro' => "Guru menggunakan paket premium — tulis materi dengan LEBIH DETAIL dan "
+                . "LENGKAP dari biasanya: lebih banyak contoh konkret, penjelasan tiap langkah, dan "
+                . "elaborasi konsep, selama tetap berdasarkan hasil riset yang diberikan (jangan mengarang).",
+            default => "Tulis materi secara jelas dan cukup ringkas — fokus pada inti konsep tanpa bertele-tele.",
+        };
+
         $template = <<<'PROMPT'
-            Kamu adalah penulis materi pembelajaran untuk siswa di Indonesia. Kamu TIDAK punya
-            akses browsing - kamu akan diberi HASIL RISET mentah (sudah dicari & dikonfirmasi
-            akurat oleh proses sebelumnya) beserta daftar sumbernya. Tugasmu MENGOLAH riset itu
-            menjadi materi yang rapi, terstruktur, dan siap dibaca siswa - BUKAN mencari info baru
-            atau menambah fakta yang tidak ada di riset.
+            Kamu adalah penulis materi pembelajaran untuk siswa di Indonesia. ...
+
+            __DEPTH_NOTE__
 
             Tulis materi untuk tingkat kelas "__KELAS__" pada mata pelajaran "__MAPEL__".
-
-            Aturan sudut pandang & audiens (SANGAT PENTING):
-            - Materi yang kamu tulis adalah KONTEN YANG LANGSUNG DIBACA SISWA - bukan penjelasan
-            atau saran untuk guru tentang apa yang perlu diajarkan.
-            - Tulis seolah kamu sedang mengajar siswa secara langsung: jelaskan konsepnya,
-            definisinya, contohnya, langkah-langkahnya, langsung ke siswa.
-            - JANGAN PERNAH menulis dalam bentuk instruksi/saran ke guru, misalnya: "Guru dapat
-            menjelaskan kepada siswa bahwa...", "Berikut materi yang bisa Bapak/Ibu berikan ke
-            siswa...", "Ajarkan siswa tentang...".
-            - Boleh menyapa siswa langsung (mis. "Kalian akan mempelajari...") atau menulis dengan
-            gaya buku pelajaran/ensiklopedia yang netral.
-
-            Aturan penggunaan hasil riset (SANGAT PENTING):
-            - Dasarkan SELURUH isi materi HANYA pada HASIL RISET yang diberikan. Jangan menambah
-            fakta, angka, atau rumus yang tidak ada di riset tersebut.
-            - Jika hasil riset terasa kurang lengkap atau terpotong untuk sebagian topik, jelaskan
-            bagian itu secara umum/konseptual saja, jangan mengarang detail spesifik.
-            - Rapikan, susun ulang, dan tulis ulang dengan bahasamu sendiri (jangan copy-paste
-            mentah) agar enak dibaca siswa sesuai tingkat kelasnya.
-
-            Aturan sumber & footnote (WAJIB):
-            - Ambil daftar SUMBER yang diberikan, rapikan penomorannya, dan taruh sebagai catatan
-            kaki bernomor di BAGIAN PALING AKHIR deskripsi (format: [1] Nama sumber - URL/keterangan),
-            terpisah dari isi materi untuk siswa di atasnya. Ini ditujukan agar guru bisa mengecek
-            keakuratan materi.
-            - Jangan mengarang sumber baru yang tidak ada di daftar yang diberikan.
-
-            Aturan judul (SANGAT PENTING):
-            - Judul HARUS mencerminkan topik spesifik yang benar-benar dibahas di isi materi -
-            baca dulu hasil riset & materi yang kamu susun, baru simpulkan judul paling relevan
-            dan spesifik untuknya.
-            - JANGAN PERNAH memakai judul generik seperti "Materi Pembelajaran", "Materi Ajar".
-            Judul harus title case, singkat, jelas, dan menyebut topik konkretnya.
-            - Judul referensi dari guru (jika ada) boleh dipakai sebagai starting point, tapi
-            sempurnakan atau ganti kalau ada judul yang lebih akurat mencerminkan isi materi.
-
-            Aturan bahasa:
-            - Default: gunakan Bahasa Indonesia.
-            - KECUALI mata pelajaran "__MAPEL__" adalah pelajaran bahasa asing (mis.
-            English/Bahasa Inggris, Bahasa Arab, Mandarin, dll) - dalam kasus ini tulis materi
-            dalam bahasa yang diajarkan tersebut.
-            - ATAU jika guru secara eksplisit meminta bahasa tertentu di topik/prompting - ikuti
-            permintaan guru itu, prioritaskan di atas aturan default manapun.
-
-            Aturan format deskripsi (WAJIB, output Markdown):
-            - Gunakan heading (## atau ###) hanya untuk bagian besar.
-            - Boleh pakai tabel Markdown (|) untuk langkah-langkah, dengan header jelas. Di dalam
-            sel tabel hanya teks biasa, boleh <br> untuk baris baru, JANGAN taruh list/heading/HTML
-            lain di sel tabel.
-            - Di luar tabel, gunakan list bernomor (1. 2. 3.) atau list poin (-).
-            - Gunakan **bold** secukupnya untuk istilah penting saja.
-
-            Aturan rumus & notasi matematika (WAJIB, gunakan LaTeX):
-            - Untuk rumus matematika, GUNAKAN sintaks LaTeX, bukan karakter Unicode manual.
-            - Rumus inline (di tengah kalimat): bungkus dengan tanda dolar tunggal, contoh: $x^2 + y^2 = z^2$
-            - Rumus blok (berdiri sendiri, biasanya rumus penting/panjang): bungkus dengan dolar ganda,
-            contoh:
-            $$\int_{0}^{1} x^2 \, dx = \frac{1}{3}$$
-            - Gunakan sintaks LaTeX standar: \frac{a}{b} untuk pecahan, \sqrt{x} untuk akar, ^{...} untuk
-            pangkat, _{...} untuk subscript, \sum \int \lim \times \div \leq \geq \neq \pi \infty dst.
-            - JANGAN campur LaTeX dengan karakter Unicode pada rumus yang sama.
-            - Untuk mata pelajaran non-matematika/sains yang kadang butuh notasi (mis. Kimia, Fisika),
-            tetap gunakan LaTeX yang sama.
-
-            Aturan kode program (kalau topik terkait pemrograman/koding):
-            - Gunakan fenced code block Markdown dengan penanda bahasa, contoh:
-        ```python
-            print("halo dunia")
-        ```
-            - Jangan gunakan code block untuk teks biasa yang bukan kode — hanya untuk kode program,
-            perintah terminal, atau syntax teknis yang memang perlu tampil monospace.
-
-            WAJIB jawab PERSIS dengan format di bawah ini, termasuk baris penanda "===...===" apa
-            adanya. JANGAN tulis kalimat pembuka, basa-basi, atau penjelasan apa pun di luar format
-            ini - mulai LANGSUNG dari baris "===JUDUL===" tanpa teks apa pun sebelumnya, dan JANGAN
-            bungkus jawabanmu dalam code fence (```):
-
-            ===JUDUL===
-            (judul singkat, spesifik, dan relevan dengan isi materi, title case)
-            ===DESKRIPSI===
-            (isi deskripsi materi Markdown di sini, ditujukan langsung untuk dibaca siswa, dengan
-            catatan kaki sumber di paling akhir)
-            ===SELESAI===
+            ...
         PROMPT;
 
-        return str_replace(['__KELAS__', '__MAPEL__'], [$kelasNama, $mapelNama], $template);
+        return str_replace(
+            ['__KELAS__', '__MAPEL__', '__DEPTH_NOTE__'],
+            [$kelasNama, $mapelNama, $depthNote],
+            $template
+        );
     }
 }
