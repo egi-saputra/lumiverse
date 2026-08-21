@@ -29,13 +29,23 @@ class GenerateQuizAiJob implements ShouldQueue
     private const STRUCTURE_MODEL = 'openai/gpt-oss-120b';
     private const END_MARKER = '===SELESAI===';
 
-    // Jumlah soal per 1x panggilan API, supaya prompt_tokens + max_tokens gak
-    // nabrak TPM limit Groq walau user minta soal dalam jumlah besar.
-    private const BATCH_SIZE = 20;
+    /**
+     * Ukuran batch disesuaikan jumlah opsi PG — makin banyak opsi, makin besar
+     * token per soal, jadi batch harus lebih kecil supaya prompt + max_tokens
+     * tetap aman di bawah limit TPM per-org (8000).
+     */
+    private function batchSize(): int
+    {
+        return match ($this->jumlahOpsiPg()) {
+            5 => 10,
+            3 => 15,
+            default => 12, // 4 opsi
+        };
+    }
 
-    private const MAX_SOURCE_CHARS = 6000;
+    private const MAX_SOURCE_CHARS = 5000;
     private const RESEARCH_MAX_TOKENS = 3000;
-    private const MAX_SOURCE_CHARS_SUPPLEMENT = 9000;
+    private const MAX_SOURCE_CHARS_SUPPLEMENT = 6000;
     private const MAX_PDF_CHARS = 8000;
 
     public function __construct(
@@ -200,7 +210,7 @@ class GenerateQuizAiJob implements ShouldQueue
         }
 
         // ================= Generate soal per-batch =================
-        $batches = $this->splitIntoBatches($this->jumlahPg, $this->jumlahEssay, self::BATCH_SIZE);
+        $batches = $this->splitIntoBatches($this->jumlahPg, $this->jumlahEssay, $this->batchSize());
 
         $allQuestions = [];
 
@@ -245,9 +255,36 @@ class GenerateQuizAiJob implements ShouldQueue
                 self::STRUCTURE_MODEL,
                 $systemPrompt,
                 $userPrompt,
-                $this->estimateMaxTokens($batch['total']),
+                $this->estimateMaxTokens($batch['pg'], $batch['essay']),
                 self::END_MARKER
             );
+
+            // Kalau kena 413 (request kelewat limit TPM), retry sekali dengan source
+            // dipangkas + max_tokens diturunkan, sebelum batch ini dianggap gagal/di-skip.
+            if (! $raw && $err instanceof \Illuminate\Http\Client\Response && $err->status() === 413) {
+                Log::warning('GenerateQuizAiJob: 413 di batch, retry dengan budget lebih kecil', [
+                    'generation_id' => $this->generationId,
+                    'batch_index' => $i,
+                ]);
+
+                $sourceContentRetry = $this->truncateForBudget($sourceContent, (int) (mb_strlen($sourceContent) * 0.6));
+
+                $userPromptRetry = "Topik/instruksi tambahan dari guru: " . ($this->topik ?: '(tidak ada, ikuti isi konten sumber di bawah)') . "\n\n"
+                    . "=== {$sourceLabel} ===\n{$sourceContentRetry}\n"
+                    . $existingQuestionsNote . "\n"
+                    . "Buatkan TEPAT {$batch['pg']} soal Pilihan Ganda dan {$batch['essay']} soal Essay "
+                    . "berdasarkan konten sumber di atas. Total {$batch['total']} soal untuk batch ini saja. "
+                    . "WAJIB unik dan tidak boleh mirip dengan soal yang sudah dibuat sebelumnya (lihat daftar di atas jika ada).";
+
+                [$raw, $err] = $this->callGroq(
+                    $apiKeys,
+                    self::STRUCTURE_MODEL,
+                    $systemPrompt,
+                    $userPromptRetry,
+                    (int) ($this->estimateMaxTokens($batch['pg'], $batch['essay']) * 0.7),
+                    self::END_MARKER
+                );
+            }
 
             if (! $raw) {
                 // Kalau batch sebelumnya sudah menghasilkan sebagian soal, simpan itu saja
@@ -354,12 +391,18 @@ class GenerateQuizAiJob implements ShouldQueue
     }
 
     /**
-     * Perkiraan kasar max_tokens per batch: soal PG butuh lebih banyak token
-     * (opsi jawaban A-E) dibanding essay. Dibatasi supaya gak nabrak TPM limit.
+     * Perkiraan max_tokens per batch, memperhitungkan jumlah opsi PG (soal
+     * 5 opsi butuh output lebih banyak per soal dibanding 3 opsi).
      */
-    private function estimateMaxTokens(int $questionCount): int
+    private function estimateMaxTokens(int $pgCount, int $essayCount): int
     {
-        return min(7000, 800 + ($questionCount * 220));
+        $opsiCount = $this->jumlahOpsiPg();
+        $perPg = 100 + ($opsiCount * 45);   // ≈235 (3 opsi) s.d. ≈325 (5 opsi)
+        $perEssay = 180;
+
+        $tokens = 500 + ($pgCount * $perPg) + ($essayCount * $perEssay);
+
+        return min(6000, $tokens); // diturunkan dari cap 7000 sebelumnya, kasih headroom lebih
     }
 
     /**
