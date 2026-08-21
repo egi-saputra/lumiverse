@@ -258,7 +258,10 @@ class GenerateMaterialAiJob implements ShouldQueue
                 $content = $response->json('choices.0.message.content');
                 $finishReason = $response->json('choices.0.finish_reason');
 
-                if (! $content || ! str_contains($content, $endMarker)) {
+                $hasMarker = $content && str_contains($content, $endMarker);
+                $looksComplete = $content && str_contains($content, '===DESKRIPSI===') && $finishReason === 'stop';
+
+                if (! $content || (! $hasMarker && ! $looksComplete)) {
                     Log::warning("Groq key #{$index} model {$model} output tidak lengkap/tanpa marker", [
                         'finish_reason' => $finishReason,
                     ]);
@@ -476,19 +479,31 @@ class GenerateMaterialAiJob implements ShouldQueue
             default => "Tulis materi secara jelas dan cukup ringkas — fokus pada inti konsep tanpa bertele-tele.",
         };
 
-        $template = <<<'PROMPT'
-            Kamu adalah penulis materi pembelajaran untuk siswa di Indonesia. ...
+        return <<<PROMPT
+        Kamu adalah penulis materi pembelajaran untuk siswa di Indonesia. Tugasmu MENGOLAH
+        hasil riset mentah (dari tahap sebelumnya) menjadi materi yang rapi, terstruktur, dan
+        siap dibaca siswa kelas "{$kelasNama}" pada mata pelajaran "{$mapelNama}". Kamu TIDAK
+        browsing — hanya boleh memakai fakta dari hasil riset yang diberikan, jangan mengarang.
 
-            __DEPTH_NOTE__
+        Aturan penulisan:
+        - {$depthNote}
+        - Gunakan bahasa yang jelas dan sesuai tingkat kelas "{$kelasNama}".
+        - Susun dengan struktur rapi (boleh pakai heading/subheading, poin-poin, contoh).
+        - Tentukan JUDUL final materi (boleh pakai/menyempurnakan judul referensi dari guru
+        kalau relevan, atau buat sendiri kalau tidak ada/kurang cocok).
+        - Cantumkan sumber (footnote) di akhir DESKRIPSI berdasarkan "SUMBER YANG DITEMUKAN"
+        yang diberikan, kalau ada.
 
-            Tulis materi untuk tingkat kelas "__KELAS__" pada mata pelajaran "__MAPEL__".
-            ...
+        WAJIB jawab PERSIS dengan format di bawah ini, mulai LANGSUNG dari baris "===JUDUL==="
+        tanpa teks pembuka apa pun, dan JANGAN bungkus jawabanmu dalam code fence (```).
+        Kamu WAJIB selalu mengakhiri jawabanmu dengan baris "===SELESAI===" sebagai penanda
+        bahwa materi sudah tuntas ditulis — jangan berhenti menulis sebelum baris itu ditulis:
+
+        ===JUDUL===
+        (judul final materi, satu baris)
+        ===DESKRIPSI===
+        (isi materi lengkap, terstruktur, siap dibaca siswa, termasuk footnote sumber di akhir)
+        ===SELESAI===
         PROMPT;
-
-        return str_replace(
-            ['__KELAS__', '__MAPEL__', '__DEPTH_NOTE__'],
-            [$kelasNama, $mapelNama, $depthNote],
-            $template
-        );
     }
 }
