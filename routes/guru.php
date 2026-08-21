@@ -57,6 +57,8 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('guru')->name('guru
         ->name('bank-soal.createAi');
     Route::post('/bank-soal/generate-ai', [QuestAiController::class, 'generateAi'])
         ->name('bank-soal.generateAi');
+    Route::post('/bank-soal/check-ai-cost', [QuestAiController::class, 'checkAiCost'])
+        ->name('bank-soal.check-ai-cost');
     Route::post('/bank-soal/generate-ai-status/{generationId}', [QuestAiController::class, 'generateAiStatus'])
         ->name('bank-soal.generateAiStatus');
 

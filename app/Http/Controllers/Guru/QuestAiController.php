@@ -8,6 +8,7 @@ use App\Models\Materi; // ASUMSI: sesuaikan namespace kalau nama model materi be
 use App\Models\Soal;
 use App\Services\Ai\AiGenerationQuotaService;
 use App\Services\Ai\MateriAdequacyChecker;
+use App\Services\Ai\MateriContentExtractor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -17,10 +18,12 @@ use Inertia\Inertia;
 class QuestAiController extends Controller
 {
     protected AiGenerationQuotaService $quotaService;
+    protected MateriContentExtractor $extractor;
 
-    public function __construct(AiGenerationQuotaService $quotaService)
+    public function __construct(AiGenerationQuotaService $quotaService, MateriContentExtractor $extractor)
     {
         $this->quotaService = $quotaService;
+        $this->extractor = $extractor;
     }
 
     /**
@@ -131,7 +134,8 @@ class QuestAiController extends Controller
         // - Materi referensi dipilih DAN kontennya cukup untuk jumlah soal yang diminta = 3 token.
         // - Tanpa materi, ATAU materi dipilih tapi kontennya terlalu sedikit untuk jumlah soal
         //   yang diminta (AI perlu riset tambahan dari web untuk melengkapi) = 6 token.
-        $materiCukup = MateriAdequacyChecker::cukup($materis, $totalSoal);
+        $totalContentChars = $this->extractor->totalContentChars($materis);
+        $materiCukup = MateriAdequacyChecker::cukupFromCharCount($totalContentChars, $totalSoal);
         $cost = $materiCukup ? 3 : 6;
 
         $remaining = $this->quotaService->remainingForCurrentMonth($planKey, $user->id);
@@ -176,6 +180,44 @@ class QuestAiController extends Controller
         return response()->json([
             'generation_id' => $generationId,
             'cost' => $cost,
+        ]);
+    }
+
+    public function checkAiCost(Request $request)
+    {
+        $request->validate([
+            'materi_ids' => 'nullable|array',
+            'materi_ids.*' => 'integer|exists:materi,id',
+            'jumlah_pg' => 'required|integer|min:0|max:100',
+            'jumlah_essay' => 'required|integer|min:0|max:100',
+        ]);
+
+        $user = Auth::user();
+        $totalSoal = (int) $request->jumlah_pg + (int) $request->jumlah_essay;
+
+        $materiIds = array_values(array_unique(array_filter((array) $request->materi_ids)));
+
+        if (empty($materiIds)) {
+            return response()->json([
+                'cost' => 6,
+                'materi_cukup' => null,
+            ]);
+        }
+
+        $materis = Materi::whereIn('id', $materiIds)
+            ->where('user_id', $user->id)
+            ->get();
+
+        if ($materis->count() !== count($materiIds)) {
+            return response()->json(['message' => 'Salah satu materi referensi tidak ditemukan.'], 404);
+        }
+
+        $totalContentChars = $this->extractor->totalContentChars($materis);
+        $materiCukup = MateriAdequacyChecker::cukupFromCharCount($totalContentChars, $totalSoal);
+
+        return response()->json([
+            'cost' => $materiCukup ? 3 : 6,
+            'materi_cukup' => $materiCukup,
         ]);
     }
 

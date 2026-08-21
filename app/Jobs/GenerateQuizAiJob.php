@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Services\Ai\MateriAdequacyChecker;
+use App\Services\Ai\MateriContentExtractor;
 
 class GenerateQuizAiJob implements ShouldQueue
 {
@@ -30,11 +31,12 @@ class GenerateQuizAiJob implements ShouldQueue
 
     // Jumlah soal per 1x panggilan API, supaya prompt_tokens + max_tokens gak
     // nabrak TPM limit Groq walau user minta soal dalam jumlah besar.
-    private const BATCH_SIZE = 8;
+    private const BATCH_SIZE = 20;
 
     private const MAX_SOURCE_CHARS = 6000;
     private const RESEARCH_MAX_TOKENS = 3000;
     private const MAX_SOURCE_CHARS_SUPPLEMENT = 9000;
+    private const MAX_PDF_CHARS = 8000;
 
     public function __construct(
         public string $generationId,
@@ -65,7 +67,7 @@ class GenerateQuizAiJob implements ShouldQueue
         ], $extra), now()->addMinutes(15));
     }
 
-    public function handle(): void
+    public function handle(MateriContentExtractor $extractor): void
     {
         $this->updateStage('analyzing', 'Menyiapkan konteks soal...');
 
@@ -92,9 +94,20 @@ class GenerateQuizAiJob implements ShouldQueue
             // di bawah MAX_SOURCE_CHARS walau user pilih banyak materi sekaligus.
             $budgetPerMateri = (int) floor(self::MAX_SOURCE_CHARS / max(1, $materis->count()));
 
-            $materiContent = $materis->map(function ($m) use ($budgetPerMateri) {
-                $isi = $this->truncateForBudget((string) $m->deskripsi, $budgetPerMateri);
-                return "--- Materi: \"{$m->judul}\" ---\n{$isi}";
+            $materiContent = '';
+            $totalContentChars = 0;
+
+            $materiContent = $materis->map(function ($m) use ($budgetPerMateri, &$totalContentChars, $extractor) {
+                $deskripsi = trim((string) $m->deskripsi);
+                $pdfText = $extractor->extractPdfText($m);
+
+                $gabungan = trim($deskripsi . ($pdfText ? "\n\n" . $pdfText : ''));
+                $totalContentChars += mb_strlen($gabungan);
+
+                $isi = $this->truncateForBudget($gabungan, $budgetPerMateri);
+                $sumberNote = $pdfText ? ' (termasuk isi lampiran PDF)' : '';
+
+                return "--- Materi: \"{$m->judul}\"{$sumberNote} ---\n{$isi}";
             })->implode("\n\n");
 
             $materiContent = trim($materiContent);
@@ -105,7 +118,7 @@ class GenerateQuizAiJob implements ShouldQueue
                 return;
             }
 
-            $materiCukup = MateriAdequacyChecker::cukup($materis, $totalSoal);
+            $materiCukup = MateriAdequacyChecker::cukupFromCharCount($totalContentChars, $totalSoal);
 
             if ($materiCukup) {
                 // Konten materi dianggap cukup untuk jumlah soal yang diminta.
@@ -193,16 +206,39 @@ class GenerateQuizAiJob implements ShouldQueue
 
         foreach ($batches as $i => $batch) {
             $doneCount = count($allQuestions);
-            // $this->updateStage('parsing', "Menyusun soal ({$doneCount}/{$totalSoal})...");
             $this->updateStage('parsing', "Mulai menyusun soal...");
 
             $systemPrompt = $this->buildQuestionPrompt($soal, $sourceLabel);
+
+            // Ringkasan soal yang sudah dibuat di batch sebelumnya, biar AI tidak mengulang.
+            // Dibatasi ke 25 soal terakhir supaya prompt tidak membengkak linear untuk
+            // total soal besar (sampai 100 soal / banyak batch).
+            $existingQuestionsNote = '';
+            if (! empty($allQuestions)) {
+                $maxShown = 25;
+                $allSoalTexts = collect($allQuestions)->pluck('soal');
+                $shown = $allSoalTexts->count() > $maxShown
+                    ? $allSoalTexts->slice(-$maxShown)->values()
+                    : $allSoalTexts;
+
+                $existingList = $shown
+                    ->map(fn ($q) => "- " . mb_substr(trim($q), 0, 100))
+                    ->implode("\n");
+
+                $totalNote = $allSoalTexts->count() > $maxShown
+                    ? " (menampilkan {$maxShown} soal TERAKHIR dari total {$allSoalTexts->count()} yang sudah dibuat)"
+                    : '';
+
+                $existingQuestionsNote = "\n\nSOAL YANG SUDAH DIBUAT SEBELUMNYA{$totalNote} (JANGAN DIULANG, buat soal dengan "
+                    . "sudut pandang/sub-topik/jenis pertanyaan yang BERBEDA dari daftar ini):\n{$existingList}\n";
+            }
+
             $userPrompt = "Topik/instruksi tambahan dari guru: " . ($this->topik ?: '(tidak ada, ikuti isi konten sumber di bawah)') . "\n\n"
-                . "=== {$sourceLabel} ===\n{$sourceContent}\n\n"
+                . "=== {$sourceLabel} ===\n{$sourceContent}\n"
+                . $existingQuestionsNote . "\n"
                 . "Buatkan TEPAT {$batch['pg']} soal Pilihan Ganda dan {$batch['essay']} soal Essay "
-                . "berdasarkan konten sumber di atas. Total {$batch['total']} soal untuk batch ini saja "
-                . "(soal lain akan diminta di panggilan terpisah, jadi jangan buat soal yang mirip/duplikat "
-                . "dengan asumsi soal sebelumnya kalau ada).";
+                . "berdasarkan konten sumber di atas. Total {$batch['total']} soal untuk batch ini saja. "
+                . "WAJIB unik dan tidak boleh mirip dengan soal yang sudah dibuat sebelumnya (lihat daftar di atas jika ada).";
 
             [$raw, $err] = $this->callGroq(
                 $apiKeys,
@@ -343,7 +379,7 @@ class GenerateQuizAiJob implements ShouldQueue
                             ['role' => 'system', 'content' => $systemPrompt],
                             ['role' => 'user', 'content' => $userPrompt],
                         ],
-                        'temperature' => 0.3,
+                        'temperature' => 0.7,
                         'max_tokens' => $maxTokens,
                     ]);
 
@@ -614,6 +650,7 @@ class GenerateQuizAiJob implements ShouldQueue
         - Jawaban benar untuk PG ditulis sebagai key opsi: {$jawabanKeyList} - BUKAN teks jawabannya.
         - Untuk Essay, "jawaban_benar" diisi kunci jawaban singkat/rubrik jawaban yang benar.
         - Variasikan tingkat kesulitan & jenis pertanyaan (jangan semua soal template yang sama).
+        - Semua soal dalam batch ini WAJIB membahas sub-topik atau aspek yang BERBEDA satu sama lain - dua soal TIDAK BOLEH menanyakan hal yang sama walau dengan kalimat berbeda.
         - Jangan membuat soal yang jawabannya bisa ditebak tanpa membaca konten (mis. opsi lain
         jelas tidak masuk akal).
         - Tulis soal langsung ke bahasa yang dipakai konten sumber (default Bahasa Indonesia,

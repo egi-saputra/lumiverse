@@ -87,24 +87,10 @@ class QuestController extends Controller
 
         $file     = $request->file('lampiran_file');
         $filename = time() . '_' . $file->getClientOriginalName();
-        $file->storeAs('public/bank_soal', $filename);
 
-        return 'storage/bank_soal/' . $filename;
+        // simpan langsung ke r2, tanpa prefix 'public/'
+        return $file->storeAs('bank_soal', $filename, 'r2'); // return value = key asli
     }
-
-    // ─── Hapus file lampiran lama ─────────────────────────────────────────────
-
-    private function deleteLampiran(?string $path): void
-    {
-        if (!$path) return;
-
-        $storagePath = str_replace('storage/', 'public/', $path);
-        if (Storage::exists($storagePath)) {
-            Storage::delete($storagePath);
-        }
-    }
-
-    // ─── Simpan lampiran opsi jawaban ─────────────────────────────────────────
 
     private function storeOpsiLampiran(Request $request, string $key): ?string
     {
@@ -113,9 +99,17 @@ class QuestController extends Controller
 
         $file     = $request->file($field);
         $filename = time() . '_' . $key . '_' . $file->getClientOriginalName();
-        $file->storeAs('public/bank_soal', $filename);
 
-        return 'storage/bank_soal/' . $filename;
+        return $file->storeAs('bank_soal', $filename, 'r2');
+    }
+
+    private function deleteLampiran(?string $path): void
+    {
+        if (!$path) return;
+
+        if (Storage::disk('r2')->exists($path)) {
+            Storage::disk('r2')->delete($path);
+        }
     }
 
     private function deleteAllOpsiLampiran(BankSoal $bankSoal): void

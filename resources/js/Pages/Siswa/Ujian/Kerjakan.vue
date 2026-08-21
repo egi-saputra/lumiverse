@@ -20,12 +20,8 @@ const props = defineProps({
 
 /* ================= TYPE & LINK ================= */
 const directLampiranLink = computed(() => {
-    const url = props.quest?.link_lampiran
-    if (!url) return null
-    if (props.quest.jenis_lampiran === 'Gambar') {
-        return `/storage/bank_soal/${url.split('/').pop()}`
-    }
-    return null
+    if (props.quest?.jenis_lampiran !== 'Gambar') return null
+    return props.quest?.link_lampiran_url ?? null
 })
 
 const isEssay = computed(() => props.quest?.tipe_soal === 'Essay')
@@ -522,8 +518,8 @@ const showFullscreenGate = ref(true)
                                             : 'text-gray-700 dark:text-gray-300']" />
 
                                 <!-- Gambar opsi (hanya render jika ada) -->
-                                <img v-if="quest['opsi_' + opsi.toLowerCase() + '_lampiran']"
-                                    :src="`/${quest['opsi_' + opsi.toLowerCase() + '_lampiran']}`"
+                                <img v-if="quest['opsi_' + opsi.toLowerCase() + '_lampiran_url']"
+                                    :src="quest['opsi_' + opsi.toLowerCase() + '_lampiran_url']"
                                     :alt="`Gambar opsi ${opsi}`"
                                     class="max-h-40 max-w-xs rounded-lg object-contain border pointer-events-none select-none"
                                     :class="jawaban === opsi
