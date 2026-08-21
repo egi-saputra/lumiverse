@@ -34,6 +34,8 @@ class HandleInertiaRequests extends Middleware
         // ── Owner (guard 'owner', hanya valid di context central) ─
         $owner = ! $isTenant ? Auth::guard('owner')->user() : null;
 
+        $isUjianRoute = $request->routeIs('siswa.ujian.*');
+
         // ── Profil sekolah (tenant-only) ──────────────────────────
         // $profil = $isTenant ? cache()->remember('profil_sekolah', now()->addWeek(), fn() => ProfilSekolah::first()) : null;
 
