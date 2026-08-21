@@ -34,8 +34,6 @@ class HandleInertiaRequests extends Middleware
         // ── Owner (guard 'owner', hanya valid di context central) ─
         $owner = ! $isTenant ? Auth::guard('owner')->user() : null;
 
-        $isUjianRoute = $request->routeIs('siswa.ujian.*');
-
         // ── Profil sekolah (tenant-only) ──────────────────────────
         // $profil = $isTenant ? cache()->remember('profil_sekolah', now()->addWeek(), fn() => ProfilSekolah::first()) : null;
 
@@ -80,30 +78,26 @@ class HandleInertiaRequests extends Middleware
         }
 
         // ── Pengumuman (tenant-only) ──────────────────────────────
-        $announcements = function () use ($isTenant, $user, $isUjianRoute, $kelasId) {
+        $announcements = function () use ($isTenant, $user, $kelasId) {
             if (!$isTenant || !$user) return collect();
 
             $role     = strtolower($user->role ?? 'siswa');
-            $ttl      = $isUjianRoute ? 300 : 60;
-            $cacheKey = "pengumuman:role:{$role}:kelas:{$kelasId}";
 
-            return Cache::remember($cacheKey, $ttl, function () use ($role, $kelasId) {
-                return Pengumuman::latest()
-                    ->get()
-                    ->filter(function ($item) use ($role, $kelasId) {
-                        if ($item->penerima === 'semua')   return true;
-                        if ($item->penerima === $role)     return true;
+            return Pengumuman::latest()
+                ->get()
+                ->filter(function ($item) use ($role, $kelasId) {
+                    if ($item->penerima === 'semua')   return true;
+                    if ($item->penerima === $role)     return true;
 
-                        if ($role === 'siswa' && $item->penerima === 'siswa') {
-                            return $item->kelas_id
-                                ? $item->kelas_id == $kelasId
-                                : true;
-                        }
+                    if ($role === 'siswa' && $item->penerima === 'siswa') {
+                        return $item->kelas_id
+                            ? $item->kelas_id == $kelasId
+                            : true;
+                    }
 
-                        return false;
-                    })
-                    ->values();
-            });
+                    return false;
+                })
+                ->values();
         };
 
         return [

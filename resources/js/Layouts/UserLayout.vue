@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { usePage, router } from '@inertiajs/vue3'
 import { ToastAlert } from '@/Composables/ToastAlert.js'
 import { onClickOutside } from '@vueuse/core'
@@ -97,6 +97,19 @@ const goToAnnouncement = id => {
 }
 
 onClickOutside(notifDropdownRef, () => (showingNotifDropdown.value = false), { ignore: [bellButtonRef] })
+
+const refreshAnnouncements = () => {
+    if (!page.props.auth?.user) return
+
+    router.reload({
+        only: ['announcements'],
+        preserveState: true,
+        preserveScroll: true,
+    })
+}
+
+const announcementRefreshTimer = setInterval(refreshAnnouncements, 30000)
+onUnmounted(() => clearInterval(announcementRefreshTimer))
 
 /* ─── Nav Dropdown ───────────────────────────────────────── */
 const showingNavigationDropdown = ref(false)

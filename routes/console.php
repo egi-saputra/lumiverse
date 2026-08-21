@@ -11,6 +11,7 @@ Schedule::command('subscriptions:revert-expired-to-free')->hourly();
 Schedule::command('subscriptions:cleanup-excess-users')->dailyAt('02:00');
 Schedule::command('ai-invoices:expire-stale')->everyFifteenMinutes();
 Schedule::command('sitemap:generate')->daily();
+Schedule::command('school:reset-journal-attendance')->cron('5 0 1 1,7 *');
 schedule::command('ai-invoices:expire-stale')->everyFifteenMinutes();
 
 Artisan::command('inspire', function () {

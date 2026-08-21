@@ -16,6 +16,7 @@ use App\Http\Controllers\PesanController;
 use App\Http\Controllers\PublicAbsensiAnalyticsController;
 use App\Http\Controllers\TenantAssetController;
 use App\Http\Controllers\Siswa\FormController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
@@ -112,25 +113,11 @@ Route::get('/dashboard', function () {
 
 // ── Dashboard Role Auth ──────────────────────────────────────
 Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
-    Route::get('/admin/dashboard', function () {
-        $user = Auth::user();
+    Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+        ->name('admin.dashboard')->middleware(['auth']);
 
-        $usersCount = [
-            'proktor' => User::where('role', 'proktor')->count(),
-            'guru'    => User::where('role', 'guru')->count(),
-            'siswa'   => User::where('role', 'siswa')->count(),
-            'user'   => User::where('role', 'user')->count(),
-            'total'   => User::count(),
-        ];
-
-        return Inertia::render('Admin/Dashboard', [
-            'auth' => [
-                'user' => $user,
-                'role' => $user->role,
-            ],
-            'usersCount' => $usersCount,
-        ]);
-    })->name('admin.dashboard')->middleware(['auth']);
+    Route::delete('/admin/dashboard/reset/{resource}', [AdminDashboardController::class, 'reset'])
+        ->name('admin.dashboard.reset')->middleware(['auth', 'role:admin']);
 
     Route::get('/guru/dashboard', function () {
         $user = Auth::user();
