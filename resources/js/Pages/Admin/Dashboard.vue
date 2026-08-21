@@ -170,7 +170,7 @@ const resetResource = () => {
                 <div
                     class="flex shrink-0 items-center gap-2 self-start rounded-full border border-slate-700/60 bg-white/[0.04] px-3 py-1.5 text-xs text-slate-400 sm:self-auto">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                    <span>Data tenant aktif</span>
+                    <span>Data sekolah aktif</span>
                     <span class="text-slate-600">·</span>
                     <span class="font-mono tabular-nums">{{ formatDate(new Date()) }}</span>
                 </div>
@@ -185,7 +185,7 @@ const resetResource = () => {
                 { label: 'Guru', value: usersCount.guru, icon: AcademicCapIcon, tint: 'emerald' },
                 { label: 'Siswa', value: usersCount.siswa, icon: BookUserIcon, tint: 'blue' },
                 { label: 'Materi', value: materials.total, icon: BookOpenIcon, tint: 'cyan' },
-                { label: 'Quiz', value: quizzes.total, icon: FileQuestionIcon, tint: 'rose' },
+                { label: 'Quiz / Soal', value: quizzes.total, icon: FileQuestionIcon, tint: 'rose' },
             ]" :key="stat.label" class="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4
                    shadow-sm transition hover:-translate-y-0.5 hover:shadow-md
                    dark:border-slate-700 dark:bg-slate-900">
@@ -227,7 +227,7 @@ const resetResource = () => {
                         <div>
                             <h2 class="font-bold text-slate-900 dark:text-white">Materi terbaru</h2>
                             <p class="text-xs text-slate-500">{{ formatNumber(materials.total) }} materi dan
-                                pembuatnya</p>
+                                authornya</p>
                         </div>
                     </div>
                     <button title="Reset seluruh materi" @click="openResetModal('materials', 'Materi')"
@@ -240,7 +240,7 @@ const resetResource = () => {
                         class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{ item.title
-                            }}</p>
+                                }}</p>
                             <p class="truncate text-xs text-slate-500">{{ item.author }} · {{ item.class }} · {{
                                 item.subject }}
                             </p>
@@ -263,7 +263,7 @@ const resetResource = () => {
                         </span>
                         <div>
                             <h2 class="font-bold text-slate-900 dark:text-white">Bank soal & evaluasi</h2>
-                            <p class="text-xs text-slate-500">Siapa pembuatnya, status, dan jumlah butir</p>
+                            <p class="text-xs text-slate-500">Author, status, dan jumlah butir soal</p>
                         </div>
                     </div>
                     <button title="Reset seluruh bank soal" @click="openResetModal('question-bank', 'Bank soal')"
@@ -276,7 +276,7 @@ const resetResource = () => {
                         class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{ item.title
-                            }}</p>
+                                }}</p>
                             <p class="truncate text-xs text-slate-500">{{ item.author }} · {{ item.subject }} · Kelas
                                 {{ item.class }}</p>
                         </div>
@@ -305,8 +305,7 @@ const resetResource = () => {
                     </span>
                     <div>
                         <h2 class="font-bold text-slate-900 dark:text-white">Pengumuman terbaru</h2>
-                        <p class="text-xs text-slate-500">{{ formatNumber(announcements.total) }} pengumuman dan
-                            pembuatnya</p>
+                        <p class="text-xs text-slate-500">{{ formatNumber(announcements.total) }} pengumuman terkini</p>
                     </div>
                 </div>
                 <button title="Reset seluruh pengumuman" @click="openResetModal('announcements', 'Pengumuman')"
@@ -353,7 +352,7 @@ const resetResource = () => {
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{
                                 item.student
-                            }}</p>
+                                }}</p>
                             <p class="truncate text-xs text-slate-500">{{ item.exam }} · {{
                                 formatDate(item.completed_at) }}</p>
                         </div>
