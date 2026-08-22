@@ -17,6 +17,7 @@ use App\Http\Controllers\PublicAbsensiAnalyticsController;
 use App\Http\Controllers\TenantAssetController;
 use App\Http\Controllers\Siswa\FormController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Guru\DashboardController as GuruDashboardController;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\User;
@@ -119,30 +120,8 @@ Route::middleware(['auth', 'verified', 'role.selected'])->group(function () {
     Route::delete('/admin/dashboard/reset/{resource}', [AdminDashboardController::class, 'reset'])
         ->name('admin.dashboard.reset')->middleware(['auth', 'role:admin']);
 
-    Route::get('/guru/dashboard', function () {
-        $user = Auth::user();
-
-        // Cek apakah guru ini adalah wali kelas
-        $isWalas = Kelas::whereHas('guru', function ($q) use ($user) {
-            $q->where('user_id', $user->id);
-        })->exists();
-
-        $usersCount = [
-            'proktor' => User::where('role', 'proktor')->count(),
-            'guru'    => User::where('role', 'guru')->count(),
-            'siswa'   => User::where('role', 'siswa')->count(),
-            'total'   => User::count(),
-        ];
-
-        return Inertia::render('Guru/Dashboard', [
-            'auth' => [
-                'user' => $user,
-                'role' => $user->role,
-            ],
-            'usersCount' => $usersCount,
-            'isWalas'    => $isWalas,
-        ]);
-    })->name('guru.dashboard')->middleware(['auth']);
+    Route::get('/guru/dashboard', [GuruDashboardController::class, 'index'])
+        ->name('guru.dashboard')->middleware(['auth']);
 
     Route::get('/proktor/dashboard', function () {
         $user = Auth::user();

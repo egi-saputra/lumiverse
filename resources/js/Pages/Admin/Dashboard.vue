@@ -25,6 +25,8 @@ const quizzes = computed(() => insights.value.quizzes ?? { total: 0, active: 0, 
 const exams = computed(() => insights.value.exams ?? { sessions: 0, completed: 0, in_progress: 0, items: [] })
 const attendance = computed(() => insights.value.attendance ?? { total: 0, hadir: 0, sakit: 0, izin: 0, alpha: 0, items: [] })
 const announcements = computed(() => insights.value.announcements ?? { total: 0, items: [] })
+const journals = computed(() => insights.value.journals ?? { items: [] })
+const attendanceClasses = computed(() => insights.value.attendance_classes ?? { items: [] })
 const resetModal = ref({ show: false, resource: '', label: '' })
 const resetting = ref(false)
 
@@ -240,7 +242,7 @@ const resetResource = () => {
                         class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{ item.title
-                                }}</p>
+                            }}</p>
                             <p class="truncate text-xs text-slate-500">{{ item.author }} · {{ item.class }} · {{
                                 item.subject }}
                             </p>
@@ -276,7 +278,7 @@ const resetResource = () => {
                         class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{ item.title
-                                }}</p>
+                            }}</p>
                             <p class="truncate text-xs text-slate-500">{{ item.author }} · {{ item.subject }} · Kelas
                                 {{ item.class }}</p>
                         </div>
@@ -326,6 +328,73 @@ const resetResource = () => {
             </div>
         </section>
 
+        <div class="mb-6 grid gap-6 xl:grid-cols-2">
+            <section
+                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400">
+                            <BookOpenIcon class="h-4.5 w-4.5" />
+                        </span>
+                        <div>
+                            <h2 class="font-bold text-slate-900 dark:text-white">Jurnal guru terbaru</h2>
+                            <p class="text-xs text-slate-500">Aktivitas pengisian jurnal terakhir</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="divide-y divide-slate-100 dark:divide-slate-800">
+                    <div v-for="item in journals.items" :key="item.id" class="py-3 first:pt-0 last:pb-0">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{
+                                    item.teacher }}</p>
+                                <p class="truncate text-xs text-slate-500">{{ item.class }} · {{ item.subject }}</p>
+                            </div>
+                            <span class="shrink-0 font-mono text-xs tabular-nums text-slate-400">{{
+                                formatDate(item.date) }}</span>
+                        </div>
+                        <p class="mt-2 truncate text-xs text-slate-600 dark:text-slate-400">{{ item.material || 'Materi tidak dicatat' }}</p>
+                    </div>
+                    <p v-if="!journals.items.length" class="py-6 text-center text-sm text-slate-400">Belum ada jurnal
+                        guru.</p>
+                </div>
+            </section>
+
+            <section
+                class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+                <div class="mb-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
+                            <CalendarCheckIcon class="h-4.5 w-4.5" />
+                        </span>
+                        <div>
+                            <h2 class="font-bold text-slate-900 dark:text-white">Top 3 kehadiran kelas</h2>
+                            <p class="text-xs text-slate-500">Rata-rata persentase hadir per hari</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div v-for="(item, index) in attendanceClasses.items" :key="item.id">
+                        <div class="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                            <span class="truncate font-semibold text-slate-700 dark:text-slate-300"><span
+                                    class="mr-2 font-mono text-xs text-slate-400">0{{ index + 1 }}</span>{{ item.class
+                                    }}</span>
+                            <span class="shrink-0 font-mono font-bold tabular-nums text-teal-600 dark:text-teal-400">{{
+                                item.percentage }}%</span>
+                        </div>
+                        <div class="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                            <div class="h-full rounded-full bg-teal-500 transition-all"
+                                :style="{ width: `${item.percentage}%` }"></div>
+                        </div>
+                    </div>
+                    <p v-if="!attendanceClasses.items.length" class="py-6 text-center text-sm text-slate-400">Belum ada
+                        data absensi kelas.</p>
+                </div>
+            </section>
+        </div>
+
         <div class="mb-6 grid gap-6 xl:grid-cols-3">
             <section
                 class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900 xl:col-span-2">
@@ -352,7 +421,7 @@ const resetResource = () => {
                         <div class="min-w-0">
                             <p class="truncate text-sm font-semibold text-slate-800 dark:text-slate-200">{{
                                 item.student
-                                }}</p>
+                            }}</p>
                             <p class="truncate text-xs text-slate-500">{{ item.exam }} · {{
                                 formatDate(item.completed_at) }}</p>
                         </div>

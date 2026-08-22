@@ -16,7 +16,7 @@ import {
     ArrowTrendingUpIcon,
     MegaphoneIcon,
     EnvelopeIcon, UsersIcon,
-    ArrowRightOnRectangleIcon,
+    ArrowRightOnRectangleIcon, CheckCircleIcon, ExclamationCircleIcon
 } from '@heroicons/vue/24/solid'
 import {
     BookOpenIcon,
@@ -30,6 +30,16 @@ const userName = page.props.auth.user.name || 'User';
 const props = defineProps({
     isWalas: { type: Boolean, default: false },
 })
+
+const insights = computed(() => page.props.insights ?? {})
+const materials = computed(() => insights.value.materials ?? { total: 0, items: [] })
+const quizzes = computed(() => insights.value.quizzes ?? { total: 0, items: [] })
+const journals = computed(() => insights.value.journals ?? { items: [] })
+const exams = computed(() => insights.value.exams ?? { completed: 0, in_progress: 0, items: [] })
+const attendance = computed(() => insights.value.attendance ?? { total: 0, hadir: 0, sakit: 0, izin: 0, alpha: 0 })
+const attendanceToday = computed(() => insights.value.attendance_today ?? { date: null, filled: [], not_filled: [] })
+const attendanceClasses = computed(() => insights.value.attendance_classes ?? { items: [] })
+const announcements = computed(() => insights.value.announcements ?? { total: 0, items: [] })
 
 const toast = ref({
     show: false,
@@ -229,6 +239,9 @@ const goTo = (url) => {
 const getInitials = (name) => {
     return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 }
+
+const formatDate = (value) => value ? new Date(value).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'
+const formatNumber = (value) => new Intl.NumberFormat('id-ID').format(value ?? 0)
 </script>
 
 <template>
@@ -406,7 +419,7 @@ const getInitials = (name) => {
                             Guru</p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page.props.usersCount.guru
-                            }}</h3>
+                                }}</h3>
                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">pengguna</span>
                         </div>
                     </div>
@@ -433,7 +446,7 @@ const getInitials = (name) => {
                             Siswa</p>
                         <div class="flex items-end gap-2">
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ page.props.usersCount.siswa
-                            }}</h3>
+                                }}</h3>
                             <span class="text-xs text-gray-400 dark:text-gray-500 mb-0.5">pengguna</span>
                         </div>
                     </div>
@@ -443,97 +456,257 @@ const getInitials = (name) => {
             </div>
         </div>
 
-        <!-- ── FITUR TERBARU (Desktop) ── -->
-        <div class="sm:block hidden rounded-2xl border transition-all duration-300
-                    bg-white border-gray-100 shadow-sm
-                    dark:bg-gray-900/60 dark:border-gray-800 dark:backdrop-blur-xl">
+        <!-- ── INSIGHT DASHBOARD (Desktop) ── -->
+        <div
+            class="sm:block hidden mb-7 rounded-2xl border transition-all duration-300 bg-white border-gray-100 shadow-sm dark:bg-gray-900/60 dark:border-gray-800 dark:backdrop-blur-xl">
             <div class="p-6 border-b border-gray-100 dark:border-gray-800 flex items-center gap-3">
                 <div
                     class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-500/20">
-                    <SparklesIcon class="w-4 h-4 text-white" />
+                    <ArrowTrendingUpIcon class="w-4 h-4 text-white" />
                 </div>
-                <h2 class="font-semibold text-gray-800 dark:text-white">Fitur – Fitur Terbaru</h2>
+                <h2 class="font-semibold text-gray-800 dark:text-white">Insight Pembelajaran</h2>
             </div>
-
             <div class="p-6 grid sm:grid-cols-2 gap-4">
-                <!-- Soon -->
+                <!-- Top 6 Kelas Berdasarkan Persentase Kehadiran Tertinggi -->
                 <div
-                    class="flex gap-3 p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-500/15">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckBadgeIcon class="w-4 h-4 text-amber-500" />
+                    class="rounded-xl bg-teal-50 dark:bg-teal-900/10 border border-teal-100 dark:border-teal-500/15 p-4 sm:col-span-2">
+                    <div class="mb-3 flex items-center gap-3">
+                        <span
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400">
+                            <CheckBadgeIcon class="h-4 w-4" />
+                        </span>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-teal-700 dark:text-teal-400">Top 6
+                            kelas berdasarkan persentase tingkat kehadiran tertinggi</p>
                     </div>
-                    <div>
-                        <p class="text-md font-semibold text-gray-800 dark:text-white mb-1">Homeroom Teacher &
-                            Attendance Recap</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Fitur ini dapat diakses oleh wali kelas untuk melihat dan mengelola data kelas mulai dari
-                            daftar siswa di kelas tersebut dan menentukan sekretaris kelas untuk memberikan kewenangan
-                            terhadap siswa dalam melakukan input absensi harian siswa di kelasnya. Attedance Recap
-                            merupakan fitur pendukungnya yang berfungsi agar wali kelas dapat mengambil data kehadiran
-                            siswa pada periode waktu tertentu (Rekap Absensi Siswa).
-                        </p>
+                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div v-for="(item, index) in attendanceClasses.items" :key="item.id">
+                            <div class="mb-1 flex justify-between text-xs">
+                                <span class="truncate text-gray-600 dark:text-gray-300">0{{ index + 1 }} · {{ item.class
+                                    }}</span>
+                                <b class="text-teal-600">{{ item.percentage }}%</b>
+                            </div>
+                            <p class="mt-0.5 truncate text-[11px] text-gray-400">Wali kelas: {{ item.walas }}</p>
+                            <div class="h-1.5 rounded-full bg-white/70 dark:bg-gray-800">
+                                <div class="h-full rounded-full bg-teal-500" :style="{ width: `${item.percentage}%` }">
+                                </div>
+                            </div>
+                        </div>
+                        <p v-if="!attendanceClasses.items.length" class="text-xs text-gray-400">Belum ada data absensi
+                            kelas.</p>
                     </div>
                 </div>
 
-                <!-- Learning Materials -->
+                <!-- Jurnal guru terbaru -->
                 <div
-                    class="flex gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-500/15">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckBadgeIcon class="w-4 h-4 text-emerald-500" />
+                    class="rounded-xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-500/15 p-4">
+                    <div class="mb-3 flex items-center gap-3">
+                        <span
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
+                            <BookOpenIcon class="h-4 w-4" />
+                        </span>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+                            Jurnal guru terbaru</p>
                     </div>
-                    <div>
-                        <p class="text-md font-semibold text-gray-800 dark:text-white mb-1">Presention Analitycs</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            Fitur ini memungkinkan semua guru dan juga siswa untuk dapat melihat hasil analitik
-                            kehadiran
-                            siswa dan memantau perkembangan kehadiran siswa di sekolah. Fitur ini bertujuan agar dapat
-                            menyajikan sebuah data
-                            berbasis fakta dalam membantu pengambilan sebuah keputusan apabila memang diperlukan di
-                            kemudian hari atau waktu mendatang.
-                        </p>
+                    <div
+                        class="mt-3 space-y-2 max-h-[280px] overflow-y-auto pr-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-indigo-200 dark:[&::-webkit-scrollbar-thumb]:bg-indigo-800 [&::-webkit-scrollbar-thumb]:rounded-full">
+                        <div v-for="item in journals.items.slice(0, 10)" :key="item.id" class="text-xs">
+                            <p class="truncate font-semibold text-gray-700 dark:text-gray-200">{{ item.teacher }}</p>
+                            <p class="truncate text-gray-500">{{ item.class }} · {{ item.subject }} · {{
+                                formatDate(item.date) }}</p>
+                        </div>
+                        <p v-if="!journals.items.length" class="text-xs text-gray-400">Belum ada jurnal.</p>
                     </div>
                 </div>
 
-                <!-- Assignment -->
+                <!-- Absensi Siswa -->
                 <div
-                    class="flex gap-3 p-4 rounded-xl bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-500/15 sm:col-span-2">
-                    <div
-                        class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <CheckBadgeIcon class="w-4 h-4 text-sky-500" />
+                    class="rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-500/15 p-4">
+                    <div class="mb-3 flex items-center gap-3">
+                        <span
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
+                            <ClipboardDocumentCheckIcon class="h-4 w-4" />
+                        </span>
+                        <p
+                            class="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                            Absensi bulan ini</p>
                     </div>
-                    <div>
-                        <p class="text-md font-semibold text-gray-800 dark:text-white mb-1">Jurnal Mengajar</p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed mb-2">
-                            Fitur ini berfungsi sebagai data history setiap guru dalam proses mengajar, seperti kapan
-                            seorang guru mengajar di kelas tertentu pada hari apa, jam berapa dan materi apa yang
-                            diberikan di kelas tersebut. Selain itu basis data riwayat mengajar ini akan dijadikan
-                            sebagai acuan dalam menetapkan jumlah jam mengajar / kehadiran seorang guru pada periode
-                            waktu tertentu (dalam sebulan). Penting untuk dipahami terkait aturan dari fitur ini
-                            adalah sebagai berikut:
-                        </p>
-                        <ol
-                            class="list-decimal list-outside pl-4 space-y-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-                            <li>
-                                Fitur jurnal mengajar hanya dapat diakses / dibuka setiap jam 13:00 setiap harinya, dan
-                                akan ditutup secara otomatis setiap hari pada pukul 18:00 (sehingga guru tidak dapat
-                                melakukan input jurnal jika sudah melewati batas waktu tersebut).
-                            </li>
-                            <li>
-                                Setiap satu baris data / satu kali input jurnal mengajar pada kelas yang telah
-                                dijadwalkan akan mengakumulasi jumlah jam mengajar sebanyak 2 jam (45 menit x 2).
-                            </li>
-                            <li>
-                                Guru tidak dapat mengisi jurnal dalam durasi yang sama atau belum selesai. Sebagai
-                                contoh: seorang guru menginput jurnal mengajar pada hari Senin pukul 13:00 dan selesai
-                                pada pukul 14:30 (waktu ini terisi otomatis berdasarkan ketepatan waktu saat guru
-                                tersebut menginput jurnal). Guru tersebut tidak dapat melakukan input jurnal jadwal
-                                selanjutnya di hari yang sama sebelum pukul 14:30 - baru bisa menginput kembali setelah
-                                durasi mengajar sebelumnya selesai, misalnya pukul 14:31. Hal ini berulang hingga pukul
-                                14:00, saat fitur ini otomatis tertutup.
-                            </li>
-                        </ol>
+                    <div class="mt-3 grid grid-cols-4 gap-2 text-center">
+                        <div><b class="block text-lg text-emerald-600">{{ attendance.hadir }}</b><span
+                                class="text-[10px] text-gray-500">Hadir</span></div>
+                        <div><b class="block text-lg text-amber-600">{{ attendance.sakit }}</b><span
+                                class="text-[10px] text-gray-500">Sakit</span></div>
+                        <div><b class="block text-lg text-blue-600">{{ attendance.izin }}</b><span
+                                class="text-[10px] text-gray-500">Izin</span></div>
+                        <div><b class="block text-lg text-rose-600">{{ attendance.alpha }}</b><span
+                                class="text-[10px] text-gray-500">Alpha</span></div>
+                    </div>
+
+                    <!-- ── Status pengisian absen hari ini per kelas ── -->
+                    <div class="mt-4 space-y-3 border-t border-emerald-100 pt-3.5 dark:border-emerald-500/10">
+                        <div class="flex items-center justify-between">
+                            <p
+                                class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                                Status absen hari ini
+                            </p>
+                            <span class="font-mono text-[10px] tabular-nums text-gray-400">
+                                {{ attendanceToday.filled.length }}/{{ attendanceToday.filled.length +
+                                    attendanceToday.not_filled.length }}
+                            </span>
+                        </div>
+
+                        <!-- Progress bar ringkas -->
+                        <div class="h-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                            <div class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+                                :style="{
+                                    width: `${(attendanceToday.filled.length + attendanceToday.not_filled.length)
+                                        ? (attendanceToday.filled.length / (attendanceToday.filled.length + attendanceToday.not_filled.length)) * 100
+                                        : 0}%`
+                                }">
+                            </div>
+                        </div>
+
+                        <div>
+                            <p
+                                class="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                                <CheckCircleIcon class="h-3.5 w-3.5" />
+                                Daftar kelas yang sudah mengisi absensi hari ini ({{ attendanceToday.filled.length }})
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span v-for="k in attendanceToday.filled" :key="'f-' + k.id"
+                                    class="group inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-emerald-700 ring-1 ring-inset ring-emerald-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:ring-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/25 dark:hover:ring-emerald-500/40">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                    {{ k.class }}
+                                </span>
+                                <span v-if="!attendanceToday.filled.length"
+                                    class="text-[11px] italic text-gray-400">Belum ada.</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p
+                                class="mb-1.5 flex items-center gap-1 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                                <ExclamationCircleIcon class="h-3.5 w-3.5" />
+                                Daftar kelas yang belum mengisi absensi hari ini ({{ attendanceToday.not_filled.length
+                                }})
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span v-for="k in attendanceToday.not_filled" :key="'n-' + k.id"
+                                    class="group inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] font-medium text-rose-700 ring-1 ring-inset ring-rose-200 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm hover:ring-rose-300 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/25 dark:hover:ring-rose-500/40">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                                    {{ k.class }}
+                                </span>
+                                <span v-if="!attendanceToday.not_filled.length"
+                                    class="text-[11px] italic text-gray-400">Semua kelas sudah isi 🎉</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materi Terbaru -->
+                <div
+                    class="rounded-xl bg-cyan-50 dark:bg-cyan-900/10 border border-cyan-100 dark:border-cyan-500/15 p-4 sm:col-span-2">
+                    <div class="mb-4 flex items-center gap-3">
+                        <span
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-cyan-100 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-400">
+                            <BookOpenIcon class="h-4 w-4" />
+                        </span>
+                        <div>
+                            <p class="font-bold text-gray-800 dark:text-white">Materi terbaru</p>
+                            <p class="text-xs text-gray-500">{{ formatNumber(materials.total) }} materi dan authornya
+                            </p>
+                        </div>
+                    </div>
+                    <div
+                        class="no-scrollbar divide-y divide-cyan-100 dark:divide-gray-800 max-h-[280px] overflow-y-auto">
+                        <div v-for="item in materials.items.slice(0, 10)" :key="item.id"
+                            class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-gray-800 dark:text-gray-200">{{ item.title
+                                }}</p>
+                                <p class="truncate text-xs text-gray-500">{{ item.author }} · {{ item.class }} · {{
+                                    item.subject }}</p>
+                            </div>
+                            <span class="shrink-0 font-mono text-xs tabular-nums text-gray-400">{{
+                                formatDate(item.created_at) }}</span>
+                        </div>
+                        <p v-if="!materials.items.length" class="text-xs text-gray-400">Belum ada materi.</p>
+                    </div>
+                </div>
+
+                <!-- Bank Soal & Evaluasi -->
+                <div
+                    class="rounded-xl bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-500/15 p-4">
+                    <div class="mb-4 flex items-center gap-3">
+                        <span
+                            class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
+                            <PencilSquareIcon class="h-4 w-4" />
+                        </span>
+                        <div>
+                            <h2 class="font-bold text-gray-800 dark:text-white">Bank soal & evaluasi</h2>
+                            <p class="text-xs text-gray-500">Author, status, dan jumlah butir soal</p>
+                        </div>
+                    </div>
+                    <div class="divide-y divide-rose-100 dark:divide-gray-800">
+                        <div v-for="item in quizzes.items" :key="item.id"
+                            class="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                            <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-gray-800 dark:text-gray-200">{{ item.title
+                                }}</p>
+                                <p class="truncate text-xs text-gray-500">{{ item.author }} · {{ item.subject }} · Kelas
+                                    {{ item.class }}</p>
+                            </div>
+                            <span class="shrink-0 text-right text-xs">
+                                <span
+                                    class="block font-mono font-semibold tabular-nums text-gray-700 dark:text-gray-300">{{
+                                        item.questions }} soal</span>
+                                <span class="font-medium"
+                                    :class="item.status === 'Aktif' ? 'text-emerald-600' : 'text-gray-400'">{{
+                                        item.status }}</span>
+                            </span>
+                        </div>
+                        <p v-if="!quizzes.items.length" class="py-6 text-center text-sm text-gray-400">Belum ada soal
+                            ujian.</p>
+                    </div>
+                </div>
+
+                <!-- Ujian & Nilai -->
+                <div class="rounded-xl bg-sky-50 dark:bg-sky-900/10 border border-sky-100 dark:border-sky-500/15 p-4">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-400">
+                            <ClipboardDocumentCheckIcon class="h-4 w-4" />
+                        </span>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-400">Ujian &
+                            nilai</p>
+                    </div>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">{{ exams.completed }} ujian selesai · {{
+                        exams.in_progress }} sedang berjalan</p>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                        <div v-for="item in exams.items.slice(0, 4)" :key="item.id"
+                            class="flex justify-between gap-2 text-xs"><span
+                                class="truncate text-gray-600 dark:text-gray-300">{{ item.student }} · {{ item.exam
+                                }}</span><b class="shrink-0 text-emerald-600">{{ item.score }}</b></div>
+                        <p v-if="!exams.items.length" class="text-xs text-gray-400">Belum ada ujian selesai.</p>
+                    </div>
+                </div>
+
+                <!-- Pengumuman -->
+                <div
+                    class="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-500/15 p-4 sm:col-span-2">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400">
+                            <MegaphoneIcon class="h-4 w-4" />
+                        </span>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                            Pengumuman</p>
+                    </div>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                        <div v-for="item in announcements.items.slice(0, 4)" :key="item.id" class="text-xs">
+                            <p class="truncate font-semibold text-gray-700 dark:text-gray-200">{{ item.title }}</p>
+                            <p class="truncate text-gray-500">{{ item.author }} · {{ formatDate(item.created_at) }}</p>
+                        </div>
+                        <p v-if="!announcements.items.length" class="text-xs text-gray-400">Belum ada pengumuman.</p>
                     </div>
                 </div>
             </div>

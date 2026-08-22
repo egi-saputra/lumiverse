@@ -10,6 +10,7 @@ use App\Models\Pengumuman;
 use App\Models\RiwayatUjian;
 use App\Models\Soal;
 use App\Models\UjianSiswa;
+use App\Models\Journal;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -110,6 +111,40 @@ class AdminDashboardController extends Controller
                 'created_at' => $announcement->created_at?->toISOString(),
             ]);
 
+        $journals = Journal::with(['guru:id,nama_lengkap', 'kelas:id,kelas', 'mapel:id,mapel'])
+            ->latest('tanggal')
+            ->latest('id')
+            ->limit(8)
+            ->get(['id', 'guru_id', 'kelas_id', 'mapel_id', 'tanggal', 'jam_mulai', 'jam_selesai', 'jumlah_jam', 'materi'])
+            ->map(fn ($journal) => [
+                'id' => $journal->id,
+                'teacher' => $journal->guru?->nama_lengkap ?? 'Tidak diketahui',
+                'class' => $journal->kelas?->kelas ?? '-',
+                'subject' => $journal->mapel?->mapel ?? '-',
+                'material' => $journal->materi,
+                'date' => $journal->tanggal?->toDateString(),
+                'hours' => $journal->jumlah_jam,
+            ]);
+
+        $dailyAttendance = DB::table('absensi_harian')
+            ->selectRaw("kelas_id, tanggal, (SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS attendance_percentage")
+            ->groupBy('kelas_id', 'tanggal');
+
+        $topAttendanceClasses = DB::query()
+            ->fromSub($dailyAttendance, 'daily_attendance')
+            ->join('kelas', 'kelas.id', '=', 'daily_attendance.kelas_id')
+            ->select('daily_attendance.kelas_id', 'kelas.kelas')
+            ->selectRaw('AVG(daily_attendance.attendance_percentage) AS average_percentage')
+            ->groupBy('daily_attendance.kelas_id', 'kelas.kelas')
+            ->orderByDesc('average_percentage')
+            ->limit(3)
+            ->get()
+            ->map(fn ($class) => [
+                'id' => $class->kelas_id,
+                'class' => $class->kelas,
+                'percentage' => round((float) $class->average_percentage, 1),
+            ]);
+
         return Inertia::render('Admin/Dashboard', [
             'auth' => [
                 'user' => $user,
@@ -123,6 +158,8 @@ class AdminDashboardController extends Controller
                 'exams' => ['sessions' => UjianSiswa::count(), 'completed' => UjianSiswa::where('status', 'Selesai')->count(), 'in_progress' => UjianSiswa::where('status', 'Sedang Dikerjakan')->count(), 'items' => $completedExams],
                 'attendance' => ['total' => (int) ($attendanceThisMonth->total ?? 0), 'hadir' => (int) ($attendanceThisMonth->hadir ?? 0), 'sakit' => (int) ($attendanceThisMonth->sakit ?? 0), 'izin' => (int) ($attendanceThisMonth->izin ?? 0), 'alpha' => (int) ($attendanceThisMonth->alpha ?? 0), 'items' => $attendanceRecent],
                 'announcements' => ['total' => $announcements->count(), 'items' => $announcements->take(8)->values()],
+                'journals' => ['items' => $journals],
+                'attendance_classes' => ['items' => $topAttendanceClasses],
             ],
         ]);
     }
