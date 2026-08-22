@@ -33,6 +33,6 @@ class PayoutRequest extends Model
 
     public function bankAccount()
     {
-        return $this->belongsTo(PartnerBankAccount::class, 'partner_bank_account_id');
+        return $this->belongsTo(PartnerBankAccount::class, 'partner_bank_account_id')->withTrashed();
     }
 }

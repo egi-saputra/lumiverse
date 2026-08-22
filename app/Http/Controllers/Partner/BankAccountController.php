@@ -65,12 +65,13 @@ class BankAccountController extends Controller
             'account_holder_name'  => ['required', 'string', 'max:255'],
         ]);
 
-        $exists = PartnerBankAccount::where('partner_id', $partner->id)
+        $existing = PartnerBankAccount::withTrashed()
+            ->where('partner_id', $partner->id)
             ->where('bank_code', $data['bank_code'])
             ->where('account_number', $data['account_number'])
-            ->exists();
+            ->first();
 
-        if ($exists) {
+        if ($existing && ! $existing->trashed()) {
             return back()->withErrors([
                 'account_number' => 'Rekening ini sudah pernah kamu daftarkan sebelumnya.',
             ])->onlyInput('bank_code', 'account_number', 'account_holder_name');
@@ -78,24 +79,29 @@ class BankAccountController extends Controller
 
         $hasAnyAccount = PartnerBankAccount::where('partner_id', $partner->id)->exists();
 
-        $account = PartnerBankAccount::create([
-            'partner_id'           => $partner->id,
-            'bank_code'            => $data['bank_code'],
-            'account_number'       => $data['account_number'],
-            'account_holder_name'  => $data['account_holder_name'],
-            'verification_status'  => PartnerBankAccount::STATUS_UNVERIFIED,
-            'is_primary'           => false,
-        ]);
+        if ($existing) {
+            // Rekening pernah dihapus sebelumnya — aktifkan lagi, riwayat payout lama tetap nyambung
+            $existing->restore();
+            $existing->update([
+                'account_holder_name' => $data['account_holder_name'],
+            ]);
+            $account = $existing;
+        } else {
+            $account = PartnerBankAccount::create([
+                'partner_id'           => $partner->id,
+                'bank_code'            => $data['bank_code'],
+                'account_number'       => $data['account_number'],
+                'account_holder_name'  => $data['account_holder_name'],
+                'verification_status'  => PartnerBankAccount::STATUS_UNVERIFIED,
+                'is_primary'           => false,
+            ]);
+        }
 
         if (! $hasAnyAccount) {
             $account->markAsPrimary();
         }
 
-        return back()->with(
-            'success',
-            'Rekening berhasil ditambahkan. Akun bank akan diverifikasi secara otomatis saat melakukan transaksi penarikan / pencairan dana pertama kali, dan baru bisa digunakan untuk penarikan dana setelah '
-                . self::COOLING_OFF_HOURS . ' jam sejak ditambahkan.'
-        );
+        return back()->with('success', 'Rekening berhasil ditambahkan...');
     }
 
     public function setPrimary(PartnerBankAccount $bankAccount)
@@ -114,13 +120,7 @@ class BankAccountController extends Controller
         $wasPrimary = $bankAccount->is_primary;
         $partnerId  = $bankAccount->partner_id;
 
-        try {
-            $bankAccount->delete();
-        } catch (\Illuminate\Database\QueryException $e) {
-            return back()->withErrors([
-                'account' => 'Rekening ini tidak bisa dihapus karena masih memiliki riwayat penarikan dana.',
-            ]);
-        }
+        $bankAccount->delete(); // sekarang soft delete, tidak akan kena FK constraint
 
         if ($wasPrimary) {
             $next = PartnerBankAccount::where('partner_id', $partnerId)->first();

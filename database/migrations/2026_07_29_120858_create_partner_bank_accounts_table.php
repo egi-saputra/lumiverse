@@ -33,7 +33,8 @@ return new class extends Migration
             // Satu partner bisa punya beberapa rekening tersimpan, tapi cuma
             // satu yang aktif dipakai untuk pencairan otomatis.
             $table->boolean('is_primary')->default(false);
-
+            
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('partner_id');

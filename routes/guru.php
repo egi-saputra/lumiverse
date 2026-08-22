@@ -7,7 +7,6 @@ use App\Http\Controllers\Guru\{
     QuizController,
     QuestController,
     RekapNilaiController,
-    ExamRoomController,
     AssignController,
     MaterialController,
     MaterialAiController,
@@ -92,18 +91,6 @@ Route::middleware(['auth', 'verified', 'role:guru'])->prefix('guru')->name('guru
     Route::get('/list-mapel', [RekapNilaiController::class, 'listMapel']);
     Route::get('/list-kelas', [RekapNilaiController::class, 'listKelas']);
     Route::post('/rekap-filtered', [RekapNilaiController::class, 'rekapFiltered']);
-
-    /** Ruang Ujian - daftar peserta */
-    Route::get('/ruang-ujian', [ExamRoomController::class, 'index'])
-        ->name('ruangUjian.index');
-
-    /** Ambil data token terbaru */
-    Route::get('/ruang-ujian/peserta/{peserta}/refresh-token', [ExamRoomController::class, 'refreshToken'])
-        ->name('ruangUjian.refreshToken');
-
-    /** Delete peserta AJAX */
-    Route::delete('/ruang-ujian/peserta/{peserta}', [ExamRoomController::class, 'destroyPeserta'])
-        ->name('ruangUjian.destroyPeserta');
 
     Route::get('/assignment', [AssignController::class, 'index'])->name('assignment.index');
 
