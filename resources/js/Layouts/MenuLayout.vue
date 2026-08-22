@@ -85,7 +85,7 @@ const notifications = computed(() => {
 
     return (page.props.announcements ?? [])
         .filter(item => {
-            if (item.penerima === 'semua') return true
+            if (!item.penerima || item.penerima === 'semua') return true
             if (item.penerima === role) return true
             if (role === 'siswa' && item.kelas_id) {
                 return Number(item.kelas_id) === Number(page.props.kelasId)

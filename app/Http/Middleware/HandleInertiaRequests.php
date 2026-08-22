@@ -88,7 +88,7 @@ class HandleInertiaRequests extends Middleware
             return Pengumuman::latest()
                 ->get()
                 ->filter(function ($item) use ($role, $kelasId) {
-                    if ($item->penerima === 'semua')   return true;
+                    if (empty($item->penerima) || $item->penerima === 'semua') return true;
                     if ($item->penerima === $role)     return true;
 
                     if ($role === 'siswa' && $item->penerima === 'siswa') {
