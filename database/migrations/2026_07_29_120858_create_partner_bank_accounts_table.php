@@ -34,7 +34,7 @@ return new class extends Migration
             // satu yang aktif dipakai untuk pencairan otomatis.
             $table->boolean('is_primary')->default(false);
             
-            $table->softDeletes();
+            // $table->softDeletes();
             $table->timestamps();
 
             $table->index('partner_id');
