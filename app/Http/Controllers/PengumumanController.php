@@ -6,6 +6,7 @@ use App\Models\Pengumuman;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ExpoPushService;
 use Inertia\Inertia;
 
 class PengumumanController extends Controller
@@ -21,6 +22,7 @@ class PengumumanController extends Controller
         return Inertia::render('Pengumuman/Index', [
             'pengumuman' => $pengumuman,
             'canManage'  => $this->canManage(),
+            'title'  => 'Pengumuman',
         ]);
     }
 
@@ -31,33 +33,30 @@ class PengumumanController extends Controller
         return Inertia::render('Pengumuman/Create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ExpoPushService $expoPush)
     {
         $this->authorizeRole();
 
         $validated = $request->validate([
             'judul'      => 'required|string|max:255',
             'pengumuman' => 'required|string|max:100000',
-            'file'       => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360',
             'video_url'  => 'nullable|url|max:500',
         ]);
-
-        if (tenant()->hasReachedFreeLimit(Pengumuman::class, 3)) {
-            return back()->with('error', 'Plan Free hanya dapat membuat maksimal 3 pengumuman. Silakan upgrade plan untuk menambah kuis.');
-        }
 
         $filePath = $request->hasFile('file')
             ? $request->file('file')->store('pengumuman', 'r2')
             : null;
 
-        Pengumuman::create([
+        $pengumuman = Pengumuman::create([
             'judul'      => $validated['judul'],
             'pengumuman' => $validated['pengumuman'],
             'user_id'    => Auth::id(),
             'file_path'  => $filePath,
             'video_url'  => $validated['video_url'] ?? null,
-            'penerima'   => 'semua',   // ← selalu tampil ke semua role
         ]);
+
+        $expoPush->sendAnnouncementPush($pengumuman->judul, $pengumuman->pengumuman);
 
         return redirect()->route('pengumuman.index')
             ->with('success', 'Pengumuman berhasil dibuat!');
@@ -87,7 +86,7 @@ class PengumumanController extends Controller
         $validated = $request->validate([
             'judul'       => 'required|string|max:255',
             'pengumuman'  => 'required|string|max:100000',
-            'file'        => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360',
+            'file' => 'nullable|file|mimes:jpg,jpeg,png,webp,gif|max:15360', // 15 MB
             'video_url'   => 'nullable|url|max:500',
             'remove_file' => 'nullable|boolean',
         ]);
@@ -95,12 +94,16 @@ class PengumumanController extends Controller
         $filePath = $pengumuman->file_path;
 
         if ($request->boolean('remove_file') && $filePath) {
-            Storage::disk('r2')->delete($filePath);
+            if (! str_starts_with($filePath, 'http') && Storage::disk('r2')->exists($filePath)) {
+                Storage::disk('r2')->delete($filePath);
+            }
             $filePath = null;
         }
 
         if ($request->hasFile('file')) {
-            if ($filePath) Storage::disk('r2')->delete($filePath);
+            if ($filePath && ! str_starts_with($filePath, 'http') && Storage::disk('r2')->exists($filePath)) {
+                Storage::disk('r2')->delete($filePath);
+            }
             $filePath = $request->file('file')->store('pengumuman', 'r2');
         }
 
@@ -109,7 +112,6 @@ class PengumumanController extends Controller
             'pengumuman' => $validated['pengumuman'],
             'file_path'  => $filePath,
             'video_url'  => $validated['video_url'] ?? null,
-            'penerima'   => 'semua',
         ]);
 
         return redirect()->route('pengumuman.show', $pengumuman)
@@ -120,7 +122,7 @@ class PengumumanController extends Controller
     {
         $this->authorizeOwner($pengumuman);
 
-        if ($pengumuman->file_path) {
+        if ($pengumuman->file_path && ! str_starts_with($pengumuman->file_path, 'http') && Storage::disk('r2')->exists($pengumuman->file_path)) {
             Storage::disk('r2')->delete($pengumuman->file_path);
         }
 

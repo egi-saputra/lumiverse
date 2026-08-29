@@ -223,7 +223,7 @@ const logout = () => router.post(route('logout'))
 
                     <!-- LEFT: Logo (desktop) + Back + Title (mobile) -->
                     <div class="flex items-center">
-                        <img :src="page.props.tenant?.logo ?? '/images/default.png'" :alt="page.props.tenant?.name"
+                        <img :src="page.props.tenant?.logo_url ?? '/images/default.png'" :alt="page.props.tenant?.name"
                             class="h-10 sm:block hidden object-contain" loading="lazy" />
                         <span class="sm:text-lg text-base ml-3
                                      font-raleway font-extrabold uppercase
