@@ -5,25 +5,13 @@ import { ref, computed } from 'vue';
 
 const page = usePage()
 
-// ─── Product type ───────────────────────────────────────────────────────────
-const isWorkspace = computed(() => page.props.tenant?.product_type === 'workspace')
+// ─── Label & teks halaman ────────────────────────────────────────────────────
+const eyebrowText = 'Lembaga Pendidikan'
+const taglineLine1 = 'The Greatest Learning Management System App'
+const taglineLine2 = 'Bergabung dan mulai kelola aktivitas belajar mengajar secara digital.'
+const lumiverseDirectoryLabel = 'Lumiverse School - Smart Learning System App'
 
-// ─── Label & teks kondisional per product_type ─────────────────────────────────
-const eyebrowText = computed(() => isWorkspace.value ? 'Perusahaan / Organisasi' : 'Lembaga Pendidikan')
-
-const taglineLine1 = computed(() => isWorkspace.value
-    ? 'The Greatest Workspace Management System App'
-    : 'The Greatest Learning Management System App')
-
-const taglineLine2 = computed(() => isWorkspace.value
-    ? 'Bergabung dan mulai kelola operasional serta aktivitas kerja tim secara digital.'
-    : 'Bergabung dan mulai kelola aktivitas belajar mengajar secara digital.')
-
-const lumiverseDirectoryLabel = computed(() => isWorkspace.value
-    ? 'Lumi Workspace - Smart Workspace System App'
-    : 'Lumiverse School - Smart Learning System App')
-
-// Daftar Direktori — item "Mading Digital" hanya relevan untuk tenant school
+// Daftar Direktori
 const directoryItems = computed(() => {
     const items = [
         {
@@ -36,7 +24,7 @@ const directoryItems = computed(() => {
     items.push({
         href: 'https://www.lumiverse.co.id',
         external: true,
-        label: lumiverseDirectoryLabel.value,
+        label: lumiverseDirectoryLabel,
     })
 
     return items

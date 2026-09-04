@@ -1,8 +1,6 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { useForm, Head, Link } from '@inertiajs/vue3'
-import { computed } from 'vue'
-import { useTenant } from '@/Composables/useTenant.js'
 
 const props = defineProps({
     kelas: Array,
@@ -10,25 +8,14 @@ const props = defineProps({
     isSmk: Boolean,
 })
 
-/* ─── Tenant (product_type) ─────────────────────────────── */
-const { isWorkspace } = useTenant()
-
-/* ─── Label kondisional per product_type ────────────────── */
-const t = computed(() => isWorkspace.value ? {
-    pageTitle: 'Register Employee',
-    heading: 'Employee Registration',
-    idPrimaryLabel: 'Employee ID',
-    idSecondaryLabel: 'Secondary Employee ID',
-    groupLabel: 'Team / Division',
-    groupPlaceholder: '-- Choose the team / division --',
-} : {
+const t = {
     pageTitle: 'Register Siswa',
     heading: 'Registrasi Siswa',
     idPrimaryLabel: 'NIS (10 digit)',
     idSecondaryLabel: 'NISN (10 digit)',
     groupLabel: 'Class Unit',
     groupPlaceholder: '-- Choose the class --',
-})
+}
 
 const form = useForm({
     nama_lengkap: '',
@@ -94,7 +81,7 @@ const submit = () => {
                 </div>
 
                 <!-- Kejuruan (hanya untuk tenant SMK) -->
-                <div v-if="isSmk && !isWorkspace">
+                <div v-if="isSmk">
                     <label class="block text-sm font-medium mb-1">Vocational</label>
                     <select v-model="form.kejuruan_id" class="w-full rounded-lg border-gray-300">
                         <option value="">-- Choose a vocation --</option>
