@@ -11,21 +11,9 @@ const props = defineProps({
     isSmk: Boolean,
 })
 
-/* ─── Tenant (product_type) ─────────────────────────────── */
-const { isWorkspace } = useTenant()
 
 /* ─── Label kondisional per product_type ────────────────── */
-const t = computed(() => isWorkspace.value ? {
-    pageTitle: 'Edit Employee Data',
-    heading: 'Edit Employee Data',
-    idPrimaryLabel: 'Employee ID',
-    idPrimaryPlaceholder: 'Enter Employee ID here...',
-    idSecondaryLabel: 'Secondary Employee ID',
-    idSecondaryPlaceholder: 'Enter Secondary Employee ID here...',
-    groupLabel: 'Team / Division',
-    groupPlaceholder: '-- Select Team / Division --',
-    leadLabel: 'Team Lead',
-} : {
+const t = {
     pageTitle: 'Edit Student Data',
     heading: 'Edit Student Data',
     idPrimaryLabel: 'NIS',
@@ -35,7 +23,7 @@ const t = computed(() => isWorkspace.value ? {
     groupLabel: 'Class Unit',
     groupPlaceholder: '-- Select Class --',
     leadLabel: 'OSIS Member',
-})
+}
 
 const form = useForm({
     nama_lengkap: props.siswa.nama_lengkap,
@@ -123,7 +111,7 @@ const submit = () => {
                 </div>
 
                 <!-- Major / Study Program (hanya untuk tenant SMK) -->
-                <div v-if="isSmk && !isWorkspace">
+                <div v-if="isSmk">
                     <label class="block text-sm dark:text-gray-300 font-medium mb-1">Vocational Program</label>
                     <select v-model="form.kejuruan_id"
                         class="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/60 dark:bg-gray-700/50 px-4 py-2 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
