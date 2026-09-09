@@ -25,14 +25,13 @@ class GenerateQuizAiJob implements ShouldQueue
     public int $timeout = 600;
     public int $tries = 1;
 
-    private const RESEARCH_MODEL = 'groq/compound';
+    private const RESEARCH_MODEL = 'openai/gpt-oss-120b';
     private const STRUCTURE_MODEL = 'openai/gpt-oss-120b';
     private const END_MARKER = '===SELESAI===';
 
     /**
      * Ukuran batch disesuaikan jumlah opsi PG — makin banyak opsi, makin besar
      * token per soal, jadi batch harus lebih kecil supaya prompt + max_tokens
-     * tetap aman di bawah limit TPM per-org (8000).
      */
     private function batchSize(): int
     {
@@ -151,7 +150,10 @@ class GenerateQuizAiJob implements ShouldQueue
                     $researchSystemPrompt,
                     $researchUserPrompt,
                     self::RESEARCH_MAX_TOKENS,
-                    self::END_MARKER
+                    self::END_MARKER,
+                    tools: [['type' => 'browser_search']],
+                    reasoningEffort: 'low',
+                    temperature: 1,
                 );
 
                 $riset = $researchRaw ? $this->parseResearch($researchRaw) : '';
@@ -190,7 +192,10 @@ class GenerateQuizAiJob implements ShouldQueue
                 $researchSystemPrompt,
                 $researchUserPrompt,
                 self::RESEARCH_MAX_TOKENS,
-                self::END_MARKER
+                self::END_MARKER,
+                tools: [['type' => 'browser_search']],
+                reasoningEffort: 'low',
+                temperature: 1,
             );
 
             if (! $researchRaw) {
@@ -256,7 +261,8 @@ class GenerateQuizAiJob implements ShouldQueue
                 $systemPrompt,
                 $userPrompt,
                 $this->estimateMaxTokens($batch['pg'], $batch['essay']),
-                self::END_MARKER
+                self::END_MARKER,
+                temperature: 0.7,
             );
 
             // Kalau kena 413 (request kelewat limit TPM), retry sekali dengan source
@@ -282,7 +288,8 @@ class GenerateQuizAiJob implements ShouldQueue
                     $systemPrompt,
                     $userPromptRetry,
                     (int) ($this->estimateMaxTokens($batch['pg'], $batch['essay']) * 0.7),
-                    self::END_MARKER
+                    self::END_MARKER,
+                    temperature: 0.7,
                 );
             }
 
@@ -406,25 +413,54 @@ class GenerateQuizAiJob implements ShouldQueue
     }
 
     /**
+     * Panggil Groq dengan 1 model spesifik, loop antar API key kalau kena
+     * rate limit/invalid key.
+     *
+     * @param  array<int, array<string, mixed>>  $tools  Tool definitions, misal [['type' => 'browser_search']]. Kosongkan kalau tahap ini tidak butuh browsing.
      * @return array{0: ?string, 1: mixed} [$content, $lastError]
      */
-    private function callGroq(array $apiKeys, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, string $endMarker): array
-    {
+    private function callGroq(
+        array $apiKeys,
+        string $model,
+        string $systemPrompt,
+        string $userPrompt,
+        int $maxTokens,
+        string $endMarker,
+        array $tools = [],
+        ?string $reasoningEffort = null,
+        float $temperature = 0.7,
+    ): array {
         $lastError = null;
 
         foreach ($apiKeys as $index => $apiKey) {
             try {
+                $payload = [
+                    'model' => $model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemPrompt],
+                        ['role' => 'user', 'content' => $userPrompt],
+                    ],
+                    'temperature' => $temperature,
+                    'max_completion_tokens' => $maxTokens,
+                ];
+
+                if (! empty($tools)) {
+                    // browser_search WAJIB dipakai, supaya riset selalu berbasis
+                    // sumber nyata dari web, bukan ingatan model.
+                    $payload['tools'] = $tools;
+                    $payload['tool_choice'] = 'required';
+                }
+
+                if ($reasoningEffort) {
+                    // Batasi kedalaman reasoning saat browsing supaya sesi tool-call
+                    // tidak melebar & boros token — budget riset di job ini ketat
+                    // (lihat RESEARCH_MAX_TOKENS).
+                    $payload['reasoning_effort'] = $reasoningEffort;
+                }
+
                 $response = Http::withToken($apiKey)
                     ->timeout(90)
-                    ->post('https://api.groq.com/openai/v1/chat/completions', [
-                        'model' => $model,
-                        'messages' => [
-                            ['role' => 'system', 'content' => $systemPrompt],
-                            ['role' => 'user', 'content' => $userPrompt],
-                        ],
-                        'temperature' => 0.7,
-                        'max_tokens' => $maxTokens,
-                    ]);
+                    ->post('https://api.groq.com/openai/v1/chat/completions', $payload);
 
                 if (in_array($response->status(), [401, 429, 413], true)) {
                     Log::warning("Groq key #{$index} model {$model} gagal", [

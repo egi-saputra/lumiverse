@@ -22,14 +22,16 @@ class GenerateMaterialAiJob implements ShouldQueue
     public int $timeout = 240;  // 2 kali call AI berurutan (riset + strukturisasi)
     public int $tries = 1;
 
-    // STAGE 1 (riset): compound punya browsing beneran -> dipakai untuk cari
-    // & kumpulkan fakta/sumber akurat. Outputnya sengaja "mentah", tidak perlu
-    // rapi, karena tujuannya kelengkapan & akurasi, bukan gaya penulisan.
+    // STAGE 1 (riset): browser_search built-in di gpt-oss dipakai untuk cari
+    // & kumpulkan fakta/sumber akurat lewat browsing beneran (bukan cuma
+    // snippet search). Outputnya sengaja "mentah", tidak perlu rapi, karena
+    // tujuannya kelengkapan & akurasi, bukan gaya penulisan.
     //
-    // STAGE 2 (strukturisasi): versatile (non-agentic, lebih taat instruksi
-    // format) dipakai untuk merapikan hasil riset compound jadi materi siap
-    // baca siswa, sekaligus menentukan JUDUL final & menyusun footnote sumber.
-    private const RESEARCH_MODEL = 'groq/compound';
+    // STAGE 2 (strukturisasi): model yang sama, TANPA tool browsing -> lebih
+    // taat instruksi format karena tidak masuk ke tool-call loop. Dipakai
+    // untuk merapikan hasil riset jadi materi siap baca siswa, sekaligus
+    // menentukan JUDUL final & menyusun footnote sumber.
+    private const RESEARCH_MODEL = 'openai/gpt-oss-120b';
     private const STRUCTURE_MODEL = 'openai/gpt-oss-120b';
 
     private const RESEARCH_END_MARKER = '===SELESAI===';
@@ -121,7 +123,10 @@ class GenerateMaterialAiJob implements ShouldQueue
             $researchSystemPrompt,
             $researchUserPrompt,
             $this->researchMaxTokens(),
-            self::RESEARCH_END_MARKER
+            self::RESEARCH_END_MARKER,
+            tools: [['type' => 'browser_search']],
+            reasoningEffort: 'low',
+            temperature: 1,
         );
 
         if (! $researchRaw) {
@@ -159,7 +164,8 @@ class GenerateMaterialAiJob implements ShouldQueue
             $structureSystemPrompt,
             $structureUserPrompt,
             $this->structureMaxTokens(),
-            self::STRUCTURE_END_MARKER
+            self::STRUCTURE_END_MARKER,
+            temperature: 0.3,
         );
 
         // Kalau kena 413 (prompt+max_tokens kelewat limit TPM Groq), retry sekali
@@ -217,28 +223,54 @@ class GenerateMaterialAiJob implements ShouldQueue
 
     /**
      * Panggil Groq dengan 1 model spesifik, loop antar API key kalau kena
-     * rate limit/invalid key. Tidak loop antar model (beda dari versi lama)
-     * karena tiap tahap sekarang punya peran model yang spesifik & disengaja.
+     * rate limit/invalid key. Tidak loop antar model karena tiap tahap
+     * sekarang punya peran spesifik & disengaja.
      *
+     * @param  array<int, array<string, mixed>>  $tools  Tool definitions, misal [['type' => 'browser_search']]. Kosongkan kalau tahap ini tidak butuh browsing.
      * @return array{0: ?string, 1: mixed} [$content, $lastError]
      */
-    private function callGroq(array $apiKeys, string $model, string $systemPrompt, string $userPrompt, int $maxTokens, string $endMarker): array
-    {
+        private function callGroq(
+        array $apiKeys,
+        string $model,
+        string $systemPrompt,
+        string $userPrompt,
+        int $maxTokens,
+        string $endMarker,
+        array $tools = [],
+        ?string $reasoningEffort = null,
+        float $temperature = 0.3,
+    ): array {
         $lastError = null;
 
         foreach ($apiKeys as $index => $apiKey) {
             try {
+                $payload = [
+                    'model' => $model,
+                    'messages' => [
+                        ['role' => 'system', 'content' => $systemPrompt],
+                        ['role' => 'user', 'content' => $userPrompt],
+                    ],
+                    'temperature' => $temperature,
+                    'max_completion_tokens' => $maxTokens,
+                ];
+
+                if (! empty($tools)) {
+                    // browser_search WAJIB dipakai (bukan cuma opsional), supaya
+                    // riset selalu berbasis sumber nyata, bukan ingatan model.
+                    $payload['tools'] = $tools;
+                    $payload['tool_choice'] = 'required';
+                }
+
+                if ($reasoningEffort) {
+                    // Batasi kedalaman reasoning saat browsing supaya sesi tool-call
+                    // tidak melebar & boros token — penting karena budget token job
+                    // ini ketat (lihat researchMaxTokens()).
+                    $payload['reasoning_effort'] = $reasoningEffort;
+                }
+
                 $response = Http::withToken($apiKey)
                     ->timeout(90)
-                    ->post('https://api.groq.com/openai/v1/chat/completions', [
-                        'model' => $model,
-                        'messages' => [
-                            ['role' => 'system', 'content' => $systemPrompt],
-                            ['role' => 'user', 'content' => $userPrompt],
-                        ],
-                        'temperature' => 0.3,
-                        'max_tokens' => $maxTokens,
-                    ]);
+                    ->post('https://api.groq.com/openai/v1/chat/completions', $payload);
 
                 if (in_array($response->status(), [401, 429, 413], true)) {
                     Log::warning("Groq key #{$index} model {$model} gagal", [
