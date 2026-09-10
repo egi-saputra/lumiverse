@@ -110,12 +110,12 @@ class BankSoalController extends Controller
     }
 
     // ─── Hapus file lampiran lama ─────────────────────────────────────────────
-
     private function deleteLampiran(?string $path): void
     {
         if (!$path) return;
+        if (str_starts_with($path, 'http')) return;
 
-        if (Storage::disk('r2')->exists($path)) {   // ← ganti dari 'public'
+        if (Storage::disk('r2')->exists($path)) {
             Storage::disk('r2')->delete($path);
         }
     }

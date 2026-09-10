@@ -154,22 +154,21 @@ class SoalController extends Controller
     public function destroy(Soal $soal)
     {
         foreach ($soal->bank_soal as $bankSoal) {
-            if ($bankSoal->link_lampiran) {
+            if ($bankSoal->link_lampiran && !str_starts_with($bankSoal->link_lampiran, 'http')) {
                 if (Storage::disk('r2')->exists($bankSoal->link_lampiran)) {
                     Storage::disk('r2')->delete($bankSoal->link_lampiran);
                 }
             }
-
             foreach (['a', 'b', 'c', 'd', 'e'] as $key) {
                 $opsiLampiran = $bankSoal->{"opsi_{$key}_lampiran"};
-                if ($opsiLampiran && Storage::disk('r2')->exists($opsiLampiran)) {
-                    Storage::disk('r2')->delete($opsiLampiran);
+                if ($opsiLampiran && !str_starts_with($opsiLampiran, 'http')) {
+                    if (Storage::disk('r2')->exists($opsiLampiran)) {
+                        Storage::disk('r2')->delete($opsiLampiran);
+                    }
                 }
             }
         }
-
         $soal->delete();
-
         return response()->json(['success' => 'Quiz has been successfully deleted!']);
     }
 
