@@ -29,11 +29,16 @@ const form = ref({
     opsi_c: props.bankSoal.opsi_c,
     opsi_d: props.bankSoal.opsi_d,
     opsi_e: props.bankSoal.opsi_e,
-    opsi_a_lampiran: props.bankSoal.opsi_a_lampiran,
-    opsi_b_lampiran: props.bankSoal.opsi_b_lampiran,
-    opsi_c_lampiran: props.bankSoal.opsi_c_lampiran,
-    opsi_d_lampiran: props.bankSoal.opsi_d_lampiran,
-    opsi_e_lampiran: props.bankSoal.opsi_e_lampiran,
+    // opsi_a_lampiran: props.bankSoal.opsi_a_lampiran,
+    // opsi_b_lampiran: props.bankSoal.opsi_b_lampiran,
+    // opsi_c_lampiran: props.bankSoal.opsi_c_lampiran,
+    // opsi_d_lampiran: props.bankSoal.opsi_d_lampiran,
+    // opsi_e_lampiran: props.bankSoal.opsi_e_lampiran,
+    opsi_a_lampiran_url: props.bankSoal.opsi_a_lampiran_url,
+    opsi_b_lampiran_url: props.bankSoal.opsi_b_lampiran_url,
+    opsi_c_lampiran_url: props.bankSoal.opsi_c_lampiran_url,
+    opsi_d_lampiran_url: props.bankSoal.opsi_d_lampiran_url,
+    opsi_e_lampiran_url: props.bankSoal.opsi_e_lampiran_url,
     processing: false,
 });
 
@@ -122,7 +127,7 @@ function submit() {
                 text: res.data.success || 'Question item has been successfully updated!',
                 confirmButtonText: 'OK', confirmButtonColor: '#3b82f6',
             }).then(result => {
-                if (result.isConfirmed) Inertia.visit(`/guru/soal/${props.bankSoal.soal_id}`);
+                if (result.isConfirmed) router.visit(`/guru/soal/${props.bankSoal.soal_id}`);
             });
         })
         .catch(err => {
@@ -261,9 +266,9 @@ function submit() {
                                 <input v-model="form['opsi_' + key]" class="form-input dark:text-gray-400 w-full" />
 
                                 <!-- Gambar lama -->
-                                <div v-if="form['opsi_' + key + '_lampiran'] && !removeFlags[key]"
+                                <div v-if="form['opsi_' + key + '_lampiran_url'] && !removeFlags[key]"
                                     class="flex items-center gap-3">
-                                    <img :src="`/${form['opsi_' + key + '_lampiran']}`"
+                                    <img :src="form['opsi_' + key + '_lampiran_url']"
                                         class="h-16 rounded-lg object-cover border border-gray-200 dark:border-slate-700" />
                                     <button type="button" @click="requestRemoveOpsiImg(key)"
                                         class="text-xs text-red-500 hover:text-red-700 font-medium transition">

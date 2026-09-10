@@ -278,8 +278,8 @@ async function confirmDeleteAll() {
                     </div>
 
                     <!-- Gambar lampiran -->
-                    <div v-if="item.link_lampiran">
-                        <img :src="`/${item.link_lampiran}`" alt="Question attachment" class="rounded-lg border border-gray-200 dark:border-slate-700
+                    <div v-if="item.link_lampiran_url">
+                        <img :src="item.link_lampiran_url" alt="Question attachment" class="rounded-lg border border-gray-200 dark:border-slate-700
                                    max-h-40 object-cover w-full" />
                     </div>
 

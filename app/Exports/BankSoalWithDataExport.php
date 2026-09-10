@@ -26,20 +26,17 @@ class BankSoalWithDataExport implements FromCollection, WithHeadings, WithEvents
                 // Tipe soal → label yang dikenali importer
                 $tipe = $item->tipe_soal === 'Essay' ? 'Essay' : 'Pilihan Ganda';
 
-                // Jenis lampiran
-                $jenis = $item->jenis_lampiran ?? 'Tanpa Lampiran';
-
                 // Jawaban benar:
-                // – PG   → simpan "opsi_a" / "opsi_b" dst. agar importer bisa memetakan
-                // – Essay → simpan teks jawaban langsung
-                $jawaban = $item->jawaban_benar ?? '';
+                // – PG   → simpan huruf A–E agar importer bisa memetakan ke opsi_x
+                // – Essay → dikosongkan (dinilai manual)
+                $jawaban = $item->jawaban_benar
+                    ? strtoupper(str_replace('opsi_', '', $item->jawaban_benar))
+                    : '';
 
                 return [
                     $index + 1,            // No
                     strip_tags($item->soal ?? ''), // Soal (hilangkan tag HTML dari Quill)
                     $tipe,                 // Tipe Soal
-                    $jenis,                // Jenis Lampiran
-                    $item->link_lampiran ?? '', // Link Lampiran
                     $jawaban,              // Jawaban Benar
                     $item->opsi_a ?? '',   // Opsi A
                     $item->opsi_b ?? '',   // Opsi B
@@ -56,8 +53,6 @@ class BankSoalWithDataExport implements FromCollection, WithHeadings, WithEvents
             'No',
             'Soal',
             'Tipe Soal',
-            'Jenis Lampiran',
-            'Link Lampiran',
             'Jawaban Benar',
             'Opsi A',
             'Opsi B',
@@ -96,33 +91,22 @@ class BankSoalWithDataExport implements FromCollection, WithHeadings, WithEvents
                     $val->setFormula1('"Pilihan Ganda,Essay"');
                 }
 
-                // ── 3. Dropdown Jenis Lampiran (kolom D, baris 2 dst) ────
-                for ($row = 2; $row <= max($lastRow, 2); $row++) {
-                    $val = $sheet->getCell("D{$row}")->getDataValidation();
-                    $val->setType(DataValidation::TYPE_LIST);
-                    $val->setAllowBlank(true);
-                    $val->setShowDropDown(true);
-                    $val->setFormula1('"Tanpa Lampiran,Gambar"');
-                }
-
-                // ── 4. Lebar kolom ────────────────────────────────────────
-                $sheet->getColumnDimension('A')->setWidth(6);
-                $sheet->getColumnDimension('B')->setWidth(55);
-                $sheet->getColumnDimension('C')->setAutoSize(true);
-                $sheet->getColumnDimension('D')->setAutoSize(true);
-                $sheet->getColumnDimension('E')->setWidth(40);
-                $sheet->getColumnDimension('F')->setAutoSize(true);
-                foreach (['G', 'H', 'I', 'J', 'K'] as $col) {
+                // ── 3. Lebar kolom ────────────────────────────────────────
+                $sheet->getColumnDimension('A')->setWidth(6);   // No
+                $sheet->getColumnDimension('B')->setWidth(55);  // Soal
+                $sheet->getColumnDimension('C')->setAutoSize(true); // Tipe Soal
+                $sheet->getColumnDimension('D')->setAutoSize(true); // Jawaban Benar
+                foreach (['E', 'F', 'G', 'H', 'I'] as $col) { // Opsi A–E
                     $sheet->getColumnDimension($col)->setWidth(25);
                 }
 
-                // ── 5. Tinggi baris ───────────────────────────────────────
+                // ── 4. Tinggi baris ───────────────────────────────────────
                 $sheet->getRowDimension(1)->setRowHeight(25);
                 for ($row = 2; $row <= $lastRow; $row++) {
                     $sheet->getRowDimension($row)->setRowHeight(28);
                 }
 
-                // ── 6. Heading styling ────────────────────────────────────
+                // ── 5. Heading styling ────────────────────────────────────
                 $sheet->getStyle("A1:{$lastCol}1")->applyFromArray([
                     'font' => [
                         'bold'  => true,
@@ -138,7 +122,7 @@ class BankSoalWithDataExport implements FromCollection, WithHeadings, WithEvents
                     ],
                 ]);
 
-                // ── 7. Data rows styling ──────────────────────────────────
+                // ── 6. Data rows styling ──────────────────────────────────
                 if ($lastRow >= 2) {
                     // Semua kolom data → center + middle
                     $sheet->getStyle("A2:{$lastCol}{$lastRow}")->getAlignment()
@@ -151,8 +135,8 @@ class BankSoalWithDataExport implements FromCollection, WithHeadings, WithEvents
                         ->setVertical(Alignment::VERTICAL_CENTER)
                         ->setWrapText(true);
 
-                    // Kolom Opsi (G–K) → left
-                    $sheet->getStyle("G2:K{$lastRow}")->getAlignment()
+                    // Kolom Opsi (E–I) → left
+                    $sheet->getStyle("E2:I{$lastRow}")->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                         ->setVertical(Alignment::VERTICAL_CENTER);
 
@@ -166,7 +150,7 @@ class BankSoalWithDataExport implements FromCollection, WithHeadings, WithEvents
                     }
                 }
 
-                // ── 8. Border tipis seluruh tabel ─────────────────────────
+                // ── 7. Border tipis seluruh tabel ─────────────────────────
                 $sheet->getStyle("A1:{$lastCol}{$lastRow}")->applyFromArray([
                     'borders' => [
                         'allBorders' => [

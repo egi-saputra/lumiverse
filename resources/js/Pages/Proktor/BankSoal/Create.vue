@@ -1,16 +1,22 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import { ref, computed } from 'vue';
-import { Link, usePage, router } from '@inertiajs/vue3';
-import { CheckIcon, ArrowLeftIcon, DocumentArrowUpIcon, PlusIcon } from '@heroicons/vue/24/solid';
+import { Link, router } from '@inertiajs/vue3';
+import {
+    CheckIcon,
+    ArrowLeftIcon,
+    DocumentArrowUpIcon,
+    PlusIcon,
+    XMarkIcon,
+    ArrowDownTrayIcon,
+} from '@heroicons/vue/24/solid';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-import { QuillEditor } from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
+import MateriContent from '@/Components/MateriContent.vue';
 
 const props = defineProps({ soal_id: [Number, String] });
 
-// ─── Form state (ref biasa, bukan useForm) ────────────────────────────────────
+// ─── Form state ───────────────────────────────────────────────────────────────
 const form = ref({
     soal_id: Number(props.soal_id),
     soal: '',
@@ -29,10 +35,13 @@ const form = ref({
 
 const isSubmitting = ref(false);
 const isImporting = ref(false);
-const fileInputRef = ref(null);
 const opsiState = ref(['a']);
+const fileInputRef = ref(null);
 const opsiFiles = ref({});
 const opsiPreviews = ref({});
+
+// Tab Edit/Preview untuk field pertanyaan (Markdown + LaTeX + kode)
+const soalTab = ref('edit'); // 'edit' | 'preview'
 
 // ─── Opsi helpers ─────────────────────────────────────────────────────────────
 function addOpsi() {
@@ -51,7 +60,7 @@ function removeOpsi() {
     }
 }
 
-// ─── File helpers ─────────────────────────────────────────────────────────────
+// ─── File lampiran ────────────────────────────────────────────────────────────
 function handleFile(event) {
     form.value.lampiran_file = event.target.files[0] || null;
 }
@@ -64,28 +73,27 @@ function handleOpsiFile(event, key) {
     opsiPreviews.value[key] = URL.createObjectURL(file);
 }
 
-// ─── Submit manual ────────────────────────────────────────────────────────────
+// ─── Submit soal manual ───────────────────────────────────────────────────────
 async function submitManual() {
     if (form.value.jenis_lampiran === 'Gambar' && !form.value.lampiran_file) {
-        return Swal.fire({ icon: 'warning', title: 'Belum ada gambar', text: 'Silakan upload file gambar terlebih dahulu!', confirmButtonColor: '#3b82f6' });
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Belum ada gambar',
+            text: 'Silakan upload file gambar terlebih dahulu!',
+            confirmButtonColor: '#3b82f6',
+        });
     }
 
     const data = new FormData();
-    data.append('soal_id', props.soal_id);
-    data.append('soal', form.value.soal);
-    data.append('tipe_soal', form.value.tipe_soal);
-    data.append('jenis_lampiran', form.value.jenis_lampiran);
-    data.append('jawaban_benar', form.value.jawaban_benar ?? '');
-    data.append('nilai', form.value.nilai);
-    data.append('opsi_a', form.value.opsi_a ?? '');
-    data.append('opsi_b', form.value.opsi_b ?? '');
-    data.append('opsi_c', form.value.opsi_c ?? '');
-    data.append('opsi_d', form.value.opsi_d ?? '');
-    data.append('opsi_e', form.value.opsi_e ?? '');
+    Object.entries(form.value).forEach(([key, val]) => {
+        if (key === 'lampiran_file') {
+            if (form.value.jenis_lampiran === 'Gambar' && val) data.append(key, val);
+        } else if (key !== 'excel') {
+            data.append(key, val ?? '');
+        }
+    });
 
-    if (form.value.jenis_lampiran === 'Gambar' && form.value.lampiran_file) {
-        data.append('lampiran_file', form.value.lampiran_file);
-    }
+    // Lampirkan gambar opsi
     Object.entries(opsiFiles.value).forEach(([key, file]) => {
         data.append(`opsi_${key}_file`, file);
     });
@@ -151,234 +159,314 @@ const isManualDisabled = computed(() => !!form.value.excel);
 
 <template>
     <MenuLayout>
-        <div class="mx-auto bg-gray-100 dark:bg-slate-950">
-            <form @submit.prevent="submitManual" class="mx-auto space-y-5 sm:p-6
-             sm:bg-white sm:border sm:border-gray-300 sm:rounded-2xl sm:shadow
-             sm:dark:bg-slate-900 sm:dark:border-slate-800">
+        <div class="min-h-screen bg-gray-50 dark:bg-slate-950">
 
-                <!-- TITLE -->
-                <h1 class="text-2xl font-extrabold mb-6 text-gray-800 dark:text-slate-100">
-                    <span class="text-3xl">+</span> Tambahkan Soal Quiz
-                </h1>
+            <div
+                class="sm:rounded-2xl sm:border sm:border-gray-200 sm:bg-white sm:shadow-sm sm:dark:border-slate-800 sm:dark:bg-slate-900 overflow-hidden">
 
-                <!-- IMPORT EXCEL -->
-                <div class="border border-dashed p-4 rounded-lg text-center space-y-2
-               bg-gray-50 border-gray-300
-               dark:bg-slate-800/60 dark:border-slate-700">
-
-                    <label class="flex flex-col items-center justify-center cursor-pointer">
-                        <DocumentArrowUpIcon class="w-10 h-10 text-blue-500 mb-2" />
-                        <span class="font-semibold mb-1 text-gray-600 dark:text-slate-200">
-                            Upload File Soal
-                        </span>
-                        <span class="text-sm text-gray-400 dark:text-slate-400">
-                            (.xlsx / .xls)
-                        </span>
-                        <input type="file" accept=".xlsx,.xls" @change="importExcel" class="hidden" />
-                    </label>
-
-                    <p v-if="form.excel" class="mt-2 font-medium text-green-600 dark:text-green-400">
-                        {{ form.excel.name }}
-                    </p>
-
-                    <div class="flex justify-center gap-2 mt-2">
-                        <button type="button" @click="submitExcel" :disabled="!form.excel || isImporting" :class="[
-                            'px-4 py-2 rounded-lg transition font-medium flex items-center gap-2 text-white',
-                            form.processing
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-green-600 hover:bg-green-700'
-                        ]">
-                            <svg v-if="isImporting" class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg"
-                                fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4" />
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                            </svg>
-                            <span>{{ isImporting ? 'Importing...' : 'Import Excel' }}</span>
-                        </button>
-
-                        <button type="button" @click="downloadTemplate"
-                            class="px-4 py-2 rounded-lg font-medium transition bg-blue-600 text-white hover:bg-blue-700">
-                            Unduh Template
-                        </button>
-                    </div>
-                </div>
-
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <!-- TIPE SOAL -->
-                    <div>
-                        <label class="block font-semibold mb-1 text-gray-700 dark:text-slate-200">
-                            <span class="text-red-600">*</span> Tipe Soal
-                        </label>
-                        <select v-model="form.tipe_soal" :disabled="isManualDisabled"
-                            class="w-full p-3 rounded-lg border transition border-gray-300 focus:ring-2 focus:ring-blue-400 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
-                            <option value="PG">Pilihan Ganda</option>
-                            <option value="Essay">Essay</option>
-                        </select>
-                    </div>
-
-                    <!-- JENIS LAMPIRAN -->
-                    <div>
-                        <label class="block font-semibold mb-1 text-gray-700 dark:text-slate-200">
-                            Jenis Lampiran
-                        </label>
-                        <select v-model="form.jenis_lampiran" :disabled="isManualDisabled"
-                            class="w-full p-3 rounded-lg border border-gray-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
-                            <option value="Tanpa Lampiran">Tanpa Lampiran</option>
-                            <option value="Gambar">Gambar</option>
-                        </select>
-                    </div>
-                </div>
-
-                <!-- UPLOAD GAMBAR -->
-                <div v-if="form.jenis_lampiran === 'Gambar'">
-                    <label class="block font-semibold mb-1 text-gray-700 dark:text-slate-200">
-                        Upload Gambar
-                    </label>
-                    <input type="file" @change="handleFile" class="w-full p-2 rounded-lg border
-                 border-gray-300
-                 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
-                    <p v-if="form.lampiran_file" class="mt-1 text-green-600 dark:text-green-400">
-                        {{ form.lampiran_file.name }}
+                <!-- ── Header card ─────────────────────────────────── -->
+                <div class="border-b border-gray-200 dark:border-slate-800 sm:px-6 sm:py-5 sm:pb-0 pb-5">
+                    <h1 class="text-xl font-semibold text-gray-900 dark:text-slate-100">
+                        Tambah Soal Quiz
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-slate-400">
+                        Isi form di bawah atau import dari file Excel.
                     </p>
                 </div>
 
-                <!-- SOAL -->
-                <div>
-                    <label class="block font-semibold mb-1 text-gray-700 dark:text-slate-200">
-                        <span class="text-red-600">*</span> Soal / Pertanyaan
-                    </label>
+                <div class="sm:px-6 py-6 space-y-6">
 
-                    <div class="rounded-xl overflow-hidden border shadow-sm
-                 border-gray-300 bg-white
-                 dark:border-slate-700 dark:bg-slate-900">
-
-                        <QuillEditor v-model:content="form.soal" placeholder="Type the question here..."
-                            content-type="html" theme="snow" class="announcement-editor" :toolbar="[
-                                ['bold', 'italic', 'underline'],
-                                [{ list: 'ordered' }, { list: 'bullet' }],
-                                [{ align: [] }],
-                                ['clean']
-                            ]" />
-
-                        <div class="flex justify-end border-t border-gray-300 dark:border-slate-700">
-                            <span class="px-3 py-2 text-xs text-gray-500 dark:text-slate-400">
-                                Powered by
-                                <strong class="pl-1 tracking-widest text-gray-700 dark:text-slate-200">
-                                    Lumiverse
-                                </strong>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- OPTIONS -->
-                <div v-if="form.tipe_soal === 'PG'" class="space-y-4 pt-4">
-                    <div class="flex sm:flex-row flex-col gap-3 justify-start sm:justify-between">
-                        <h3 class="font-semibold text-gray-700 dark:text-gray-200">Answer Options</h3>
-                        <div class="flex gap-2">
-                            <button v-if="opsiState.length > 1" type="button" @click="removeOpsi"
-                                class="text-red-600 btn-primary !py-1 !px-3 font-semibold flex items-center gap-1">
-                                Remove
-                            </button>
-                            <button v-if="opsiState.length < 5" type="button" @click="addOpsi"
-                                class="text-indigo-600 font-semibold btn-primary !py-1 !px-3 flex items-center gap-1">
-                                <PlusIcon class="w-4 h-4" /> Add
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div v-for="key in opsiState" :key="key" class="space-y-2">
-                            <label class="text-sm font-medium dark:text-gray-300">
-                                Option {{ key.toUpperCase() }}
-                            </label>
-
-                            <!-- Teks opsi -->
-                            <input v-model="form['opsi_' + key]" class="form-input dark:text-gray-400 w-full"
-                                placeholder="Enter Optional Answer" />
-
-                            <!-- Upload gambar opsi -->
-                            <div class="flex items-center gap-2">
-                                <label :for="`opsi_${key}_file`" class="cursor-pointer text-xs px-3 py-1.5 rounded-lg border
-                           border-gray-300 dark:border-slate-600
-                           bg-gray-50 dark:bg-slate-800
-                           text-gray-600 dark:text-slate-300
-                           hover:bg-gray-100 dark:hover:bg-slate-700 transition">
-                                    📷 Gambar (opsional)
-                                </label>
-                                <input :id="`opsi_${key}_file`" type="file" accept="image/*"
-                                    @change="handleOpsiFile($event, key)" class="hidden" />
-
-                                <!-- Preview -->
-                                <span v-if="opsiFiles[key]"
-                                    class="text-xs text-green-600 dark:text-green-400 truncate max-w-[120px]">
-                                    {{ opsiFiles[key].name }}
-                                </span>
+                    <!-- ── Import Excel ────────────────────────────── -->
+                    <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50
+                                    dark:border-slate-700 dark:bg-slate-800/50 p-5">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="rounded-full bg-blue-50 dark:bg-blue-500/10 p-3">
+                                <DocumentArrowUpIcon class="w-7 h-7 text-blue-500" />
+                            </div>
+                            <div class="text-center">
+                                <p class="font-medium text-gray-700 dark:text-slate-200">
+                                    Import Soal dari Excel
+                                </p>
+                                <p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">
+                                    Format: .xlsx / .xls
+                                </p>
                             </div>
 
-                            <!-- Preview thumbnail -->
-                            <img v-if="opsiPreviews[key]" :src="opsiPreviews[key]"
-                                class="mt-1 h-20 rounded-lg object-cover border border-gray-200 dark:border-slate-700" />
+                            <label class="cursor-pointer inline-flex items-center gap-2 rounded-lg
+                                              border border-gray-300 dark:border-slate-600
+                                              bg-white dark:bg-slate-700
+                                              px-4 py-2 text-sm font-medium
+                                              text-gray-700 dark:text-slate-200
+                                              hover:bg-gray-50 dark:hover:bg-slate-600
+                                              transition-colors">
+                                Pilih File
+                                <input ref="fileInputRef" type="file" accept=".xlsx,.xls" @change="importExcel"
+                                    class="hidden" />
+                            </label>
+
+                            <!-- File terpilih -->
+                            <div v-if="form.excel" class="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-500/10
+                                            border border-green-200 dark:border-green-500/20
+                                            px-3 py-2 text-sm text-green-700 dark:text-green-400">
+                                <span class="truncate max-w-[220px]">{{ form.excel.name }}</span>
+                                <button type="button" @click="clearExcel"
+                                    class="ml-1 rounded-full hover:bg-green-100 dark:hover:bg-green-500/20 p-0.5 transition">
+                                    <XMarkIcon class="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center gap-3 mt-4">
+                            <button type="button" @click="submitExcel" :disabled="!form.excel || isImporting" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+                                           text-white transition-colors
+                                           disabled:opacity-50 disabled:cursor-not-allowed
+                                           bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-600">
+                                <svg v-if="isImporting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4" />
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                </svg>
+                                {{ isImporting ? 'Mengimport...' : 'Import Excel' }}
+                            </button>
+
+                            <button type="button" @click="downloadTemplate" class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold
+                                           text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                <ArrowDownTrayIcon class="w-4 h-4" />
+                                Unduh Template
+                            </button>
                         </div>
                     </div>
-                </div>
 
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <!-- JAWABAN BENAR -->
-                    <div>
-                        <label class="block font-semibold mb-1 text-gray-700 dark:text-slate-200">
-                            Jawaban Benar
-                        </label>
-
-                        <input v-if="form.tipe_soal === 'Essay'" v-model="form.jawaban_benar" type="text"
-                            placeholder="Jawaban Essay" :disabled="isManualDisabled" class="w-full p-3 rounded-lg border
-                 border-gray-300
-                 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" />
-
-                        <select v-else v-model="form.jawaban_benar" :disabled="isManualDisabled" class="w-full p-3 rounded-lg border
-                 border-gray-300
-                 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
-                            <option value="opsi_a">A. {{ form.opsi_a }}</option>
-                            <option value="opsi_b">B. {{ form.opsi_b }}</option>
-                            <option value="opsi_c">C. {{ form.opsi_c }}</option>
-                            <option value="opsi_d">D. {{ form.opsi_d }}</option>
-                            <option value="opsi_e">E. {{ form.opsi_e }}</option>
-                        </select>
+                    <!-- ── Divider ──────────────────────────────────── -->
+                    <div class="relative flex items-center gap-3">
+                        <div class="flex-1 border-t border-gray-200 dark:border-slate-700" />
+                        <span class="text-xs font-medium text-gray-400 dark:text-slate-500 uppercase tracking-widest">
+                            atau isi manual
+                        </span>
+                        <div class="flex-1 border-t border-gray-200 dark:border-slate-700" />
                     </div>
 
-                    <!-- NILAI -->
-                    <div>
-                        <label class="block font-semibold mb-1 text-gray-700 dark:text-slate-200">
-                            Bobot Nilai
-                        </label>
-                        <input v-model="form.nilai" type="number" min="0" :disabled="isManualDisabled"
-                            class="w-full p-3 rounded-lg border border-gray-300 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100" />
-                    </div>
+                    <!-- ── Form Manual ─────────────────────────────── -->
+                    <form @submit.prevent="submitManual" class="space-y-5"
+                        :class="{ 'opacity-50 pointer-events-none': isManualDisabled }">
+
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <!-- Question Type -->
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                    Tipe Soal <span class="text-red-500">*</span>
+                                </label>
+                                <select v-model="form.tipe_soal" class="w-full rounded-lg border border-gray-300
+                                                   bg-white dark:bg-slate-800
+                                                   dark:border-slate-700 dark:text-slate-100
+                                                   px-3 py-2.5 text-sm
+                                                   focus:outline-none focus:ring-2 focus:ring-blue-500
+                                                   transition">
+                                    <option value="PG">Pilihan Ganda</option>
+                                    <option value="Essay">Essay</option>
+                                </select>
+                            </div>
+
+                            <!-- Attachment Type -->
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                    Lampiran
+                                </label>
+                                <select v-model="form.jenis_lampiran" class="w-full rounded-lg border border-gray-300
+                                                   bg-white dark:bg-slate-800
+                                                   dark:border-slate-700 dark:text-slate-100
+                                                   px-3 py-2.5 text-sm
+                                                   focus:outline-none focus:ring-2 focus:ring-blue-500
+                                                   transition">
+                                    <option value="Tanpa Lampiran">Tanpa Lampiran</option>
+                                    <option value="Gambar">Gambar</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Upload Image -->
+                        <div v-if="form.jenis_lampiran === 'Gambar'" class="space-y-1.5">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                Upload Gambar
+                            </label>
+                            <input type="file" accept="image/*" @change="handleFile" class="w-full rounded-lg border border-gray-300
+                                           dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200
+                                           px-3 py-2 text-sm file:mr-3 file:rounded file:border-0
+                                           file:bg-blue-50 file:text-blue-700 file:text-xs file:font-medium
+                                           dark:file:bg-blue-500/10 dark:file:text-blue-400
+                                           transition" />
+                            <p v-if="form.lampiran_file" class="text-xs text-green-600 dark:text-green-400">
+                                ✓ {{ form.lampiran_file.name }}
+                            </p>
+                        </div>
+
+                        <!-- Question (Markdown + LaTeX + kode, dengan tab Edit/Preview) -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="font-medium text-gray-700 dark:text-slate-300">
+                                    Soal / Pertanyaan <span class="text-red-500">*</span>
+                                </label>
+
+                                <div
+                                    class="inline-flex rounded-lg border border-gray-300 dark:border-slate-600 p-0.5 bg-gray-50 dark:bg-slate-900">
+                                    <button type="button" @click="soalTab = 'edit'" :class="[
+                                        'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
+                                        soalTab === 'edit'
+                                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    ]">
+                                        ✏️ Edit
+                                    </button>
+                                    <button type="button" @click="soalTab = 'preview'" :class="[
+                                        'px-3 py-1 text-xs font-semibold rounded-md transition-colors',
+                                        soalTab === 'preview'
+                                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                    ]">
+                                        👁️ Preview
+                                    </button>
+                                </div>
+                            </div>
+
+                            <textarea v-show="soalTab === 'edit'" v-model="form.soal" required rows="5" class="w-full rounded-lg border border-gray-300 font-mono
+                                       dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
+                                       px-3 py-2.5 text-sm resize-y
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                                placeholder="Tulis pertanyaan di sini. Mendukung Markdown, LaTeX ($x^2$ atau $$...$$), dan blok kode (```python ... ```)."></textarea>
+
+                            <div v-show="soalTab === 'preview'"
+                                class="w-full min-h-[120px] border border-gray-300 dark:border-slate-700 rounded-lg px-4 py-3 bg-white dark:bg-slate-800">
+                                <MateriContent v-if="form.soal" :content="form.soal" />
+                                <p v-else class="text-sm text-gray-400 italic">Belum ada konten untuk di-preview.</p>
+                            </div>
+
+                            <p class="text-xs text-gray-500 dark:text-slate-400">
+                                Mendukung Markdown dasar, LaTeX untuk rumus matematika, dan blok kode.
+                            </p>
+                        </div>
+
+                        <!-- Answer Options (PG) -->
+                        <div v-if="form.tipe_soal === 'PG'" class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="text-sm font-medium text-gray-700 dark:text-slate-300">
+                                    Pilihan Jawaban
+                                </label>
+                                <div class="flex gap-2">
+                                    <button v-if="opsiState.length > 1" type="button" @click="removeOpsi" class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs
+                       font-medium text-red-600 dark:text-red-400
+                       border border-red-200 dark:border-red-500/30
+                       hover:bg-red-50 dark:hover:bg-red-500/10 transition">
+                                        <XMarkIcon class="w-3 h-3" /> Hapus
+                                    </button>
+                                    <button v-if="opsiState.length < 5" type="button" @click="addOpsi" class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs
+                       font-medium text-blue-600 dark:text-blue-400
+                       border border-blue-200 dark:border-blue-500/30
+                       hover:bg-blue-50 dark:hover:bg-blue-500/10 transition">
+                                        <PlusIcon class="w-3 h-3" /> Tambah
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 gap-3">
+                                <div v-for="key in opsiState" :key="key" class="space-y-2">
+                                    <label
+                                        class="text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wide">
+                                        Opsi {{ key.toUpperCase() }}
+                                    </label>
+
+                                    <!-- Teks opsi -->
+                                    <input v-model="form['opsi_' + key]"
+                                        :placeholder="`Masukkan opsi ${key.toUpperCase()}`"
+                                        class="w-full rounded-lg border border-gray-300  dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition placeholder-gray-400 dark:placeholder-slate-500" />
+
+                                    <!-- Upload gambar opsi -->
+                                    <div class="flex items-center gap-2">
+                                        <label :for="`opsi_${key}_file`"
+                                            class="cursor-pointer inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-600 transition">
+                                            📷 Gambar (opsional)
+                                        </label>
+                                        <input :id="`opsi_${key}_file`" type="file" accept="image/*"
+                                            @change="handleOpsiFile($event, key)" class="hidden" />
+                                        <span v-if="opsiFiles[key]"
+                                            class="text-xs text-green-600 dark:text-green-400 truncate max-w-[120px]">
+                                            {{ opsiFiles[key].name }}
+                                        </span>
+                                    </div>
+
+                                    <!-- Preview thumbnail -->
+                                    <img v-if="opsiPreviews[key]" :src="opsiPreviews[key]"
+                                        class="h-20 rounded-lg object-cover border border-gray-200 dark:border-slate-700" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Correct Answer + Score -->
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <!-- Correct Answer -->
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                    Jawaban Benar
+                                </label>
+                                <textarea v-if="form.tipe_soal === 'Essay'" v-model="form.jawaban_benar" rows="3"
+                                    placeholder="Kunci jawaban Essay" class="w-full rounded-lg border border-gray-300
+                                               dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
+                                               px-3 py-2.5 text-sm resize-none
+                                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                                <select v-else v-model="form.jawaban_benar" class="w-full rounded-lg border border-gray-300
+                                               bg-white dark:bg-slate-800
+                                               dark:border-slate-700 dark:text-slate-100
+                                               px-3 py-2.5 text-sm
+                                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                    <option value="">-- Pilih jawaban benar --</option>
+                                    <option v-for="key in opsiState" :key="key" :value="'opsi_' + key">
+                                        {{ key.toUpperCase() }}. {{ form['opsi_' + key] || '(kosong)' }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <!-- Score -->
+                            <div class="space-y-1.5">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-slate-300">
+                                    Bobot Nilai <span class="text-red-500">*</span>
+                                </label>
+                                <input v-model="form.nilai" type="number" min="0" placeholder="0" class="w-full rounded-lg border border-gray-300
+                                               dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100
+                                               px-3 py-2.5 text-sm
+                                               focus:outline-none focus:ring-2 focus:ring-blue-500 transition" />
+                            </div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button type="submit" :disabled="isSubmitting" class="flex-1 inline-flex items-center justify-center gap-2
+                                           rounded-xl px-6 py-3 text-sm font-semibold text-white
+                                           bg-blue-600 hover:bg-blue-700 active:scale-[0.98]
+                                           disabled:opacity-60 disabled:cursor-not-allowed
+                                           transition-all shadow-sm">
+                                <svg v-if="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4" />
+                                    <path class="opacity-75" fill="currentColor"
+                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                </svg>
+                                <CheckIcon v-else class="w-4 h-4" />
+                                {{ isSubmitting ? 'Menyimpan...' : 'Buat Soal' }}
+                            </button>
+
+                            <Link :href="`/proktor/soal/${props.soal_id}`" class="flex-1 inline-flex items-center justify-center gap-2
+                                           rounded-xl px-6 py-3 text-sm font-semibold
+                                           text-gray-700 dark:text-slate-300
+                                           border border-gray-300 dark:border-slate-700
+                                           hover:bg-gray-50 dark:hover:bg-slate-800
+                                           active:scale-[0.98] transition-all">
+                                <ArrowLeftIcon class="w-4 h-4" />
+                                Batal
+                            </Link>
+                        </div>
+                    </form>
                 </div>
-
-                <!-- BUTTON -->
-                <div class="flex flex-col md:flex-row gap-4 mt-4">
-                    <button type="submit" :disabled="isSubmitting"
-                        class="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold rounded-lg shadow transition">
-                        <svg v-if="isSubmitting" class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg"
-                            fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                        </svg>
-                        <CheckIcon class="w-5 h-5" />
-                        {{ isSubmitting ? 'Creating...' : 'Create Quest' }}
-                    </button>
-
-                    <Link :href="`/proktor/soal/${props.soal_id}`" class="flex-1 flex items-center justify-center gap-2 px-6 py-3
-                 bg-gray-600 hover:bg-gray-700
-                 text-white font-semibold rounded-lg shadow transition">
-                        <ArrowLeftIcon class="w-5 h-5" />
-                        Back to Quiz List
-                    </Link>
-                </div>
-
-            </form>
+            </div>
         </div>
     </MenuLayout>
 </template>
