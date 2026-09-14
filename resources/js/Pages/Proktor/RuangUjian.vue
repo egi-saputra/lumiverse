@@ -3,7 +3,7 @@ import MenuLayout from '@/Layouts/MenuLayout.vue';
 import {
     BookOpenIcon, BuildingLibraryIcon, MagnifyingGlassIcon,
     TrashIcon, ArrowPathIcon, XMarkIcon,
-    UserGroupIcon, FunnelIcon, AcademicCapIcon
+    UserGroupIcon, FunnelIcon
 } from "@heroicons/vue/24/outline";
 import { ref, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
@@ -163,15 +163,14 @@ const deletePeserta = async (id, nama) => {
 };
 
 const deleteAllPeserta = async () => {
-    const kelasAktif = filterKelas.value;
-    const label = kelasAktif ? `kelas <strong>${kelasAktif}</strong>` : 'semua kelas';
-    const jumlah = filteredPeserta.value.length;
+    const idsToDelete = filteredPeserta.value.map(p => p.id); // <-- basis penghapusan = basis tampilan
+    const jumlah = idsToDelete.length;
+    const label = hasActiveFilter.value ? 'data yang sesuai filter saat ini' : 'semua peserta';
 
     if (jumlah === 0) {
         return toast('info', 'Tidak ada data', 'Tidak ada peserta yang cocok dengan filter saat ini.');
     }
 
-    // Step 1 — Konfirmasi scope
     const step1 = await Swal.fire({
         title: 'Hapus Data Peserta',
         html: `Anda akan menghapus <strong>${jumlah} peserta</strong> dari ${label}.<br><br>
@@ -185,17 +184,14 @@ const deleteAllPeserta = async () => {
         confirmButtonText: '🗑️ Ujian Siswa + Riwayat',
         denyButtonText: '📋 Ujian Siswa Saja',
         cancelButtonText: 'Batal',
-        reverseButtons: false,
     });
 
     if (step1.isDismissed) return;
+    const includeRiwayat = step1.isConfirmed;
 
-    const includeRiwayat = step1.isConfirmed; // true = keduanya, false = ujian saja
-
-    // Step 2 — Konfirmasi akhir
     const step2 = await Swal.fire({
         title: 'Konfirmasi Akhir',
-        html: `Tindakan ini <strong>tidak dapat dibatalkan</strong>.<br>
+        html: `Tindakan ini <strong>tidak dapat dibatalkan</strong> dari sisi tampilan (data akan soft-delete).<br>
                ${jumlah} data dari ${label} akan dihapus${includeRiwayat ? ' beserta seluruh riwayat ujian' : ''}.`,
         icon: 'error',
         showCancelButton: true,
@@ -220,21 +216,13 @@ const deleteAllPeserta = async () => {
     try {
         await axios.delete('/proktor/ruang-ujian/peserta/destroy-all', {
             data: {
-                kelas: kelasAktif || null,
+                ids: idsToDelete,           // <-- eksplisit, bukan filter mentah
                 include_riwayat: includeRiwayat,
+                confirm_label: step2.value,
             }
         });
 
-        // Update local state
-        if (kelasAktif) {
-            pesertaList.value = pesertaList.value.filter(
-                p => p.user?.siswa?.kelas?.kelas !== kelasAktif
-            );
-        } else {
-            pesertaList.value = [];
-        }
-
-        filterKelas.value = '';
+        pesertaList.value = pesertaList.value.filter(p => !idsToDelete.includes(p.id));
         toast('success', 'Data berhasil dihapus', `${jumlah} peserta telah dihapus.`);
 
     } catch (e) {
@@ -271,19 +259,17 @@ const statusDot = (status) => {
 
 <template>
     <MenuLayout>
-        <div class="mx-auto w-full pb-10">
+        <div class="mx-auto w-full px-4 pb-10">
 
             <!-- ── HEADER ────────────────────────────────────── -->
-            <header class="page-header">
-                <div class="header-left">
-                    <div class="header-icon">
-                        <AcademicCapIcon class="icon" />
-                    </div>
-                    <div>
-                        <h1 class="page-title">Exam Room Management</h1>
-                        <p class="page-subtitle">Kelola dan pantau peserta ujian (Klik tombol reload untuk refresh dan
-                            menampilkan data terbaru)</p>
-                    </div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-50 tracking-tight">
+                        Exam Room Management
+                    </h1>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                        Kelola dan pantau peserta ujian (Klik tombol reload untuk refresh dan menampilkan data terbaru)
+                    </p>
                 </div>
 
                 <div class="flex gap-2">
@@ -302,7 +288,7 @@ const statusDot = (status) => {
                         Hapus {{ filterKelas ? `Kelas ${filterKelas}` : 'Semua' }}
                     </button>
                 </div>
-            </header>
+            </div>
 
             <!-- ── STAT CARDS ─────────────────────────────────── -->
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
@@ -561,42 +547,3 @@ const statusDot = (status) => {
         </div>
     </MenuLayout>
 </template>
-
-<style scoped>
-/* ══ Header ══════════════════════════════════════════════════════════════ */
-.page-header {
-    @apply flex items-center justify-between gap-4;
-}
-
-.header-left {
-    @apply flex items-center gap-4 mb-10;
-}
-
-.header-icon {
-    @apply w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-200 dark:shadow-blue-900/40 flex-shrink-0;
-}
-
-.header-icon .icon {
-    @apply w-6 h-6 text-white;
-}
-
-.page-title {
-    @apply text-xl md:text-2xl font-bold text-gray-900 dark:text-white leading-tight;
-}
-
-.page-subtitle {
-    @apply text-sm text-gray-500 dark:text-gray-400 mt-0.5;
-}
-
-.header-stat {
-    @apply flex flex-col items-center bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-2xl px-4 py-2 text-center;
-}
-
-.stat-num {
-    @apply text-2xl font-bold text-blue-600 dark:text-blue-400 leading-none;
-}
-
-.stat-label {
-    @apply text-xs text-blue-500 dark:text-blue-400 mt-0.5;
-}
-</style>

@@ -91,4 +91,9 @@ Route::middleware(['auth', 'verified', 'role:proktor'])->prefix('proktor')->name
         Route::delete('/rekap-nilai/destroy', [NilaiController::class, 'destroyRekap'])
             ->name('nilai.destroyRekap');
 
+        Route::get('/ruang-ujian/trash', [RuangUjianController::class, 'trashIndex']);
+        Route::get('/ruang-ujian/trash/data', [RuangUjianController::class, 'trashed']);
+        Route::post('/ruang-ujian/trash/restore', [RuangUjianController::class, 'restore']);
+        Route::delete('/ruang-ujian/trash/force-delete', [RuangUjianController::class, 'forceDeleteData']);
+
     });

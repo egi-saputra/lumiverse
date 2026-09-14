@@ -50,11 +50,22 @@ class MaterialController extends Controller
             'deskripsi' => 'nullable|string',
             'file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,xls,xlsx,doc,docx,zip|max:10240',
             'link' => 'nullable|url',
-            'ai_document_path' => 'nullable|string', // ← tambahkan ini
+            'ai_document_path' => 'nullable|string',
         ]);
 
-        if (tenant()->hasReachedFreeLimitForUser(Materi::class, 3)) {
-            return back()->with('error', 'Plan Free hanya dapat membuat maksimal 3 materi per akun. Silakan upgrade plan untuk menambah materi lebih banyak.');
+        // Kuota cuma berlaku kalau materi ini pakai file attachment (upload manual
+        // atau PDF hasil AI). Materi link-only tidak dibatasi — sama seperti
+        // MaterialUploadQuotaService di versi non-multitenant.
+        $usesFileAttachment = $request->hasFile('file') || $request->filled('ai_document_path');
+
+        if ($usesFileAttachment && tenant()->hasReachedFreeLimitForUser(
+            Materi::class,
+            3,
+            fn ($query) => $query->whereNotNull('file_path')->where('file_path', 'not like', 'http%')
+        )) {
+            return back()
+                ->with('error', 'Plan Free hanya dapat membuat maksimal 3 materi dengan file attachment per akun. Silakan upgrade plan, atau gunakan link eksternal (tidak dibatasi).')
+                ->withInput();
         }
 
         $filePath = null;
@@ -62,7 +73,6 @@ class MaterialController extends Controller
         if ($request->hasFile('file')) {
             $filePath = $request->file('file')->store('materials', 'r2');
         } elseif ($request->filled('ai_document_path')) {
-            // PDF sudah ada di R2 dari proses generateAi, tinggal pakai path-nya
             $filePath = $request->ai_document_path;
         }
 
@@ -80,11 +90,15 @@ class MaterialController extends Controller
 
     public function destroy(Materi $material)
     {
-        if ($material->file_path && Storage::disk('r2')->exists($material->file_path)) {   // ← ganti dari 'public'
-            Storage::disk('r2')->delete($material->file_path);   // ← ganti dari 'public'
-        }
+        abort_unless($material->user_id === Auth::id(), 403);
+
+        $filePath = $material->file_path;
 
         $material->delete();
+
+        if ($filePath && !str_starts_with($filePath, 'http') && Storage::disk('r2')->exists($filePath)) {
+            Storage::disk('r2')->delete($filePath);
+        }
 
         return redirect()->back()->with('success', 'Material deleted successfully.');
     }
