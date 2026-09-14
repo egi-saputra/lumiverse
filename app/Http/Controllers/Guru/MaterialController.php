@@ -3,17 +3,24 @@
 namespace App\Http\Controllers\Guru;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Materi;
 use App\Models\Kelas;
 use App\Models\Mapel;
+use App\Models\Materi;
+use App\Services\MaterialUploadQuotaService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class MaterialController extends Controller
 {
-    // 🔹 Show all materials for current user
+    protected MaterialUploadQuotaService $quotaService;
+
+    public function __construct(MaterialUploadQuotaService $quotaService)
+    {
+        $this->quotaService = $quotaService;
+    }
+
     public function index()
     {
         $material = Materi::with(['kelas', 'mapel'])
@@ -26,10 +33,11 @@ class MaterialController extends Controller
             'title' => 'Materials',
         ]);
     }
-    
-    // Show material form
+
     public function create()
     {
+        $user = Auth::user();
+
         $kelas = Kelas::select('id', 'kelas')->orderBy('kelas')->get();
         $subjects = Mapel::select('id', 'mapel')->orderBy('mapel')->get();
 
@@ -37,12 +45,19 @@ class MaterialController extends Controller
             'kelas' => $kelas,
             'subjects' => $subjects,
             'title' => 'New Material',
+            'uploadQuota' => [
+                'plan'      => $user->aiPlanKey(),
+                'limit'     => $this->quotaService->limitForUser($user),
+                'used'      => $this->quotaService->uploadedCountForUser($user->id),
+                'remaining' => $this->quotaService->remainingForUser($user),
+            ],
         ]);
     }
 
-    // Store material
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         $request->validate([
             'kelas_id' => 'required|exists:kelas,id',
             'mapel_id' => 'required|exists:mapel,id',
@@ -53,18 +68,18 @@ class MaterialController extends Controller
             'ai_document_path' => 'nullable|string',
         ]);
 
-        // Kuota cuma berlaku kalau materi ini pakai file attachment (upload manual
-        // atau PDF hasil AI). Materi link-only tidak dibatasi — sama seperti
-        // MaterialUploadQuotaService di versi non-multitenant.
+        // Kuota cuma berlaku kalau materi ini pakai file attachment
+        // (upload manual atau PDF hasil AI). Materi link-only tidak dibatasi.
         $usesFileAttachment = $request->hasFile('file') || $request->filled('ai_document_path');
 
-        if ($usesFileAttachment && tenant()->hasReachedFreeLimitForUser(
-            Materi::class,
-            3,
-            fn ($query) => $query->whereNotNull('file_path')->where('file_path', 'not like', 'http%')
-        )) {
+        if ($usesFileAttachment && !$this->quotaService->canUpload($user)) {
+            $limit = $this->quotaService->limitForUser($user);
+            $plan  = strtoupper($user->aiPlanKey());
+
             return back()
-                ->with('error', 'Plan Free hanya dapat membuat maksimal 3 materi dengan file attachment per akun. Silakan upgrade plan, atau gunakan link eksternal (tidak dibatasi).')
+                ->withErrors([
+                    'file' => "Kamu sudah mencapai batas {$limit} materi dengan file attachment untuk paket {$plan}. Hapus materi lama, upgrade paket, atau gunakan link eksternal (tidak dibatasi).",
+                ])
                 ->withInput();
         }
 

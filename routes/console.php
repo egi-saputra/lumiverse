@@ -15,6 +15,12 @@ Schedule::command('tenants:prune-journals')->cron('5 0 1 1,7 *');
 Schedule::command('tenants:prune-absensi')->cron('10 0 1 1,7 *');
 Schedule::command('tenants:reset-ujian')->cron('15 0 1 1,7 *');
 
+Schedule::command('r2:prune-orphaned-materials --force --hours=48')
+    ->weekly()
+    ->sundays()
+    ->at('03:00')
+    ->onOneServer();
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
