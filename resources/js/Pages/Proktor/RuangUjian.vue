@@ -139,20 +139,21 @@ const reloadPeserta = async () => {
 const deletePeserta = async (id, nama) => {
     const result = await Swal.fire({
         title: 'Hapus Peserta?',
-        html: `Yakin ingin menghapus <strong>${nama ?? 'siswa ini'}</strong> dari ruang ujian?`,
+        html: `Anda akan menghapus <strong>${nama ?? 'siswa ini'}</strong> dari ruang ujian.<br><br>
+               Pilih data yang ingin dihapus:`,
         icon: 'warning',
         showDenyButton: true,
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
         denyButtonColor: '#f97316',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: 'Ya, Hapus',
-        denyButtonText: 'Ya, Hapus Juga Riwayat Nilainya',
+        confirmButtonText: '🗑️ Ruang Ujian + Nilainya', // merah -> includeRiwayat true
+        denyButtonText: '📋 Ruang Ujian Saja',        // orange -> includeRiwayat false
         cancelButtonText: 'Batal',
     });
 
     if (result.isDismissed) return;
-    const includeRiwayat = result.isDenied; // tombol "Hapus + Riwayat Nilainya"
+    const includeRiwayat = result.isConfirmed;
 
     setRowLoading(id, true);
     try {
