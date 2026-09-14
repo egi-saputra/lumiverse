@@ -12,81 +12,80 @@ class PruneOrphanedR2Materials extends Command
 {
     protected $signature = 'r2:prune-orphaned-materials
                             {--force : Benar-benar hapus file. Tanpa flag ini, cuma laporan (dry-run).}
-                            {--hours=24 : Grace period — file yang lebih baru dari ini dari sekarang tidak disentuh.}
-                            {--tenant= : Batasi ke satu tenant (by id/code). Kosongkan untuk semua tenant.}';
+                            {--hours=24 : Grace period — file yang lebih baru dari ini dari sekarang tidak disentuh.}';
 
-    protected $description = 'Hapus file di R2 folder "materials/" yang sudah tidak punya row Materi manapun (file yatim). Default dry-run.';
+    protected $description = 'Hapus file di R2 folder "materials/" (shared, bukan per-tenant) yang tidak dirujuk oleh row Materi manapun di SEMUA tenant. Default dry-run.';
 
     public function handle(): int
     {
-        $isDryRun     = ! $this->option('force');
-        $graceHours   = (int) $this->option('hours');
-        $tenantFilter = $this->option('tenant');
+        $isDryRun   = ! $this->option('force');
+        $graceHours = (int) $this->option('hours');
 
         $this->info($isDryRun
             ? '=== DRY RUN — tidak ada file yang benar-benar dihapus ==='
             : '=== MODE HAPUS AKTIF — file yang terdeteksi yatim akan dihapus permanen ===');
 
-        $tenants = Tenant::query()
-            ->when($tenantFilter, fn ($q) => $q->where('id', $tenantFilter)->orWhere('code', $tenantFilter))
-            ->get();
+        // PENTING: folder materials/ di R2 adalah flat, dipakai bersama SEMUA tenant.
+        // Jadi validasi HARUS union dari semua tenant dulu, sebelum diff ke disk.
+        // Jangan pernah cek per-tenant secara terpisah — itu yang menyebabkan
+        // false-positive kemarin (file tenant lain ikut tertandai orphan).
+
+        $this->line('Mengumpulkan file_path valid dari semua tenant...');
+        $validPaths = collect();
+
+        Tenant::query()->get()->each(function ($tenant) use (&$validPaths) {
+            $tenant->run(function () use ($tenant, &$validPaths) {
+                $paths = Materi::query()
+                    ->whereNotNull('file_path')
+                    ->where('file_path', 'not like', 'http%')
+                    ->pluck('file_path');
+
+                $this->line("  - {$tenant->code}: {$paths->count()} referensi file");
+                $validPaths = $validPaths->concat($paths);
+            });
+        });
+
+        $validPaths = $validPaths->unique()->flip(); // O(1) lookup
+        $this->line("Total referensi file valid (gabungan semua tenant): {$validPaths->count()}");
+        $this->newLine();
+
+        // Scan disk SEKALI, bukan per tenant.
+        $filesOnDisk = Storage::disk('r2')->allFiles('materials');
+        $cutoff = now()->subHours($graceHours);
 
         $totalOrphans = 0;
         $totalDeleted = 0;
         $totalErrors  = 0;
 
-        foreach ($tenants as $tenant) {
-            $this->line("--- Tenant: {$tenant->name} ({$tenant->code}) ---");
+        foreach ($filesOnDisk as $path) {
+            if (isset($validPaths[$path])) {
+                continue; // masih dipakai oleh tenant manapun, skip
+            }
 
-            $tenant->run(function () use ($tenant, $isDryRun, $graceHours, &$totalOrphans, &$totalDeleted, &$totalErrors) {
+            $lastModified = Storage::disk('r2')->lastModified($path);
+            if ($lastModified && \Carbon\Carbon::createFromTimestamp($lastModified)->gt($cutoff)) {
+                continue; // grace period, belum tentu row-nya sudah ter-create
+            }
 
-                // 1. Kumpulkan semua path yang MASIH VALID (dipakai row Materi manapun).
-                $validPaths = Materi::query()
-                    ->whereNotNull('file_path')
-                    ->where('file_path', 'not like', 'http%')
-                    ->pluck('file_path')
-                    ->unique()
-                    ->flip(); // flip supaya lookup isset() O(1), bukan in_array() O(n)
+            $totalOrphans++;
+            $this->warn(($isDryRun ? '[AKAN DIHAPUS] ' : '[DIHAPUS] ') . $path);
 
-                // 2. Ambil semua file fisik yang ada di folder materials/ pada disk r2.
-                $filesOnDisk = Storage::disk('r2')->allFiles('materials');
+            Log::channel('single')->info('r2-prune-orphaned-materials', [
+                'path'      => $path,
+                'action'    => $isDryRun ? 'would_delete' : 'deleted',
+                'timestamp' => now()->toISOString(),
+            ]);
 
-                $cutoff = now()->subHours($graceHours);
-
-                foreach ($filesOnDisk as $path) {
-                    if (isset($validPaths[$path])) {
-                        continue; // masih dipakai, skip
-                    }
-
-                    // Grace period — jangan sentuh file yang baru diupload
-                    // (kemungkinan row Materi-nya belum sempat ter-create).
-                    $lastModified = Storage::disk('r2')->lastModified($path);
-                    if ($lastModified && \Carbon\Carbon::createFromTimestamp($lastModified)->gt($cutoff)) {
-                        continue;
-                    }
-
-                    $totalOrphans++;
-                    $this->warn(($isDryRun ? '[AKAN DIHAPUS] ' : '[DIHAPUS] ') . "{$tenant->code}: {$path}");
-
-                    Log::channel('single')->info('r2-prune-orphaned-materials', [
-                        'tenant'    => $tenant->code,
-                        'path'      => $path,
-                        'action'    => $isDryRun ? 'would_delete' : 'deleted',
-                        'timestamp' => now()->toISOString(),
-                    ]);
-
-                    if (! $isDryRun) {
-                        try {
-                            Storage::disk('r2')->delete($path);
-                            $totalDeleted++;
-                        } catch (\Throwable $e) {
-                            $totalErrors++;
-                            report($e);
-                            $this->error("Gagal hapus {$path}: {$e->getMessage()}");
-                        }
-                    }
+            if (! $isDryRun) {
+                try {
+                    Storage::disk('r2')->delete($path);
+                    $totalDeleted++;
+                } catch (\Throwable $e) {
+                    $totalErrors++;
+                    report($e);
+                    $this->error("Gagal hapus {$path}: {$e->getMessage()}");
                 }
-            });
+            }
         }
 
         $this->newLine();
