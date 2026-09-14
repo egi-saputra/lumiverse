@@ -139,17 +139,13 @@ const reloadPeserta = async () => {
 const deletePeserta = async (id, nama) => {
     const result = await Swal.fire({
         title: 'Hapus Peserta?',
-        html: `Anda akan menghapus <strong>${nama ?? 'siswa ini'}</strong> dari ruang ujian.<br><br>
-               Pilih data yang ingin dihapus:`,
+        html: `Yakin ingin menghapus <strong>${nama ?? 'siswa ini'}</strong> dari ruang ujian?`,
         icon: 'warning',
         showDenyButton: true,
-        showCancelButton: true,
         confirmButtonColor: '#ef4444',
         denyButtonColor: '#f97316',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '🗑️ Ruang Ujian + Nilainya', // merah -> includeRiwayat true
-        denyButtonText: '📋 Ruang Ujian Saja',        // orange -> includeRiwayat false
-        cancelButtonText: 'Batal',
+        confirmButtonText: 'Ya, Hapus Juga Riwayat Nilainya',
+        denyButtonText: 'Ya, Hapus',
     });
 
     if (result.isDismissed) return;
@@ -185,13 +181,10 @@ const deleteAllPeserta = async () => {
                Pilih data yang ingin dihapus:`,
         icon: 'warning',
         showDenyButton: true,
-        showCancelButton: true,
         confirmButtonColor: '#ef4444',
         denyButtonColor: '#f97316',
-        cancelButtonColor: '#6b7280',
-        confirmButtonText: '🗑️ Ruang Ujian + Riwayat Nilainya',
+        confirmButtonText: '🗑️ Ruang Ujian + Nilainya',
         denyButtonText: '📋 Ruang Ujian Saja',
-        cancelButtonText: 'Batal',
     });
 
     if (step1.isDismissed) return;
