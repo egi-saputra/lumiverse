@@ -35,12 +35,32 @@ class RuangUjianController extends Controller
 
     // ── API: hapus satu peserta (tanpa riwayat) ───────────────────
 
-    public function destroyPeserta(int $id): JsonResponse
+    public function destroyPeserta(Request $request, int $id): JsonResponse
     {
-        $peserta = UjianSiswa::findOrFail($id);
-        $peserta->delete();
+        $validated = $request->validate([
+            'include_riwayat' => ['required', 'boolean'],
+        ]);
 
-        return response()->json(['message' => 'Peserta berhasil dihapus.']);
+        $includeRiwayat = (bool) $validated['include_riwayat'];
+
+        try {
+            DB::transaction(function () use ($id, $includeRiwayat) {
+                if ($includeRiwayat) {
+                    $this->scopeRiwayatByUjianSiswaIds(collect([$id]))->delete();
+                }
+
+                UjianSiswa::findOrFail($id)->delete();
+            });
+
+            return response()->json(['message' => 'Peserta berhasil dihapus.']);
+
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'message' => 'Terjadi kesalahan saat menghapus data.',
+            ], 500);
+        }
     }
 
     // ── API: hapus semua / per-kelas ──────────────────────────────

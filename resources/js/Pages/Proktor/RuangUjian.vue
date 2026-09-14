@@ -139,19 +139,26 @@ const reloadPeserta = async () => {
 const deletePeserta = async (id, nama) => {
     const result = await Swal.fire({
         title: 'Hapus Peserta?',
-        html: `Peserta <strong>${nama ?? 'ini'}</strong> akan dihapus dari ruang ujian.`,
+        html: `Yakin ingin menghapus <strong>${nama ?? 'siswa ini'}</strong> dari ruang ujian?`,
         icon: 'warning',
+        showDenyButton: true,
         showCancelButton: true,
         confirmButtonColor: '#ef4444',
+        denyButtonColor: '#f97316',
         cancelButtonColor: '#6b7280',
         confirmButtonText: 'Ya, Hapus',
+        denyButtonText: 'Ya, Hapus Juga Riwayat Nilainya',
         cancelButtonText: 'Batal',
     });
-    if (!result.isConfirmed) return;
+
+    if (result.isDismissed) return;
+    const includeRiwayat = result.isDenied; // tombol "Hapus + Riwayat Nilainya"
 
     setRowLoading(id, true);
     try {
-        await axios.delete(`/proktor/ruang-ujian/peserta/${id}`);
+        await axios.delete(`/proktor/ruang-ujian/peserta/${id}`, {
+            data: { include_riwayat: includeRiwayat },
+        });
         pesertaList.value = pesertaList.value.filter(p => p.id !== id);
         toast('success', 'Peserta dihapus');
     } catch (e) {
@@ -181,8 +188,8 @@ const deleteAllPeserta = async () => {
         confirmButtonColor: '#ef4444',
         denyButtonColor: '#f97316',
         cancelButtonColor: '#6b7280',
-        confirmButtonText: '🗑️ Ujian Siswa + Riwayat',
-        denyButtonText: '📋 Ujian Siswa Saja',
+        confirmButtonText: '🗑️ Ruang Ujian + Riwayat Nilainya',
+        denyButtonText: '📋 Ruang Ujian Saja',
         cancelButtonText: 'Batal',
     });
 
