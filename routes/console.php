@@ -16,10 +16,16 @@ Schedule::command('tenants:prune-absensi')->cron('10 0 1 1,7 *');
 Schedule::command('tenants:reset-ujian')->cron('15 0 1 1,7 *');
 
 Schedule::command('r2:prune-orphaned-materials --force --hours=48')
-    ->weekly()
-    ->sundays()
-    ->at('03:00')
-    ->onOneServer();
+    ->weekly()->sundays()->at('03:00')->onOneServer();
+
+Schedule::command('r2:prune-orphaned-assignments --force --hours=48')
+    ->weekly()->sundays()->at('03:15')->onOneServer();
+
+Schedule::command('r2:prune-orphaned-pengumuman --force --hours=48')
+    ->weekly()->sundays()->at('03:30')->onOneServer();
+
+Schedule::command('r2:prune-orphaned-bank-soal --force --hours=48')
+    ->weekly()->sundays()->at('03:45')->onOneServer();
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
