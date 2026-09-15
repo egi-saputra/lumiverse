@@ -84,6 +84,21 @@ return [
             ]) : [],
         ],
 
+        'smknusantara' => [
+            'driver' => 'mysql',
+            'host' => env('SMKNUSANTARA_DB_HOST', '10.8.0.1'),
+            'port' => env('SMKNUSANTARA_DB_PORT', '3306'),
+            'database' => env('SMKNUSANTARA_DB_DATABASE', 'lms_nusantara'),
+            'username' => env('SMKNUSANTARA_DB_USERNAME', 'nusantara'),
+            'password' => env('SMKNUSANTARA_DB_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+        ],
+
         'central' => [
             'driver' => 'pgsql',
             'host' => env('DB_ADMIN_HOST', '127.0.0.1'),

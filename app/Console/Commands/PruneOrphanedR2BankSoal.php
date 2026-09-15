@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\BankSoal;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +15,7 @@ class PruneOrphanedR2BankSoal extends Command
                             {--force : Benar-benar hapus file. Tanpa flag ini, cuma laporan (dry-run).}
                             {--hours=24 : Grace period — file yang lebih baru dari ini dari sekarang tidak disentuh.}';
 
-    protected $description = 'Hapus file di R2 folder "bank_soal/" (shared, bukan per-tenant) yang tidak dirujuk oleh kolom lampiran manapun (link_lampiran, opsi_a..e_lampiran) di row BankSoal manapun di SEMUA tenant. Default dry-run.';
+    protected $description = 'Hapus file di R2 folder "bank_soal/" (shared: semua tenant Lumiverse + smknusantara) yang tidak dirujuk oleh kolom lampiran manapun. Default dry-run.';
 
     private const LAMPIRAN_COLUMNS = [
         'link_lampiran',
@@ -34,20 +35,18 @@ class PruneOrphanedR2BankSoal extends Command
             ? '=== DRY RUN — tidak ada file yang benar-benar dihapus ==='
             : '=== MODE HAPUS AKTIF — file yang terdeteksi yatim akan dihapus permanen ===');
 
-        $this->line('Mengumpulkan path lampiran valid (6 kolom) dari semua tenant...');
+        $this->line('Mengumpulkan path lampiran valid (6 kolom) dari semua tenant Lumiverse...');
         $validPaths = collect();
 
         Tenant::query()->get()->each(function ($tenant) use (&$validPaths) {
             $tenant->run(function () use ($tenant, &$validPaths) {
-                $rows = BankSoal::query()
-                    ->select(self::LAMPIRAN_COLUMNS)
-                    ->get();
+                $rows = BankSoal::query()->select(self::LAMPIRAN_COLUMNS)->get();
 
                 $paths = collect();
                 foreach (self::LAMPIRAN_COLUMNS as $column) {
                     $paths = $paths->concat(
                         $rows->pluck($column)
-                            ->filter() // buang null
+                            ->filter()
                             ->reject(fn ($p) => str_starts_with($p, 'http'))
                     );
                 }
@@ -57,8 +56,32 @@ class PruneOrphanedR2BankSoal extends Command
             });
         });
 
+        $this->line('Mengumpulkan path lampiran valid dari smknusantara (6 kolom)...');
+        try {
+            $smkRows = DB::connection('smknusantara')
+                ->table('bank_soal')
+                ->select(self::LAMPIRAN_COLUMNS)
+                ->get();
+
+            $smkPaths = collect();
+            foreach (self::LAMPIRAN_COLUMNS as $column) {
+                $smkPaths = $smkPaths->concat(
+                    collect($smkRows->pluck($column))
+                        ->filter()
+                        ->reject(fn ($p) => str_starts_with($p, 'http'))
+                );
+            }
+
+            $this->line("  - smknusantara: {$smkPaths->count()} referensi file (dari 6 kolom)");
+            $validPaths = $validPaths->concat($smkPaths);
+        } catch (\Throwable $e) {
+            $this->error('GAGAL konek ke database smknusantara: ' . $e->getMessage());
+            $this->error('Command dihentikan — tidak aman lanjut tanpa data referensi smknusantara.');
+            return self::FAILURE;
+        }
+
         $validPaths = $validPaths->unique()->flip();
-        $this->line("Total referensi file valid (gabungan semua tenant): {$validPaths->count()}");
+        $this->line("Total referensi file valid (Lumiverse + smknusantara): {$validPaths->count()}");
         $this->newLine();
 
         $filesOnDisk = Storage::disk('r2')->allFiles('bank_soal');

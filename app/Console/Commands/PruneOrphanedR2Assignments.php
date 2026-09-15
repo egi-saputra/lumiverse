@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Assignment;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +15,7 @@ class PruneOrphanedR2Assignments extends Command
                             {--force : Benar-benar hapus file. Tanpa flag ini, cuma laporan (dry-run).}
                             {--hours=24 : Grace period — file yang lebih baru dari ini dari sekarang tidak disentuh.}';
 
-    protected $description = 'Hapus file di R2 folder "assignments/" (shared, bukan per-tenant) yang tidak dirujuk oleh row Assignment manapun di SEMUA tenant. Default dry-run.';
+    protected $description = 'Hapus file di R2 folder "assignments/" (shared: semua tenant Lumiverse + tabel "tugas" smknusantara) yang tidak dirujuk oleh row manapun. Default dry-run.';
 
     public function handle(): int
     {
@@ -25,7 +26,7 @@ class PruneOrphanedR2Assignments extends Command
             ? '=== DRY RUN — tidak ada file yang benar-benar dihapus ==='
             : '=== MODE HAPUS AKTIF — file yang terdeteksi yatim akan dihapus permanen ===');
 
-        $this->line('Mengumpulkan file_path valid dari semua tenant...');
+        $this->line('Mengumpulkan file_path valid dari semua tenant Lumiverse...');
         $validPaths = collect();
 
         Tenant::query()->get()->each(function ($tenant) use (&$validPaths) {
@@ -40,8 +41,24 @@ class PruneOrphanedR2Assignments extends Command
             });
         });
 
+        $this->line('Mengumpulkan file_path valid dari smknusantara (tabel "tugas")...');
+        try {
+            $smkPaths = DB::connection('smknusantara')
+                ->table('tugas')
+                ->whereNotNull('file_path')
+                ->where('file_path', 'not like', 'http%')
+                ->pluck('file_path');
+
+            $this->line("  - smknusantara: {$smkPaths->count()} referensi file");
+            $validPaths = $validPaths->concat($smkPaths);
+        } catch (\Throwable $e) {
+            $this->error('GAGAL konek ke database smknusantara: ' . $e->getMessage());
+            $this->error('Command dihentikan — tidak aman lanjut tanpa data referensi smknusantara.');
+            return self::FAILURE;
+        }
+
         $validPaths = $validPaths->unique()->flip();
-        $this->line("Total referensi file valid (gabungan semua tenant): {$validPaths->count()}");
+        $this->line("Total referensi file valid (Lumiverse + smknusantara): {$validPaths->count()}");
         $this->newLine();
 
         $filesOnDisk = Storage::disk('r2')->allFiles('assignments');

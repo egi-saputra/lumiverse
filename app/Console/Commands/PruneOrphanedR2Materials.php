@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Materi;
 use App\Models\Tenant;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -14,7 +15,7 @@ class PruneOrphanedR2Materials extends Command
                             {--force : Benar-benar hapus file. Tanpa flag ini, cuma laporan (dry-run).}
                             {--hours=24 : Grace period — file yang lebih baru dari ini dari sekarang tidak disentuh.}';
 
-    protected $description = 'Hapus file di R2 folder "materials/" (shared, bukan per-tenant) yang tidak dirujuk oleh row Materi manapun di SEMUA tenant. Default dry-run.';
+    protected $description = 'Hapus file di R2 folder "materials/" (shared: semua tenant Lumiverse + smknusantara) yang tidak dirujuk oleh row Materi manapun. Default dry-run.';
 
     public function handle(): int
     {
@@ -25,12 +26,7 @@ class PruneOrphanedR2Materials extends Command
             ? '=== DRY RUN — tidak ada file yang benar-benar dihapus ==='
             : '=== MODE HAPUS AKTIF — file yang terdeteksi yatim akan dihapus permanen ===');
 
-        // PENTING: folder materials/ di R2 adalah flat, dipakai bersama SEMUA tenant.
-        // Jadi validasi HARUS union dari semua tenant dulu, sebelum diff ke disk.
-        // Jangan pernah cek per-tenant secara terpisah — itu yang menyebabkan
-        // false-positive kemarin (file tenant lain ikut tertandai orphan).
-
-        $this->line('Mengumpulkan file_path valid dari semua tenant...');
+        $this->line('Mengumpulkan file_path valid dari semua tenant Lumiverse...');
         $validPaths = collect();
 
         Tenant::query()->get()->each(function ($tenant) use (&$validPaths) {
@@ -45,11 +41,26 @@ class PruneOrphanedR2Materials extends Command
             });
         });
 
-        $validPaths = $validPaths->unique()->flip(); // O(1) lookup
-        $this->line("Total referensi file valid (gabungan semua tenant): {$validPaths->count()}");
+        $this->line('Mengumpulkan file_path valid dari smknusantara (database terpisah)...');
+        try {
+            $smkPaths = DB::connection('smknusantara')
+                ->table('materi')
+                ->whereNotNull('file_path')
+                ->where('file_path', 'not like', 'http%')
+                ->pluck('file_path');
+
+            $this->line("  - smknusantara: {$smkPaths->count()} referensi file");
+            $validPaths = $validPaths->concat($smkPaths);
+        } catch (\Throwable $e) {
+            $this->error('GAGAL konek ke database smknusantara: ' . $e->getMessage());
+            $this->error('Command dihentikan — tidak aman lanjut tanpa data referensi smknusantara.');
+            return self::FAILURE;
+        }
+
+        $validPaths = $validPaths->unique()->flip();
+        $this->line("Total referensi file valid (Lumiverse + smknusantara): {$validPaths->count()}");
         $this->newLine();
 
-        // Scan disk SEKALI, bukan per tenant.
         $filesOnDisk = Storage::disk('r2')->allFiles('materials');
         $cutoff = now()->subHours($graceHours);
 
@@ -59,12 +70,12 @@ class PruneOrphanedR2Materials extends Command
 
         foreach ($filesOnDisk as $path) {
             if (isset($validPaths[$path])) {
-                continue; // masih dipakai oleh tenant manapun, skip
+                continue;
             }
 
             $lastModified = Storage::disk('r2')->lastModified($path);
             if ($lastModified && \Carbon\Carbon::createFromTimestamp($lastModified)->gt($cutoff)) {
-                continue; // grace period, belum tentu row-nya sudah ter-create
+                continue;
             }
 
             $totalOrphans++;
