@@ -284,6 +284,7 @@ const submit = () => {
 }
 
 const kembaliKePilihPeran = () => router.visit(route('role.select'))
+const logout = () => router.post(route('logout'))
 
 /* ─── Pilihan dropdown ───────────────────────────────────── */
 const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu']
@@ -346,10 +347,10 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                                 Isi dengan data yang sesuai ijazah terakhir kamu.
                             </p>
                         </div>
-                        <button type="button" @click="kembaliKePilihPeran"
-                            class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-blue-500 transition-colors mt-1 shrink-0">
-                            <ArrowLeftIcon class="w-4 h-4" />
-                            <span class="hidden sm:inline">Kembali</span>
+                        <button type="button" @click="logout"
+                            class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors mt-1 shrink-0">
+                            <ArrowLeftOnRectangleIcon class="w-4 h-4" />
+                            <span class="hidden sm:inline">Logout</span>
                         </button>
                     </div>
 
@@ -698,32 +699,32 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
 
                         <!-- ══ NAVIGASI ══ -->
                         <div class="pt-4 flex items-center gap-3">
-                            <button v-if="!isFirstStep" type="button" @click="prevStep" class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold
-                                       text-gray-600 bg-gray-100 hover:bg-gray-200
-                                       transition-all duration-200 shrink-0">
+                            <button type="button" @click="isFirstStep ? kembaliKePilihPeran() : prevStep()" class="flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold
+               text-gray-600 bg-gray-100 hover:bg-gray-200
+               transition-all duration-200 shrink-0">
                                 <ArrowLeftIcon class="w-4 h-4" />
                                 Kembali
                             </button>
 
                             <button v-if="!isLastStep" type="submit" class="flex-1 flex items-center justify-center gap-2.5
-                                       px-6 py-3 rounded-xl text-sm font-bold text-white
-                                       bg-gradient-to-r from-blue-600 to-indigo-600
-                                       hover:from-blue-700 hover:to-indigo-700
-                                       active:scale-[0.98]
-                                       shadow-lg shadow-blue-200
-                                       transition-all duration-200">
+               px-6 py-3 rounded-xl text-sm font-bold text-white
+               bg-gradient-to-r from-blue-600 to-indigo-600
+               hover:from-blue-700 hover:to-indigo-700
+               active:scale-[0.98]
+               shadow-lg shadow-blue-200
+               transition-all duration-200">
                                 Selanjutnya
                                 <ArrowRightIcon class="w-4 h-4" />
                             </button>
 
                             <button v-else type="submit" :disabled="form.processing" class="flex-1 flex items-center justify-center gap-2.5
-                                       px-6 py-3 rounded-xl text-sm font-bold text-white
-                                       bg-gradient-to-r from-blue-600 to-indigo-600
-                                       hover:from-blue-700 hover:to-indigo-700
-                                       active:scale-[0.98]
-                                       disabled:opacity-60 disabled:cursor-not-allowed
-                                       shadow-lg shadow-blue-200
-                                       transition-all duration-200">
+               px-6 py-3 rounded-xl text-sm font-bold text-white
+               bg-gradient-to-r from-blue-600 to-indigo-600
+               hover:from-blue-700 hover:to-indigo-700
+               active:scale-[0.98]
+               disabled:opacity-60 disabled:cursor-not-allowed
+               shadow-lg shadow-blue-200
+               transition-all duration-200">
                                 <svg v-if="form.processing" class="animate-spin w-4 h-4 text-white"
                                     xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
