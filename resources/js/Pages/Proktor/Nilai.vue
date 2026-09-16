@@ -1,7 +1,7 @@
 <script setup>
 import MenuLayout from '@/Layouts/MenuLayout.vue';
 import {
-    ArrowPathIcon, BookOpenIcon,
+    ClipboardDocumentCheckIcon, ArrowPathIcon, BookOpenIcon,
     AcademicCapIcon, ArrowDownTrayIcon, DocumentTextIcon,
     InboxIcon, CheckCircleIcon, ClockIcon,
     ChevronLeftIcon, ChevronRightIcon,
@@ -99,9 +99,9 @@ const visiblePages = computed(() => {
 onMounted(async () => {
     try {
         const [soalRes, mapelRes, kelasRes] = await Promise.all([
-            fetch('/proktor/list-soal'),
-            fetch('/proktor/list-mapel'),
-            fetch('/proktor/list-kelas'),
+            fetch('/proktor/rekap-nilai/list-soal'),
+            fetch('/proktor/rekap-nilai/list-mapel'),
+            fetch('/proktor/rekap-nilai/list-kelas'),
         ]);
         [listSoal.value, listMapel.value, listKelas.value] = await Promise.all([
             soalRes.json(), mapelRes.json(), kelasRes.json(),
@@ -116,7 +116,12 @@ watch(filter, () => { currentPage.value = 1; }, { deep: true });
 watch(sortedRekap, () => { currentPage.value = 1; });
 
 // ── Methods ────────────────────────────────────────────────────────────────────
-const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+// const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+const getCsrfHeader = () => {
+    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+    const token = match ? decodeURIComponent(match[1]) : null;
+    return token ? { 'X-XSRF-TOKEN': token } : {};
+};
 
 const generate = async () => {
     if (!hasFilter.value) {
@@ -129,18 +134,22 @@ const generate = async () => {
     loaded.value = false;
 
     try {
-        const res = await fetch('/proktor/rekap-filtered', {
+        const res = await fetch('/proktor/rekap-nilai/filtered', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf,
                 'Accept': 'application/json',
+                ...getCsrfHeader(),
             },
             credentials: 'include',
             body: JSON.stringify(filter.value),
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            const body = await res.text();
+            console.error(`Generate rekap gagal — HTTP ${res.status}:`, body);
+            throw new Error(`HTTP ${res.status}`);
+        }
 
         rekap.value = await res.json();
         loaded.value = true;
@@ -270,8 +279,8 @@ const destroyRekap = async () => {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf,
                 'Accept': 'application/json',
+                ...getCsrfHeader(),
             },
             credentials: 'include',
             body: JSON.stringify(filter.value),
@@ -311,7 +320,7 @@ const destroyRekap = async () => {
             <header class="page-header">
                 <div class="header-left">
                     <div class="header-icon">
-                        <DocumentTextIcon class="icon" />
+                        <ClipboardDocumentCheckIcon class="icon" />
                     </div>
                     <div>
                         <h1 class="page-title">Rekap Penilaian</h1>
