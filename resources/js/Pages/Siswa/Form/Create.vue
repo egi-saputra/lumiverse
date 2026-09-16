@@ -350,7 +350,7 @@ const agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghuc
                         <button type="button" @click="logout"
                             class="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-red-500 transition-colors mt-1 shrink-0">
                             <ArrowLeftOnRectangleIcon class="w-4 h-4" />
-                            <span class="hidden sm:inline">Logout</span>
+                            <span>Logout</span>
                         </button>
                     </div>
 
