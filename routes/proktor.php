@@ -87,6 +87,13 @@ Route::middleware(['auth', 'verified', 'role:proktor'])->prefix('proktor')->name
         Route::get('/rekap-nilai', [NilaiController::class, 'index'])
             ->name('nilai.index');
 
+        // Data dropdown filter — dipindah dari api.php (auth:sanctum) ke sini (session web)
+        // karena halaman ini di-render via Inertia, bukan token Sanctum.
+        Route::get('/rekap-nilai/list-soal',  [NilaiController::class, 'listSoal'])->name('nilai.listSoal');
+        Route::get('/rekap-nilai/list-mapel', [NilaiController::class, 'listMapel'])->name('nilai.listMapel');
+        Route::get('/rekap-nilai/list-kelas', [NilaiController::class, 'listKelas'])->name('nilai.listKelas');
+        Route::post('/rekap-nilai/filtered',  [NilaiController::class, 'rekapFiltered'])->name('nilai.rekapFiltered');
+
         // Hapus rekap nilai berdasarkan filter
         Route::delete('/rekap-nilai/destroy', [NilaiController::class, 'destroyRekap'])
             ->name('nilai.destroyRekap');
