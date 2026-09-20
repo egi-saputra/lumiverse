@@ -50,10 +50,10 @@ class RekapNilaiController extends Controller
         $kelasIds = RiwayatUjian::join('soal', 'soal.id', '=', 'riwayat_ujian.soal_id')
             ->join('siswa', 'siswa.user_id', '=', 'riwayat_ujian.user_id')
             ->where('soal.user_id', auth()->id())
-            ->whereNotNull('siswa.kelas_id')
-            ->where('siswa.kelas_id', '!=', '')
+            ->whereRaw("CAST(siswa.kelas_id AS TEXT) ~ '^[0-9]+$'")   // hanya angka, buang NULL & string kosong
+            ->distinct()
             ->pluck('siswa.kelas_id')
-            ->unique()
+            ->map(fn ($id) => (int) $id)
             ->values();
 
         return Kelas::select('id', 'kelas')
