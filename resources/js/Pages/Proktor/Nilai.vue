@@ -9,6 +9,7 @@ import {
 } from '@heroicons/vue/24/outline';
 import { PlayIcon } from '@heroicons/vue/24/solid';
 import { ref, computed, onMounted, watch } from 'vue';
+import { getCsrfHeader } from '@/Composables/useCsrf.js';
 import { ToastAlert } from '@/Composables/ToastAlert.js';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -116,12 +117,11 @@ watch(filter, () => { currentPage.value = 1; }, { deep: true });
 watch(sortedRekap, () => { currentPage.value = 1; });
 
 // ── Methods ────────────────────────────────────────────────────────────────────
-// const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
-const getCsrfHeader = () => {
-    const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
-    const token = match ? decodeURIComponent(match[1]) : null;
-    return token ? { 'X-XSRF-TOKEN': token } : {};
-};
+// const getCsrfHeader = () => {
+//     const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]*)/);
+//     const token = match ? decodeURIComponent(match[1]) : null;
+//     return token ? { 'X-XSRF-TOKEN': token } : {};
+// };
 
 const generate = async () => {
     if (!hasFilter.value) {

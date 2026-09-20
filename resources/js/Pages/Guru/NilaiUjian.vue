@@ -242,6 +242,7 @@ import {
 } from '@heroicons/vue/24/outline';
 import { PlayIcon } from '@heroicons/vue/24/solid';
 import { ref, computed, onMounted, watch } from 'vue';
+import { getCsrfHeader } from '@/Composables/useCsrf.js';
 import { ToastAlert } from '@/Composables/ToastAlert.js';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -270,9 +271,6 @@ const sortOptions = [
     { label: 'Nilai', value: 'nilai' },
     { label: 'Nama', value: 'nama' },
 ];
-
-// ── CSRF token (cached once) ───────────────────────────────────────────────────
-const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
 // ── Computed ───────────────────────────────────────────────────────────────────
 const hasFilter = computed(() =>
@@ -334,10 +332,15 @@ const visiblePages = computed(() => {
 // ── Lifecycle ──────────────────────────────────────────────────────────────────
 onMounted(async () => {
     try {
+        // const [soalRes, mapelRes, kelasRes] = await Promise.all([
+        //     fetch('/guru/list-soal'),
+        //     fetch('/guru/list-mapel'),
+        //     fetch('/guru/list-kelas'),
+        // ]);
         const [soalRes, mapelRes, kelasRes] = await Promise.all([
-            fetch('/guru/list-soal'),
-            fetch('/guru/list-mapel'),
-            fetch('/guru/list-kelas'),
+            fetch('/guru/list-soal', { headers: { Accept: 'application/json' }, credentials: 'same-origin' }),
+            fetch('/guru/list-mapel', { headers: { Accept: 'application/json' }, credentials: 'same-origin' }),
+            fetch('/guru/list-kelas', { headers: { Accept: 'application/json' }, credentials: 'same-origin' }),
         ]);
 
         // Validasi response sebelum parse
@@ -384,14 +387,18 @@ const generate = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrf,
                 'Accept': 'application/json',
+                ...getCsrfHeader(),
             },
             credentials: 'include',
             body: JSON.stringify(filter.value),
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) {
+            const body = await res.text();
+            console.error(`Generate rekap gagal — HTTP ${res.status}:`, body);
+            throw new Error(`HTTP ${res.status}`);
+        }
 
         const data = await res.json();
         rekap.value = Array.isArray(data) ? data : [];
