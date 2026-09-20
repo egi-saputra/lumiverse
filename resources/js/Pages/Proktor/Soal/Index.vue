@@ -127,7 +127,7 @@ function resetFilters() {
 // ─── Delete ───────────────────────────────────────────────────────────────────
 function confirmDeleteItem(id, event) {
     event.stopPropagation();
-    confirm({ text: 'Yakin hapus quiz ini?' }).then(result => {
+    confirm({ text: 'Yakin hapus quiz ini? Jika soal memiliki data nilai siswa, maka data nilai tersebut akan ikut terhapus. Tindakan ini tidak dapat dibatalkan.' }).then(result => {
         if (result.isConfirmed) {
             axios.delete(`/proktor/soal/${id}`)
                 .then(res => {
