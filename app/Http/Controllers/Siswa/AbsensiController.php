@@ -46,11 +46,11 @@ class AbsensiController extends Controller
         $rekapBulan = AbsensiHarian::where('kelas_id', $siswaMe->kelas_id)
             ->bulan($today->month, $today->year)
             ->selectRaw("
-                COUNT(DISTINCT tanggal)      AS total_hari_aktif,
-                SUM(status = 'hadir')        AS hadir,
-                SUM(status = 'sakit')        AS sakit,
-                SUM(status = 'izin')         AS izin,
-                SUM(status = 'alpha')        AS alpha
+                COUNT(DISTINCT tanggal)                   AS total_hari_aktif,
+                COUNT(*) FILTER (WHERE status = 'hadir')  AS hadir,
+                COUNT(*) FILTER (WHERE status = 'sakit')  AS sakit,
+                COUNT(*) FILTER (WHERE status = 'izin')   AS izin,
+                COUNT(*) FILTER (WHERE status = 'alpha')  AS alpha
             ")
             ->first();
 
